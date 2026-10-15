@@ -1,0 +1,62 @@
+[
+  [
+    10,
+    "How to Destroy a Wavesurfer.js Instance to Free Up Memory",
+    "Destroying a Wavesurfer.js instance properly is essential to prevent memory leaks and free up browser resources when an audio visualization component unmounts or is no longer needed. To completely tear down an active instance, you must invoke the built-in",
+    false
+  ],
+  [
+    9,
+    "How to Toggle Audio Playback in Wavesurfer.js",
+    "To toggle between playing and pausing audio in Wavesurfer.js, you use the playPause() method. Calling this method automatically checks the current playback status of the audio instance—if the audio is currently playing, it pauses it; if it is paused or st",
+    false
+  ],
+  [
+    8,
+    "How Do You Pause Audio Playback in Wavesurfer.js?",
+    "Pausing audio playback in a Wavesurfer.js instance is achieved primarily by calling the native pause() method on your initialized Wavesurfer object. Alternatively, developers can utilize the playPause() method to toggle between play and pause states, or h",
+    false
+  ],
+  [
+    7,
+    "How to Start Audio Playback in Wavesurfer.js?",
+    "To start audio playback in Wavesurfer.js, you call the play() method on your initialized WaveSurfer instance. Wavesurfer.js is a popular, open-source JavaScript library that creates interactive HTML5 audio waveforms, allowing developers to easily handle a",
+    false
+  ],
+  [
+    6,
+    "How to Load Audio into Wavesurfer.js via URL",
+    "Loading an audio file into Wavesurfer.js using a URL is a straightforward process that involves initializing the WaveSurfer instance and calling its load method with the audio file link. Wavesurfer.js fetches the audio via HTTP, decodes the buffer, and au",
+    false
+  ],
+  [
+    5,
+    "How to Set Waveform Canvas Height in Wavesurfer.js?",
+    "Wavesurfer.js uses the height configuration option to control the height of the waveform canvas. When initializing the WaveSurfer instance, setting this option determines the canvas height in pixels, allowing you to customize how tall or compact the audio",
+    false
+  ],
+  [
+    4,
+    "How to Change Progress Color in Wavesurfer.js?",
+    "To change the color of the progress portion of an audio waveform in Wavesurfer.js, pass the progressColor option in the parameters object when calling WaveSurfer.create(). This property defines the color of the waveform from the start up to the current pl",
+    false
+  ],
+  [
+    3,
+    "How to Set the Unplayed Waveform Color in Wavesurfer.js?",
+    "In Wavesurfer.js, the waveColor configuration option determines the color of the unplayed portion of the audio waveform. By passing a valid CSS color string—such as a hex code, RGB value, or named color—to this parameter during initialization, developers",
+    false
+  ],
+  [
+    2,
+    "What Container Element Is Required for Wavesurfer.js?",
+    "Wavesurfer.js requires a standard HTML element, typically a <div>, to serve as the visual container where the audio waveform canvas is rendered. Pass this element to the library during initialization using the container option, which accepts either a CSS",
+    false
+  ],
+  [
+    1,
+    "How Do You Initialize Wavesurfer.js in a Web App?",
+    "To initialize Wavesurfer.js in a web application, you need to include the library via a CDN or npm package, prepare a container HTML element, and instantiate the Wavesurfer class with your target container and audio file URL. Wavesurfer.js then automatica",
+    false
+  ]
+]
