@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build an Audio Trimmer with Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This guide explains how to construct an online audio trimming tool using Wavesurfer.js and standard browser APIs. You will learn how to initialize the waveform visualization, enable selection handles with the Regions plugin, extract the selected audio seg">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/build-an-audio-trimmer-with-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Build an Audio Trimmer with Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/build-an-audio-trimmer-with-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide explains how to construct an online audio trimming tool using Wavesurfer.js and standard browser APIs. You will learn how to initialize the waveform visualization, enable selection handles with the Regions plugin, extract the selected audio seg" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="build-an-audio-trimmer-with-wavesurferjs">Build an Audio Trimmer
+with Wavesurfer.js</h1>
+<p>This guide explains how to construct an online audio trimming tool
+using Wavesurfer.js and standard browser APIs. You will learn how to
+initialize the waveform visualization, enable selection handles with the
+Regions plugin, extract the selected audio segments using the Web Audio
+API, and export the trimmed result into a downloadable file.</p>
+<h3 id="1-set-up-the-project-structure">1. Set Up the Project
+Structure</h3>
+<p>Create an HTML file with basic markup to hold your waveform, playback
+controls, file input, and export button. Load Wavesurfer.js and the
+Regions plugin via CDN or install them via npm.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;!DOCTYPE</span> html<span class="dt">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">html</span><span class="ot"> lang</span><span class="op">=</span><span class="st">&quot;en&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> charset</span><span class="op">=</span><span class="st">&quot;UTF-8&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>Audio Trimmer<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;https://unpkg.com/wavesurfer.js@7&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;file&quot;</span><span class="ot"> id</span><span class="op">=</span><span class="st">&quot;audio-input&quot;</span><span class="ot"> accept</span><span class="op">=</span><span class="st">&quot;audio/*&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> id</span><span class="op">=</span><span class="st">&quot;waveform&quot;</span><span class="ot"> style</span><span class="op">=</span><span class="st">&quot;width: 100%; margin: 20px 0;&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> id</span><span class="op">=</span><span class="st">&quot;btn-play&quot;</span><span class="dt">&gt;</span>Play / Pause<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> id</span><span class="op">=</span><span class="st">&quot;btn-trim&quot;</span><span class="dt">&gt;</span>Trim and Download<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;app.js&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">html</span><span class="dt">&gt;</span></span></code></pre></div>
+<h3 id="2-initialize-wavesurfer-and-the-regions-plugin">2. Initialize
+Wavesurfer and the Regions Plugin</h3>
+<p>In your JavaScript file (<code>app.js</code>), instantiate Wavesurfer
+alongside the Regions plugin. The Regions plugin allows users to
+visually define the start and end points of the cut.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> regions <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="at">Regions</span><span class="op">.</span><span class="fu">create</span>()<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F4A85&#39;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#383351&#39;</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">plugins</span><span class="op">:</span> [regions]<span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> activeRegion <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Handle audio upload</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;audio-input&#39;</span>)<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;change&#39;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> file <span class="op">=</span> e<span class="op">.</span><span class="at">target</span><span class="op">.</span><span class="at">files</span>[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (file) {</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> url <span class="op">=</span> URL<span class="op">.</span><span class="fu">createObjectURL</span>(file)<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">load</span>(url)<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Controls</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;btn-play&#39;</span>)<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;click&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">playPause</span>()<span class="op">;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="3-create-a-trimming-selection-region">3. Create a Trimming
+Selection Region</h3>
+<p>Once the audio loads, clear any previous regions and add a single
+region that the user can resize and drag. Restrict user interaction to
+one region to keep the trimming workflow simple.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  regions<span class="op">.</span><span class="fu">clearRegions</span>()<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> duration <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getDuration</span>()<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Create an initial region covering a portion of the audio</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  activeRegion <span class="op">=</span> regions<span class="op">.</span><span class="fu">addRegion</span>({</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">start</span><span class="op">:</span> duration <span class="op">*</span> <span class="fl">0.1</span><span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">end</span><span class="op">:</span> duration <span class="op">*</span> <span class="fl">0.9</span><span class="op">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">color</span><span class="op">:</span> <span class="st">&#39;rgba(0, 255, 0, 0.2)&#39;</span><span class="op">,</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">drag</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">resize</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Update the active reference if the region changes</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>regions<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;region-updated&#39;</span><span class="op">,</span> (region) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  activeRegion <span class="op">=</span> region<span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="4-slice-the-audiobuffer">4. Slice the AudioBuffer</h3>
+<p>To trim the audio, obtain the decoded <code>AudioBuffer</code> from
+Wavesurfer, calculate the sample frames corresponding to the region’s
+start and end times, and copy those samples into a new
+<code>AudioBuffer</code>.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">sliceAudioBuffer</span>(originalBuffer<span class="op">,</span> start<span class="op">,</span> end) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> sampleRate <span class="op">=</span> originalBuffer<span class="op">.</span><span class="at">sampleRate</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> numberOfChannels <span class="op">=</span> originalBuffer<span class="op">.</span><span class="at">numberOfChannels</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> startOffset <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">floor</span>(start <span class="op">*</span> sampleRate)<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> endOffset <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">floor</span>(end <span class="op">*</span> sampleRate)<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> frameCount <span class="op">=</span> endOffset <span class="op">-</span> startOffset<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> audioContext <span class="op">=</span> <span class="kw">new</span> (<span class="bu">window</span><span class="op">.</span><span class="at">AudioContext</span> <span class="op">||</span> <span class="bu">window</span><span class="op">.</span><span class="at">webkitAudioContext</span>)()<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> trimmedBuffer <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createBuffer</span>(numberOfChannels<span class="op">,</span> frameCount<span class="op">,</span> sampleRate)<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">let</span> channel <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> channel <span class="op">&lt;</span> numberOfChannels<span class="op">;</span> channel<span class="op">++</span>) {</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> originalChannelData <span class="op">=</span> originalBuffer<span class="op">.</span><span class="fu">getChannelData</span>(channel)<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> trimmedChannelData <span class="op">=</span> trimmedBuffer<span class="op">.</span><span class="fu">getChannelData</span>(channel)<span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> frameCount<span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>      trimmedChannelData[i] <span class="op">=</span> originalChannelData[startOffset <span class="op">+</span> i]<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> trimmedBuffer<span class="op">;</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="5-encode-and-export-the-audio-to-wav">5. Encode and Export the
+Audio to WAV</h3>
+<p>The sliced <code>AudioBuffer</code> must be converted into a binary
+format such as WAV to be saved to the user's device. Implement a WAV
+encoder function to write the buffer's PCM data to a
+<code>Blob</code>.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">audioBufferToWav</span>(buffer) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> numChannels <span class="op">=</span> buffer<span class="op">.</span><span class="at">numberOfChannels</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> sampleRate <span class="op">=</span> buffer<span class="op">.</span><span class="at">sampleRate</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> format <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// PCM</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> bitDepth <span class="op">=</span> <span class="dv">16</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> bytesPerSample <span class="op">=</span> bitDepth <span class="op">/</span> <span class="dv">8</span><span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> blockAlign <span class="op">=</span> numChannels <span class="op">*</span> bytesPerSample<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> numSamples <span class="op">=</span> buffer<span class="op">.</span><span class="at">length</span><span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> byteRate <span class="op">=</span> sampleRate <span class="op">*</span> blockAlign<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> dataSize <span class="op">=</span> numSamples <span class="op">*</span> blockAlign<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> bufferSize <span class="op">=</span> <span class="dv">44</span> <span class="op">+</span> dataSize<span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> arrayBuffer <span class="op">=</span> <span class="kw">new</span> <span class="bu">ArrayBuffer</span>(bufferSize)<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> view <span class="op">=</span> <span class="kw">new</span> <span class="bu">DataView</span>(arrayBuffer)<span class="op">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">function</span> <span class="fu">writeString</span>(offset<span class="op">,</span> string) {</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> string<span class="op">.</span><span class="at">length</span><span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      view<span class="op">.</span><span class="fu">setUint8</span>(offset <span class="op">+</span> i<span class="op">,</span> string<span class="op">.</span><span class="fu">charCodeAt</span>(i))<span class="op">;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">// RIFF Chunk Descriptor</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">writeString</span>(<span class="dv">0</span><span class="op">,</span> <span class="st">&#39;RIFF&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  view<span class="op">.</span><span class="fu">setUint32</span>(<span class="dv">4</span><span class="op">,</span> <span class="dv">36</span> <span class="op">+</span> dataSize<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">writeString</span>(<span class="dv">8</span><span class="op">,</span> <span class="st">&#39;WAVE&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &quot;fmt &quot; sub-chunk</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">writeString</span>(<span class="dv">12</span><span class="op">,</span> <span class="st">&#39;fmt &#39;</span>)<span class="op">;</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  view<span class="op">.</span><span class="fu">setUint32</span>(<span class="dv">16</span><span class="op">,</span> <span class="dv">16</span><span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  view<span class="op">.</span><span class="fu">setUint16</span>(<span class="dv">20</span><span class="op">,</span> format<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  view<span class="op">.</span><span class="fu">setUint16</span>(<span class="dv">22</span><span class="op">,</span> numChannels<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  view<span class="op">.</span><span class="fu">setUint32</span>(<span class="dv">24</span><span class="op">,</span> sampleRate<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  view<span class="op">.</span><span class="fu">setUint32</span>(<span class="dv">28</span><span class="op">,</span> byteRate<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  view<span class="op">.</span><span class="fu">setUint16</span>(<span class="dv">32</span><span class="op">,</span> blockAlign<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>  view<span class="op">.</span><span class="fu">setUint16</span>(<span class="dv">34</span><span class="op">,</span> bitDepth<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>  <span class="co">// &quot;data&quot; sub-chunk</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">writeString</span>(<span class="dv">36</span><span class="op">,</span> <span class="st">&#39;data&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>  view<span class="op">.</span><span class="fu">setUint32</span>(<span class="dv">40</span><span class="op">,</span> dataSize<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Write interleaved PCM samples</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> offset <span class="op">=</span> <span class="dv">44</span><span class="op">;</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> numSamples<span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (<span class="kw">let</span> channel <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> channel <span class="op">&lt;</span> numChannels<span class="op">;</span> channel<span class="op">++</span>) {</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> sample <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="op">-</span><span class="dv">1</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">min</span>(<span class="dv">1</span><span class="op">,</span> buffer<span class="op">.</span><span class="fu">getChannelData</span>(channel)[i]))<span class="op">;</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>      view<span class="op">.</span><span class="fu">setInt16</span>(offset<span class="op">,</span> sample <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">?</span> sample <span class="op">*</span> <span class="bn">0x8000</span> <span class="op">:</span> sample <span class="op">*</span> <span class="bn">0x7FFF</span><span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>      offset <span class="op">+=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="kw">new</span> <span class="bu">Blob</span>([view]<span class="op">,</span> { <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;audio/wav&#39;</span> })<span class="op">;</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="6-connect-the-trim-event">6. Connect the Trim Event</h3>
+<p>Attach a click handler to the trim button. It retrieves the current
+decoded audio buffer from Wavesurfer, processes the slice using the
+region bounds, creates a file download link, and clicks it
+automatically.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;btn-trim&#39;</span>)<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;click&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>activeRegion) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> originalBuffer <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getDecodedData</span>()<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>originalBuffer) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> trimmedBuffer <span class="op">=</span> <span class="fu">sliceAudioBuffer</span>(</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    originalBuffer<span class="op">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    activeRegion<span class="op">.</span><span class="at">start</span><span class="op">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    activeRegion<span class="op">.</span><span class="at">end</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  )<span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> wavBlob <span class="op">=</span> <span class="fu">audioBufferToWav</span>(trimmedBuffer)<span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> downloadUrl <span class="op">=</span> URL<span class="op">.</span><span class="fu">createObjectURL</span>(wavBlob)<span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> downloadLink <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">createElement</span>(<span class="st">&#39;a&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  downloadLink<span class="op">.</span><span class="at">href</span> <span class="op">=</span> downloadUrl<span class="op">;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  downloadLink<span class="op">.</span><span class="at">download</span> <span class="op">=</span> <span class="st">&#39;trimmed-audio.wav&#39;</span><span class="op">;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  downloadLink<span class="op">.</span><span class="fu">click</span>()<span class="op">;</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  URL<span class="op">.</span><span class="fu">revokeObjectURL</span>(downloadUrl)<span class="op">;</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/build-an-audio-trimmer-with-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Web Audio Connections in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Debugging the Web Audio node graph in Wavesurfer.js requires inspecting internal audio nodes, tracking custom filter chains, and visualizing connections that are not always directly exposed by the library&#39;s high-level API. This guide explains how to acces">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/debug-web-audio-connections-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Debug Web Audio Connections in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/debug-web-audio-connections-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Debugging the Web Audio node graph in Wavesurfer.js requires inspecting internal audio nodes, tracking custom filter chains, and visualizing connections that are not always directly exposed by the library&#39;s high-level API. This guide explains how to acces" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="debug-web-audio-connections-in-wavesurferjs">Debug Web Audio
+Connections in Wavesurfer.js</h1>
+<p>Debugging the Web Audio node graph in Wavesurfer.js requires
+inspecting internal audio nodes, tracking custom filter chains, and
+visualizing connections that are not always directly exposed by the
+library's high-level API. This guide explains how to access the
+underlying <code>AudioContext</code>, intercept and log dynamic node
+connections programmatically, use browser inspection tools to visualize
+routing, and resolve common pipeline disconnection issues.</p>
+<h3 id="accessing-the-audiocontext-and-internal-nodes">Accessing the
+AudioContext and Internal Nodes</h3>
+<p>In Wavesurfer.js, the Web Audio integration depends on whether you
+are using the default media element pipeline or custom Web Audio backend
+processing. When using Web Audio integration, you can retrieve the
+primary audio context and default nodes directly through the Wavesurfer
+instance or the backend:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Access the underlying AudioContext</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioContext <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">?.</span><span class="at">ac</span> <span class="op">||</span> wavesurfer<span class="op">.</span><span class="at">options</span><span class="op">.</span><span class="at">audioContext</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Access primary routing nodes</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> mediaElement <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getMediaElement</span>()<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> analyser <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">?.</span><span class="at">analyser</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> gainNode <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">?.</span><span class="at">gainNode</span><span class="op">;</span></span></code></pre></div>
+<p>If custom plugins or custom nodes (such as biquad filters or
+convolvers) are inserted, track references to those specific instances
+when initializing them so they can be individually interrogated.</p>
+<h3 id="monkey-patching-audionodeprototypeconnect">Monkey-Patching
+AudioNode.prototype.connect</h3>
+<p>The Web Audio API does not provide a native inspection method (such
+as <code>node.getConnections()</code>) to see where a node routes its
+output. To trace graph connections in Wavesurfer.js, you can
+monkey-patch the native <code>connect</code> and <code>disconnect</code>
+methods on <code>AudioNode.prototype</code> before instantiating
+Wavesurfer.js:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> originalConnect <span class="op">=</span> <span class="bu">AudioNode</span><span class="op">.</span><span class="at">prototype</span><span class="op">.</span><span class="at">connect</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> originalDisconnect <span class="op">=</span> <span class="bu">AudioNode</span><span class="op">.</span><span class="at">prototype</span><span class="op">.</span><span class="at">disconnect</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">AudioNode</span><span class="op">.</span><span class="at">prototype</span><span class="op">.</span><span class="at">connect</span> <span class="op">=</span> <span class="kw">function</span> (destination<span class="op">,</span> outputIndex<span class="op">,</span> inputIndex) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">groupCollapsed</span>(<span class="vs">`[WebAudio Connect] </span><span class="sc">${</span><span class="kw">this</span><span class="op">.</span><span class="at">constructor</span><span class="op">.</span><span class="at">name</span><span class="sc">}</span><span class="vs"> -&gt; </span><span class="sc">${</span>destination<span class="op">.</span><span class="at">constructor</span><span class="op">.</span><span class="at">name</span><span class="sc">}</span><span class="vs">`</span>)<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Source Node:&quot;</span><span class="op">,</span> <span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Destination:&quot;</span><span class="op">,</span> destination)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&quot;Output Index:&quot;</span><span class="op">,</span> outputIndex<span class="op">,</span> <span class="st">&quot;Input Index:&quot;</span><span class="op">,</span> inputIndex)<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">trace</span>(<span class="st">&quot;Connection Stack Trace&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">groupEnd</span>()<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> originalConnect<span class="op">.</span><span class="fu">apply</span>(<span class="kw">this</span><span class="op">,</span> <span class="kw">arguments</span>)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="bu">AudioNode</span><span class="op">.</span><span class="at">prototype</span><span class="op">.</span><span class="at">disconnect</span> <span class="op">=</span> <span class="kw">function</span> () {</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">warn</span>(<span class="vs">`[WebAudio Disconnect] Called on </span><span class="sc">${</span><span class="kw">this</span><span class="op">.</span><span class="at">constructor</span><span class="op">.</span><span class="at">name</span><span class="sc">}</span><span class="vs">`</span><span class="op">,</span> <span class="kw">this</span>)<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> originalDisconnect<span class="op">.</span><span class="fu">apply</span>(<span class="kw">this</span><span class="op">,</span> <span class="kw">arguments</span>)<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>This logging technique outputs the exact order and hierarchy in which
+Wavesurfer.js links nodes (e.g.,
+<code>MediaElementAudioSourceNode</code> → <code>GainNode</code> →
+<code>AnalyserNode</code> → <code>AudioDestinationNode</code>),
+highlighting any custom nodes injected in between.</p>
+<h3 id="using-browser-devtools-for-graph-visualization">Using Browser
+DevTools for Graph Visualization</h3>
+<p>While console logs help identify call orders, visualizing complex
+node relationships is easiest with dedicated browser extensions:</p>
+<ol type="1">
+<li><strong>Chromium Web Audio Panel:</strong> Install a browser
+extension such as the open-source "Web Audio Inspector" from the Chrome
+Web Store.</li>
+<li><strong>Opening the Inspector:</strong> Open your browser's
+Developer Tools and switch to the dedicated Web Audio tab.</li>
+<li><strong>Graph Rendering:</strong> Reload the page and trigger
+playback. The tool automatically maps all active <code>AudioNode</code>
+instances within the Wavesurfer context, drawing nodes, parameters, and
+directional edges showing signal flow.</li>
+</ol>
+<p>This visual feedback immediately exposes orphaned nodes, missing
+links to the <code>destination</code>, or duplicate parallel
+connections.</p>
+<h3 id="common-connection-pitfalls-in-wavesurferjs">Common Connection
+Pitfalls in Wavesurfer.js</h3>
+<ul>
+<li><strong>Dangling Chains:</strong> If you introduce custom filter
+nodes using <code>wavesurfer.backend.setFilter()</code>, ensure the
+output of your custom chain connects back to
+<code>backend.gainNode</code> or <code>backend.analyser</code>. An
+unlinked tail node causes silent playback.</li>
+<li><strong>Suspended AudioContext:</strong> Modern browsers block audio
+playback until user interaction occurs. Check
+<code>audioContext.state</code>; if it is <code>"suspended"</code>, call
+<code>audioContext.resume()</code> before initiating audio
+connections.</li>
+<li><strong>Double Routing:</strong> Connecting a node directly to
+<code>audioContext.destination</code> while it is also piped through
+Wavesurfer's internal output pipeline can cause phase cancellation,
+signal amplification, or unwanted distortion. Check your graph to ensure
+a single, linear path to the destination.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/debug-web-audio-connections-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

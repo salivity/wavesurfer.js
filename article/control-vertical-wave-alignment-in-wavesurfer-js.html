@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Vertical Wave Alignment in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js provides built-in configuration options to manipulate how audio waveforms render visually on a canvas. This guide explains how to control vertical wave alignment using the barAlign parameter, detailing its available values and demonstrating">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/control-vertical-wave-alignment-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Control Vertical Wave Alignment in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/control-vertical-wave-alignment-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js provides built-in configuration options to manipulate how audio waveforms render visually on a canvas. This guide explains how to control vertical wave alignment using the barAlign parameter, detailing its available values and demonstrating" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="control-vertical-wave-alignment-in-wavesurferjs">Control
+Vertical Wave Alignment in Wavesurfer.js</h1>
+<p>Wavesurfer.js provides built-in configuration options to manipulate
+how audio waveforms render visually on a canvas. This guide explains how
+to control vertical wave alignment using the <code>barAlign</code>
+parameter, detailing its available values and demonstrating how to align
+your audio visualization to the top, bottom, or center of the
+container.</p>
+<h3 id="the-baralign-option">The <code>barAlign</code> Option</h3>
+<p>In modern versions of Wavesurfer.js (v7 and newer), vertical wave
+alignment is controlled using the <strong><code>barAlign</code></strong>
+option during player initialization. By default, Wavesurfer.js centers
+the waveform vertically within the container element. Setting the
+<code>barAlign</code> property allows you to anchor the waveform either
+to the top or the bottom edge instead.</p>
+<h3 id="supported-values">Supported Values</h3>
+<p>The <code>barAlign</code> property accepts the following values:</p>
+<ul>
+<li><strong><code>undefined</code> (Default):</strong> Leaves the
+waveform vertically centered, extending equally above and below the
+horizontal centerline.</li>
+<li><strong><code>'bottom'</code>:</strong> Aligns the baseline of the
+waveform to the bottom of the canvas, rendering all amplitude bars
+upward. This is the common layout for modern voice-message players.</li>
+<li><strong><code>'top'</code>:</strong> Aligns the baseline of the
+waveform to the top of the canvas, rendering the amplitude bars
+downward.</li>
+</ul>
+<h3 id="implementation-example">Implementation Example</h3>
+<p>To apply vertical alignment, pass <code>barAlign</code> into the
+configuration object of <code>WaveSurfer.create()</code> alongside your
+visual preferences:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#312E81&#39;</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;/audio/track.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barWidth</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barGap</span><span class="op">:</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barRadius</span><span class="op">:</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barAlign</span><span class="op">:</span> <span class="st">&#39;bottom&#39;</span><span class="op">,</span> <span class="co">// Controls vertical alignment (&#39;top&#39; or &#39;bottom&#39;)</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div>
+<h3 id="dynamic-updates">Dynamic Updates</h3>
+<p>If you need to change alignment dynamically after initialization, use
+the <code>setOptions</code> method:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">setOptions</span>({</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barAlign</span><span class="op">:</span> <span class="st">&#39;top&#39;</span><span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div>
+<p>Using <code>barAlign</code> provides complete control over the
+vertical placement of audio bars to fit diverse interface layouts
+without requiring custom canvas manipulation.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/control-vertical-wave-alignment-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

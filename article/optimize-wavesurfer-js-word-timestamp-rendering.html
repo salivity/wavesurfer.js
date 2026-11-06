@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimize Wavesurfer.js Word Timestamp Rendering - wavesurfer.js</title>
+    <meta name="description" content="Syncing thousands of word-level timestamps with audio playback in Wavesurfer.js frequently degrades performance, causing UI stutters, audio glitches, and dropped frames. This guide covers the technical strategies required to optimize the render loop, incl">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/optimize-wavesurfer-js-word-timestamp-rendering">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Optimize Wavesurfer.js Word Timestamp Rendering - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/optimize-wavesurfer-js-word-timestamp-rendering" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Syncing thousands of word-level timestamps with audio playback in Wavesurfer.js frequently degrades performance, causing UI stutters, audio glitches, and dropped frames. This guide covers the technical strategies required to optimize the render loop, incl" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="optimize-wavesurferjs-word-timestamp-rendering">Optimize
+Wavesurfer.js Word Timestamp Rendering</h1>
+<p>Syncing thousands of word-level timestamps with audio playback in
+Wavesurfer.js frequently degrades performance, causing UI stutters,
+audio glitches, and dropped frames. This guide covers the technical
+strategies required to optimize the render loop, including decoupling
+playback listeners from the DOM via <code>requestAnimationFrame</code>,
+replacing linear scans with binary search algorithms, caching active
+state mutations, and reducing layout thrashing across dense interactive
+transcripts.</p>
+<h3 id="the-source-of-the-bottleneck">The Source of the Bottleneck</h3>
+<p>Wavesurfer.js dispatches <code>timeupdate</code> and
+<code>audioprocess</code> events continuously during playback. Binding
+transcript highlighting directly to these events creates two critical
+performance bottlenecks:</p>
+<ol type="1">
+<li><strong>Algorithmic Overhead:</strong> Linearly iterating through an
+array of thousands of timestamped words on every tick consumes CPU
+cycles that should be reserved for decoding and rendering.</li>
+<li><strong>Layout Thrashing:</strong> Directly querying and modifying
+DOM element classes or layout properties (such as <code>scrollTop</code>
+or <code>scrollIntoView</code>) at unthrottled audio clock rates forces
+the browser to recalculate styles and execute continuous reflows.</li>
+</ol>
+<hr />
+<h3 id="step-1-optimize-lookup-using-binary-search">Step 1: Optimize
+Lookup Using Binary Search</h3>
+<p>Transcripts are naturally ordered by start and end times. Replacing
+an <span class="math inline">\(O(n)\)</span>
+<code>Array.prototype.find()</code> with an <span
+class="math inline">\(O(\log n)\)</span> binary search reduces the
+computational cost of locating the active word from hundreds of
+operations per frame to fewer than ten.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">findActiveWordIndex</span>(words<span class="op">,</span> currentTime) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> low <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> high <span class="op">=</span> words<span class="op">.</span><span class="at">length</span> <span class="op">-</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (low <span class="op">&lt;=</span> high) {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> mid <span class="op">=</span> (low <span class="op">+</span> high) <span class="op">&gt;&gt;</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> word <span class="op">=</span> words[mid]<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (currentTime <span class="op">&gt;=</span> word<span class="op">.</span><span class="at">start</span> <span class="op">&amp;&amp;</span> currentTime <span class="op">&lt;=</span> word<span class="op">.</span><span class="at">end</span>) {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> mid<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span> (currentTime <span class="op">&lt;</span> word<span class="op">.</span><span class="at">start</span>) {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>      high <span class="op">=</span> mid <span class="op">-</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      low <span class="op">=</span> mid <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h3 id="step-2-decouple-audio-updates-with-requestanimationframe">Step
+2: Decouple Audio Updates with <code>requestAnimationFrame</code></h3>
+<p>Audio clocks fire independently of the display refresh rate. If an
+audio event fires faster than the screen's refresh rate (e.g., 60Hz or
+120Hz), executing DOM updates in that listener wastes compute on
+invisible intermediate frames.</p>
+<p>Instead, store the current playback position in a shared variable and
+run your visual sync inside a <code>requestAnimationFrame</code> (rAF)
+loop.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> currentTime <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> isPlaying <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> rafId <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;play&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  isPlaying <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  rafId <span class="op">=</span> <span class="fu">requestAnimationFrame</span>(renderLoop)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;pause&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  isPlaying <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cancelAnimationFrame</span>(rafId)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;timeupdate&#39;</span><span class="op">,</span> (time) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  currentTime <span class="op">=</span> time<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">renderLoop</span>() {</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>isPlaying) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">updateActiveWord</span>(currentTime)<span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  rafId <span class="op">=</span> <span class="fu">requestAnimationFrame</span>(renderLoop)<span class="op">;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h3
+id="step-3-implement-index-caching-to-prevent-redundant-mutations">Step
+3: Implement Index Caching to Prevent Redundant Mutations</h3>
+<p>Even within an optimized loop, re-applying classes or inline styles
+to a word that is already highlighted causes unnecessary layout work.
+Cache the previously active index and only touch the DOM when the index
+changes.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> previousWordIndex <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wordElements <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelectorAll</span>(<span class="st">&#39;.transcript-word&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">updateActiveWord</span>(time) {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> currentIndex <span class="op">=</span> <span class="fu">findActiveWordIndex</span>(wordData<span class="op">,</span> time)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Exit early if the active word has not changed</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (currentIndex <span class="op">===</span> previousWordIndex) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Remove highlight from previous word</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (previousWordIndex <span class="op">!==</span> <span class="op">-</span><span class="dv">1</span> <span class="op">&amp;&amp;</span> wordElements[previousWordIndex]) {</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    wordElements[previousWordIndex]<span class="op">.</span><span class="at">classList</span><span class="op">.</span><span class="fu">remove</span>(<span class="st">&#39;is-active&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Apply highlight to new word</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (currentIndex <span class="op">!==</span> <span class="op">-</span><span class="dv">1</span> <span class="op">&amp;&amp;</span> wordElements[currentIndex]) {</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    wordElements[currentIndex]<span class="op">.</span><span class="at">classList</span><span class="op">.</span><span class="fu">add</span>(<span class="st">&#39;is-active&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scrollWordIntoView</span>(wordElements[currentIndex])<span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  previousWordIndex <span class="op">=</span> currentIndex<span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h3 id="step-4-batch-and-restrict-auto-scrolling">Step 4: Batch and
+Restrict Auto-Scrolling</h3>
+<p>Invoking <code>element.scrollIntoView()</code> on every word change
+triggers synchronous layout calculations. Optimize scroll behavior with
+the following adjustments:</p>
+<ul>
+<li><strong>Throttling Scrolls:</strong> Only scroll when the active
+word moves outside the visible boundaries of the transcript container
+rather than centering every single word.</li>
+<li><strong>Using CSS Containment:</strong> Apply
+<code>contain: content;</code> or <code>content-visibility: auto;</code>
+to parent containers or paragraph blocks to prevent the browser from
+recalculating the layout of the entire transcript tree during DOM
+mutations.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">scrollWordIntoView</span>(targetElement) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> container <span class="op">=</span> targetElement<span class="op">.</span><span class="at">parentElement</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> containerRect <span class="op">=</span> container<span class="op">.</span><span class="fu">getBoundingClientRect</span>()<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> targetRect <span class="op">=</span> targetElement<span class="op">.</span><span class="fu">getBoundingClientRect</span>()<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> isVisible <span class="op">=</span> (</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    targetRect<span class="op">.</span><span class="at">top</span> <span class="op">&gt;=</span> containerRect<span class="op">.</span><span class="at">top</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    targetRect<span class="op">.</span><span class="at">bottom</span> <span class="op">&lt;=</span> containerRect<span class="op">.</span><span class="at">bottom</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  )<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>isVisible) {</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    targetElement<span class="op">.</span><span class="fu">scrollIntoView</span>({</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">behavior</span><span class="op">:</span> <span class="st">&#39;smooth&#39;</span><span class="op">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">block</span><span class="op">:</span> <span class="st">&#39;nearest&#39;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h3 id="step-5-virtualize-render-lists-for-long-documents">Step 5:
+Virtualize Render Lists for Long Documents</h3>
+<p>For audio tracks exceeding 30 minutes, keeping tens of thousands of
+word nodes in the active DOM tree causes substantial paint overhead.</p>
+<p>Divide the transcript into larger structural blocks (such as
+paragraphs or speaker utterances) and only bind granular timestamps to
+the currently active block. Keep inactive blocks rendered as simple,
+continuous text nodes without individual word-level wrappers until
+playback approaches their timestamp window.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/optimize-wavesurfer-js-word-timestamp-rendering';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

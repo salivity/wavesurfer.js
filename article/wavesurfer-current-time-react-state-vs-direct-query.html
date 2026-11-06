@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer Current Time: React State vs Direct Query - wavesurfer.js</title>
+    <meta name="description" content="Managing playback time in web-based audio applications requires balancing declarative UI development with main-thread performance. Storing audio playback time in React state causes high-frequency re-renders across the component tree, leading to UI jank an">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-current-time-react-state-vs-direct-query">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer Current Time: React State vs Direct Query - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-current-time-react-state-vs-direct-query" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Managing playback time in web-based audio applications requires balancing declarative UI development with main-thread performance. Storing audio playback time in React state causes high-frequency re-renders across the component tree, leading to UI jank an" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurfer-current-time-react-state-vs-direct-query">Wavesurfer
+Current Time: React State vs Direct Query</h1>
+<p>Managing playback time in web-based audio applications requires
+balancing declarative UI development with main-thread performance.
+Storing audio playback time in React state causes high-frequency
+re-renders across the component tree, leading to UI jank and potential
+audio stutter. Conversely, querying Wavesurfer.js directly decouples
+playback updates from React's reconciliation engine, offering superior
+runtime efficiency at the expense of declarative component patterns.</p>
+<h3 id="the-problem-with-storing-current-time-in-react-state">The
+Problem with Storing Current Time in React State</h3>
+<p>Audio playback typically demands high-frequency updates, firing
+anywhere from 4 times per second (via standard HTML5
+<code>timeupdate</code> events) to 60 times per second if synchronized
+with <code>requestAnimationFrame</code> for smooth scrubbers or
+visualizers.</p>
+<p>When you store <code>currentTime</code> in React state:</p>
+<ul>
+<li><strong>Render Cascades:</strong> Every call to
+<code>setCurrentTime()</code> triggers a re-render of the component
+hosting the state and, by default, all of its children. Unless every
+child component is aggressively memoized with <code>React.memo</code>,
+CPU cycles are wasted diffing the Virtual DOM.</li>
+<li><strong>Main Thread Congestion:</strong> High-frequency rendering
+consumes the browser's main thread. If a re-render takes longer than
+16.6ms, it will drop frames, causing visible stutter in UI animations
+and waveform rendering.</li>
+<li><strong>Garbage Collection Pressure:</strong> Rapid re-renders
+constantly allocate and deallocate virtual DOM nodes, functions, and
+objects, triggering frequent garbage collection pauses that disrupt
+real-time performance.</li>
+</ul>
+<h3 id="the-performance-advantage-of-querying-wavesurferjs">The
+Performance Advantage of Querying Wavesurfer.js</h3>
+<p>Wavesurfer.js manages audio through the Web Audio API or an HTML5
+<code>&lt;audio&gt;</code> element. Querying the current playback time
+imperatively using <code>wavesurfer.getCurrentTime()</code> bypasses
+React entirely.</p>
+<ul>
+<li><strong>Constant-Time Reads:</strong> Invoking
+<code>wavesurfer.getCurrentTime()</code> is an <span
+class="math inline">\(O(1)\)</span> property lookup that accesses the
+underlying audio context clock. It executes in fractions of a
+microsecond.</li>
+<li><strong>Zero Component Rerenders:</strong> Because no state change
+is registered, React does not schedule a render pass. The main thread
+remains idle and available for audio decoding, canvas redrawing, and
+user input handling.</li>
+<li><strong>Decoupled Architecture:</strong> The audio engine operates
+as the single source of truth without requiring synchronization logic
+between JavaScript memory and the React state store.</li>
+</ul>
+<h3
+id="architectural-best-practices-for-time-synchronization">Architectural
+Best Practices for Time Synchronization</h3>
+<p>To maintain optimal performance while still providing visual time
+indicators:</p>
+<ol type="1">
+<li><p><strong>Direct DOM Manipulation for Clocks:</strong> If a running
+timestamp or time readout is required, use a React <code>ref</code>
+pointing to a leaf <code>&lt;span&gt;</code> element. Subscribe to
+Wavesurfer's <code>audioprocess</code> or <code>timeupdate</code> event
+and update <code>element.textContent</code> directly using imperative
+DOM manipulation, bypassing the React render cycle completely.</p></li>
+<li><p><strong>Leaf Component Isolation:</strong> If the timestamp must
+live in React state, isolate that state inside an autonomous leaf
+component (e.g., <code>&lt;CurrentTimeDisplay /&gt;</code>). This
+confines re-renders strictly to that single component, shielding the
+rest of the application tree, controls, and waveform containers from
+redundant diffing.</p></li>
+<li><p><strong>Throttled State Updates:</strong> If parent components
+genuinely require the time (for instance, to highlight synchronized
+transcript lines or trigger chapter changes), throttle the update rate.
+Updating React state once every 250ms to 1000ms drastically reduces
+overhead while maintaining sufficient resolution for macro-level UI
+changes.</p></li>
+<li><p><strong>Pull on Demand:</strong> For user interactions such as
+clicking a "Save Timestamp" button or submitting an annotation, query
+<code>wavesurfer.getCurrentTime()</code> directly inside the event
+handler instead of continuously syncing state in anticipation of an
+event.</p></li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-current-time-react-state-vs-direct-query';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

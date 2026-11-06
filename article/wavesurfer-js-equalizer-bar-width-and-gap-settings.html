@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Equalizer Bar Width and Gap Settings - wavesurfer.js</title>
+    <meta name="description" content="Achieving a retro or vintage graphic equalizer aesthetic in Wavesurfer.js depends primarily on balancing the barWidth and barGap properties alongside structural styling like barRadius. By shifting away from standard continuous waveforms toward distinct, b">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-equalizer-bar-width-and-gap-settings">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Equalizer Bar Width and Gap Settings - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-equalizer-bar-width-and-gap-settings" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Achieving a retro or vintage graphic equalizer aesthetic in Wavesurfer.js depends primarily on balancing the barWidth and barGap properties alongside structural styling like barRadius. By shifting away from standard continuous waveforms toward distinct, b" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-equalizer-bar-width-and-gap-settings">Wavesurfer.js
+Equalizer Bar Width and Gap Settings</h1>
+<p>Achieving a retro or vintage graphic equalizer aesthetic in
+Wavesurfer.js depends primarily on balancing the <code>barWidth</code>
+and <code>barGap</code> properties alongside structural styling like
+<code>barRadius</code>. By shifting away from standard continuous
+waveforms toward distinct, blocky vertical pillars, you can transform
+standard audio data into displays reminiscent of 1980s rackmount units,
+studio spectrum analyzers, and modern digital meters.</p>
+<h2 id="understanding-the-equalizer-proportions">Understanding the
+Equalizer Proportions</h2>
+<p>A standard waveform uses continuous, thin lines with minimal spacing,
+whereas a graphic equalizer utilizes wider vertical bars separated by
+distinct gaps that mimic hardware LED columns. To achieve this look, the
+ratio between <code>barWidth</code> and <code>barGap</code> generally
+needs to stay between 1:1 and 3:1, coupled with a squared or slightly
+rounded edge profile.</p>
+<h3 id="1-the-vintage-stereo-rack-led-segment-look">1. The Vintage
+Stereo Rack (LED Segment Look)</h3>
+<p>This profile replicates the chunky, rectangular look of physical LED
+meters found on 1980s and 1990s stereo receivers.</p>
+<ul>
+<li><strong><code>barWidth</code>:</strong> <code>6</code></li>
+<li><strong><code>barGap</code>:</strong> <code>3</code></li>
+<li><strong><code>barRadius</code>:</strong> <code>0</code></li>
+</ul>
+<p>The 2:1 width-to-gap ratio provides sufficient separation to make
+each bar read as a standalone indicator, while flat tops
+(<code>barRadius: 0</code>) ensure an authentic, unrounded hardware
+appearance.</p>
+<h3 id="2-the-high-density-studio-spectrum">2. The High-Density Studio
+Spectrum</h3>
+<p>For an equalizer look that mimics digital mastering software or
+multi-band parametric equalizers, smaller elements packed closely
+together yield a sharper, more technical display.</p>
+<ul>
+<li><strong><code>barWidth</code>:</strong> <code>2</code></li>
+<li><strong><code>barGap</code>:</strong> <code>1</code></li>
+<li><strong><code>barRadius</code>:</strong> <code>0</code></li>
+</ul>
+<p>This tight layout fits dozens of visible channels across medium-width
+containers, maintaining distinct vertical columns without blurring into
+a solid wave.</p>
+<h3 id="3-the-modern-neo-retro-equalizer">3. The Modern Neo-Retro
+Equalizer</h3>
+<p>If you prefer an equalizer style with softer modern UI aesthetics
+(similar to mobile music visualizers), use wider bars with subtle
+rounding.</p>
+<ul>
+<li><strong><code>barWidth</code>:</strong> <code>4</code></li>
+<li><strong><code>barGap</code>:</strong> <code>2</code></li>
+<li><strong><code>barRadius</code>:</strong> <code>2</code></li>
+</ul>
+<p>The slight border radius softens the harsh edges of the blocks while
+preserving the distinct separation necessary for an equalizer feel.</p>
+<h3 id="4-the-chunky-boombox-analyzer">4. The Chunky Boombox
+Analyzer</h3>
+<p>For lower-resolution, arcade-like displays or dashboard visualizers,
+maximize the width and spacing.</p>
+<ul>
+<li><strong><code>barWidth</code>:</strong> <code>8</code></li>
+<li><strong><code>barGap</code>:</strong> <code>4</code></li>
+<li><strong><code>barRadius</code>:</strong> <code>0</code></li>
+</ul>
+<p>This layout reduces the total number of bars rendered across the
+container, giving the visual appearance of a fixed 10-band or 12-band
+graphic equalizer rather than a continuous audio signal.</p>
+<h2 id="implementation-example">Implementation Example</h2>
+<p>To apply these settings, initialize your Wavesurfer instance with the
+selected values along with complementary equalizer properties:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4ade80&#39;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#22c55e&#39;</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barWidth</span><span class="op">:</span> <span class="dv">6</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barGap</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barRadius</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barHeight</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">normalize</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">minPxPerSec</span><span class="op">:</span> <span class="dv">50</span><span class="op">,</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="critical-complementary-settings">Critical Complementary
+Settings</h2>
+<ul>
+<li><strong><code>barRadius</code>:</strong> Setting this to
+<code>0</code> is essential for classic hardware realism. Softening the
+corners beyond <code>2</code> quickly shifts the design from a technical
+equalizer to a standard audio pill visualizer.</li>
+<li><strong><code>normalize: true</code>:</strong> An authentic
+equalizer utilizes the entire vertical display. Normalizing scales the
+peaks to touch the container edges, mirroring peak audio meter
+behavior.</li>
+<li><strong>Canvas Gradients:</strong> Real graphic equalizers often
+shift from green at the bottom to yellow in the mid-range and red at the
+top. You can pass an HTML5 Canvas gradient into <code>waveColor</code>
+and <code>progressColor</code> to match this classic tri-color LED meter
+look.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-equalizer-bar-width-and-gap-settings';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

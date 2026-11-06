@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silence Detection Algorithm in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This article explains the algorithm used to automatically detect and highlight silent audio segments in Wavesurfer.js. In audio visualization workflows, automatically isolating silence relies on parsing the raw PCM audio buffer using a threshold-based ene">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/silence-detection-algorithm-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Silence Detection Algorithm in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/silence-detection-algorithm-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains the algorithm used to automatically detect and highlight silent audio segments in Wavesurfer.js. In audio visualization workflows, automatically isolating silence relies on parsing the raw PCM audio buffer using a threshold-based ene" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="silence-detection-algorithm-in-wavesurferjs">Silence Detection
+Algorithm in Wavesurfer.js</h1>
+<p>This article explains the algorithm used to automatically detect and
+highlight silent audio segments in Wavesurfer.js. In audio visualization
+workflows, automatically isolating silence relies on parsing the raw PCM
+audio buffer using a threshold-based energy detection
+algorithm—typically Peak Amplitude or Root Mean Square (RMS)
+thresholding—combined with temporal constraints, which then feeds into
+the Wavesurfer.js Regions plugin to visually mark non-audible
+segments.</p>
+<h3 id="the-core-algorithm-threshold-based-energy-detection">The Core
+Algorithm: Threshold-Based Energy Detection</h3>
+<p>Wavesurfer.js does not contain a machine-learning voice activity
+detector (VAD) by default; instead, it uses a time-domain thresholding
+algorithm. This algorithm processes the decoded audio buffer directly
+and identifies silence through five key phases:</p>
+<h4 id="1-extracting-raw-channel-data">1. Extracting Raw Channel
+Data</h4>
+<p>Once an audio file is loaded and decoded, Wavesurfer.js grants access
+to the underlying Web Audio API <code>AudioBuffer</code>. The algorithm
+extracts the channel data as a <code>Float32Array</code>, where each
+index represents an individual audio sample between <code>-1.0</code>
+and <code>1.0</code>.</p>
+<h4 id="2-windowing-and-power-calculation">2. Windowing and Power
+Calculation</h4>
+<p>The algorithm iterates through the sample array using discrete time
+windows (frames) to measure signal energy. Energy at each window is
+evaluated using one of two standard metrics:</p>
+<ul>
+<li><strong>Peak Absolute Amplitude:</strong> Evaluates the maximum
+absolute sample value within the window: <span
+class="math display">\[\text{Peak} = \max(|x_i|)\]</span></li>
+<li><strong>Root Mean Square (RMS):</strong> Measures the average signal
+power over <span class="math inline">\(N\)</span> samples, which better
+reflects perceived loudness: <span class="math display">\[\text{RMS} =
+\sqrt{\frac{1}{N} \sum_{i=1}^{N} x_i^2}\]</span></li>
+</ul>
+<p>RMS or peak values are commonly converted to decibels relative to
+full scale (dBFS) using the formula: <span
+class="math display">\[\text{dBFS} = 20
+\log_{10}(\text{Value})\]</span></p>
+<h4 id="3-threshold-evaluation">3. Threshold Evaluation</h4>
+<p>The calculated amplitude or RMS is compared against a predefined
+silence threshold. A typical threshold ranges between
+<code>-30 dBFS</code> and <code>-50 dBFS</code> (or approximately
+<code>0.01</code> to <code>0.003</code> in normalized linear amplitude).
+If the value falls below this threshold, the window is flagged as
+silent.</p>
+<h4 id="4-temporal-filtering-minimum-duration-constraints">4. Temporal
+Filtering (Minimum Duration Constraints)</h4>
+<p>Individual sample drops can trigger false positives due to
+zero-crossings or brief pauses between syllables. To counter this, the
+algorithm enforces a <strong>Minimum Silence Duration</strong>
+condition:</p>
+<ul>
+<li>A silent sequence starts when amplitude drops below the
+threshold.</li>
+<li>The algorithm counts consecutive silent windows until an amplitude
+spike exceeds the threshold.</li>
+<li>If the accumulated duration of the consecutive silent windows is
+greater than or equal to the minimum duration parameter (e.g.,
+<code>0.5</code> seconds), the interval is marked as a valid silent
+segment.</li>
+<li>Intervals shorter than this duration are discarded.</li>
+</ul>
+<h4 id="5-region-generation">5. Region Generation</h4>
+<p>Once the boundaries (start and end timestamps in seconds) of all
+qualified segments are resolved, the algorithm passes these time
+coordinates to the Wavesurfer.js <code>RegionsPlugin</code>. The plugin
+renders visually distinct overlays across the waveform canvas at the
+exact coordinates of each silent stretch.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/silence-detection-algorithm-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

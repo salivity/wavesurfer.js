@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backdrop-Filter with Wavesurfer.js Waveforms - wavesurfer.js</title>
+    <meta name="description" content="Applying CSS backdrop-filter to elements layered over Wavesurfer.js waveforms allows developers to dynamically alter the appearance of rendered audio data without modifying the underlying &lt;canvas&gt; element. By placing a semi-transparent element with a back">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/backdrop-filter-with-wavesurfer-js-waveforms">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Backdrop-Filter with Wavesurfer.js Waveforms - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/backdrop-filter-with-wavesurfer-js-waveforms" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Applying CSS backdrop-filter to elements layered over Wavesurfer.js waveforms allows developers to dynamically alter the appearance of rendered audio data without modifying the underlying &lt;canvas&gt; element. By placing a semi-transparent element with a back" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="backdrop-filter-with-wavesurferjs-waveforms">Backdrop-Filter
+with Wavesurfer.js Waveforms</h1>
+<p>Applying CSS <code>backdrop-filter</code> to elements layered over
+Wavesurfer.js waveforms allows developers to dynamically alter the
+appearance of rendered audio data without modifying the underlying
+<code>&lt;canvas&gt;</code> element. By placing a semi-transparent
+element with a backdrop filter above the waveform, you can apply
+real-time graphical effects like blurs, color inversions, and contrast
+adjustments directly to the peaks and valleys beneath it.</p>
+<h3 id="how-backdrop-filter-interacts-with-wavesurferjs">How
+<code>backdrop-filter</code> Interacts with Wavesurfer.js</h3>
+<p>Wavesurfer.js draws audio visualizers using the HTML5 Canvas API. The
+<code>backdrop-filter</code> property applies visual effects to the area
+behind an element, sampling all rendered pixels—including canvas
+drawings—before drawing the overlay element itself.</p>
+<p>For any <code>backdrop-filter</code> to take effect, the overlay
+element must meet two fundamental criteria:</p>
+<ol type="1">
+<li>It must have a <code>z-index</code> higher than the Wavesurfer
+container or canvas element.</li>
+<li>Its <code>background-color</code> must have some degree of
+transparency (for example, <code>rgba(255, 255, 255, 0.2)</code> or
+<code>transparent</code>). If the background is fully opaque, the
+backdrop effect is obscured.</li>
+</ol>
+<h3 id="key-backdrop-filters-affecting-waveforms">Key Backdrop Filters
+Affecting Waveforms</h3>
+<h4 id="1-backdrop-filter-invert">1.
+<code>backdrop-filter: invert(...)</code></h4>
+<ul>
+<li><p><strong>Effect:</strong> Inverts the pixel colors of the
+underlying waveform.</p></li>
+<li><p><strong>Use Case:</strong> Commonly used for custom playheads,
+scrub bars, or region selectors. Inverting the waveform colors ensures
+that the audio data remains distinctly visible regardless of whether the
+waveform is rendered on a dark or light theme.</p></li>
+<li><p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.waveform-playhead</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">position</span><span class="ch">:</span> <span class="dv">absolute</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">width</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">height</span><span class="ch">:</span> <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">background-color</span><span class="ch">:</span> <span class="dv">transparent</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">backdrop-filter</span><span class="ch">:</span> <span class="fu">invert(</span><span class="dv">100</span><span class="dt">%</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">pointer-events</span><span class="ch">:</span> <span class="dv">none</span><span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></li>
+</ul>
+<h4 id="2-backdrop-filter-blur">2.
+<code>backdrop-filter: blur(...)</code></h4>
+<ul>
+<li><p><strong>Effect:</strong> Diffuses and softens the sharp peak
+edges of the waveform canvas.</p></li>
+<li><p><strong>Use Case:</strong> Essential for modern "glassmorphism"
+user interfaces. When audio controls, modals, or contextual menus hover
+over the waveform, adding a blur effect separates the UI layer from the
+dense visual detail of the audio track.</p></li>
+<li><p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.waveform-floating-controls</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">position</span><span class="ch">:</span> <span class="dv">absolute</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">background</span><span class="ch">:</span> <span class="fu">rgba(</span><span class="dv">15</span><span class="op">,</span> <span class="dv">23</span><span class="op">,</span> <span class="dv">42</span><span class="op">,</span> <span class="dv">0.65</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">backdrop-filter</span><span class="ch">:</span> <span class="fu">blur(</span><span class="dv">8</span><span class="dt">px</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">border-radius</span><span class="ch">:</span> <span class="dv">8</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></li>
+</ul>
+<h4 id="3-backdrop-filter-brightness-and-contrast">3.
+<code>backdrop-filter: brightness(...)</code> and
+<code>contrast(...)</code></h4>
+<ul>
+<li><p><strong>Effect:</strong> Increases or reduces the luminance and
+dynamic range of the audio visualizer.</p></li>
+<li><p><strong>Use Case:</strong> Useful for region annotations or loop
+markers. Lowering the brightness or contrast over non-selected regions
+dims unselected audio data, directing the user's focus to the active
+segment without re-rendering the canvas.</p></li>
+<li><p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.unselected-region-mask</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">position</span><span class="ch">:</span> <span class="dv">absolute</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">background</span><span class="ch">:</span> <span class="fu">rgba(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0.15</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">backdrop-filter</span><span class="ch">:</span> <span class="fu">brightness(</span><span class="dv">60</span><span class="dt">%</span><span class="fu">)</span> <span class="fu">contrast(</span><span class="dv">80</span><span class="dt">%</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></li>
+</ul>
+<h4 id="4-backdrop-filter-hue-rotate-and-saturate">4.
+<code>backdrop-filter: hue-rotate(...)</code> and
+<code>saturate(...)</code></h4>
+<ul>
+<li><strong>Effect:</strong> Shifts the color spectrum or alters the
+color intensity of the waveform.</li>
+<li><strong>Use Case:</strong> Allows dynamic state indicators—such as
+cue markers or active loop areas—to tint the waveform beneath them
+without altering the original color configuration passed to the
+Wavesurfer initialization options.</li>
+</ul>
+<h3 id="common-implementation-pitfalls">Common Implementation
+Pitfalls</h3>
+<ul>
+<li><strong>Hardware Acceleration:</strong> Canvas elements and backdrop
+filters are GPU-intensive. If audio playback stutters, assign
+<code>will-change: backdrop-filter, transform;</code> to the overlay
+element to force GPU layer promotion.</li>
+<li><strong>Clipping and Overflow:</strong> Wavesurfer containers often
+use <code>overflow: hidden</code>. Ensure that layered overlay elements
+remain within the same stacking context to avoid unintended clipping of
+the backdrop boundary.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/backdrop-filter-with-wavesurfer-js-waveforms';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

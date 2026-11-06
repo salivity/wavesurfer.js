@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Wavesurfer.js Canvas Bounding Rect and Dimensions - wavesurfer.js</title>
+    <meta name="description" content="This article explains how to retrieve the exact dimensions and bounding rectangle of the waveform rendering area in Wavesurfer.js. While the library does not provide a custom standalone method solely called to calculate bounding boxes, it exposes the rend">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/get-wavesurfer-js-canvas-bounding-rect-and-dimensions">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Get Wavesurfer.js Canvas Bounding Rect and Dimensions - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/get-wavesurfer-js-canvas-bounding-rect-and-dimensions" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to retrieve the exact dimensions and bounding rectangle of the waveform rendering area in Wavesurfer.js. While the library does not provide a custom standalone method solely called to calculate bounding boxes, it exposes the rend" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="get-wavesurferjs-canvas-bounding-rect-and-dimensions">Get
+Wavesurfer.js Canvas Bounding Rect and Dimensions</h1>
+<p>This article explains how to retrieve the exact dimensions and
+bounding rectangle of the waveform rendering area in Wavesurfer.js.
+While the library does not provide a custom standalone method solely
+called to calculate bounding boxes, it exposes the rendering container
+through API methods, allowing you to use standard DOM methods like
+<code>getBoundingClientRect()</code> alongside built-in dimension
+properties. Below is a concise guide on accessing these dimensions in
+both modern (v7+) and legacy versions of Wavesurfer.js.</p>
+<h3 id="modern-wavesurferjs-version-7">Modern Wavesurfer.js (Version
+7+)</h3>
+<p>In Wavesurfer.js v7 and later, the primary method used to obtain the
+waveform container is <code>wavesurfer.getWrapper()</code>. You can call
+the standard Web API method <code>getBoundingClientRect()</code>
+directly on this wrapper element.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize Wavesurfer</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;violet&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;purple&#39;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Wait for the waveform to be ready</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Get the wrapper element</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> wrapper <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getWrapper</span>()<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Retrieve the bounding rectangle</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rect <span class="op">=</span> wrapper<span class="op">.</span><span class="fu">getBoundingClientRect</span>()<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Bounding Rect:&#39;</span><span class="op">,</span> rect)<span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Width:&#39;</span><span class="op">,</span> rect<span class="op">.</span><span class="at">width</span>)<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Height:&#39;</span><span class="op">,</span> rect<span class="op">.</span><span class="at">height</span>)<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Top:&#39;</span><span class="op">,</span> rect<span class="op">.</span><span class="at">top</span>)<span class="op">;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Left:&#39;</span><span class="op">,</span> rect<span class="op">.</span><span class="at">left</span>)<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="accessing-the-canvas-directly">Accessing the Canvas
+Directly</h4>
+<p>If you specifically need the <code>&lt;canvas&gt;</code> element's
+dimensions rather than the wrapper container, query the canvas directly
+from the wrapper:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> canvas <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getWrapper</span>()<span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;canvas&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (canvas) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> canvasRect <span class="op">=</span> canvas<span class="op">.</span><span class="fu">getBoundingClientRect</span>()<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Canvas Dimensions:&#39;</span><span class="op">,</span> canvasRect<span class="op">.</span><span class="at">width</span><span class="op">,</span> canvasRect<span class="op">.</span><span class="at">height</span>)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="legacy-wavesurferjs-version-6-and-earlier">Legacy Wavesurfer.js
+(Version 6 and Earlier)</h3>
+<p>In Wavesurfer.js v6 and older versions, rendering was handled by the
+<code>drawer</code> module. You access the wrapper and dimensions
+through the drawer object:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> <span class="kw">function</span> () {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Get bounding rect via the drawer wrapper</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rect <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">drawer</span><span class="op">.</span><span class="at">wrapper</span><span class="op">.</span><span class="fu">getBoundingClientRect</span>()<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Get width directly from drawer properties</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> width <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">drawer</span><span class="op">.</span><span class="fu">getWidth</span>()<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> height <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">drawer</span><span class="op">.</span><span class="fu">getHeight</span>()<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Bounding Rect:&#39;</span><span class="op">,</span> rect)<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Dimensions:&#39;</span><span class="op">,</span> width<span class="op">,</span> height)<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="summary-of-properties-returned-by-getboundingclientrect">Summary
+of Properties Returned by <code>getBoundingClientRect()</code></h3>
+<p>Calling <code>getBoundingClientRect()</code> on the wrapper element
+returns a <code>DOMRect</code> object containing the following read-only
+properties:</p>
+<ul>
+<li><strong><code>width</code></strong>: The horizontal width of the
+element.</li>
+<li><strong><code>height</code></strong>: The vertical height of the
+element.</li>
+<li><strong><code>top</code></strong>: The distance from the top of the
+viewport to the top edge.</li>
+<li><strong><code>bottom</code></strong>: The distance from the top of
+the viewport to the bottom edge.</li>
+<li><strong><code>left</code></strong>: The distance from the left edge
+of the viewport to the left edge.</li>
+<li><strong><code>right</code></strong>: The distance from the left edge
+of the viewport to the right edge.</li>
+<li><strong><code>x</code></strong>: Equivalent to
+<code>left</code>.</li>
+<li><strong><code>y</code></strong>: Equivalent to
+<code>top</code>.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/get-wavesurfer-js-canvas-bounding-rect-and-dimensions';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Audio Decoding Quirks in Safari - wavesurfer.js</title>
+    <meta name="description" content="Rendering interactive audio waveforms with Wavesurfer.js relies heavily on the browser’s Web Audio API, an area where Apple’s Safari (WebKit) engine behaves differently from Chromium and Gecko. Safari introduces unique challenges—including aggressive Audi">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-audio-decoding-quirks-in-safari">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Audio Decoding Quirks in Safari - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-audio-decoding-quirks-in-safari" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Rendering interactive audio waveforms with Wavesurfer.js relies heavily on the browser’s Web Audio API, an area where Apple’s Safari (WebKit) engine behaves differently from Chromium and Gecko. Safari introduces unique challenges—including aggressive Audi" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-audio-decoding-quirks-in-safari">Wavesurfer.js
+Audio Decoding Quirks in Safari</h1>
+<p>Rendering interactive audio waveforms with Wavesurfer.js relies
+heavily on the browser’s Web Audio API, an area where Apple’s Safari
+(WebKit) engine behaves differently from Chromium and Gecko. Safari
+introduces unique challenges—including aggressive
+<code>AudioContext</code> suspension, strict memory ceilings on iOS,
+codec incompatibilities, and distinct behavior when executing
+<code>decodeAudioData</code>—that frequently lead to empty waveforms,
+playback failures, or silent errors. Understanding these quirks is
+essential for ensuring consistent, cross-browser audio
+visualization.</p>
+<h3 id="audiocontext-suspension-and-user-gestures">AudioContext
+Suspension and User Gestures</h3>
+<p>Safari enforces a strict autoplay policy that suspends the
+<code>AudioContext</code> until a direct user gesture (such as a
+<code>click</code> or <code>touchend</code> event) is registered.</p>
+<p>When Wavesurfer.js initializes using the default WebAudio backend, it
+immediately attempts to create and use an <code>AudioContext</code>. In
+Safari, this context is instantiated in a <code>suspended</code> state.
+While decoding audio via <code>decodeAudioData</code> can technically
+occur while the context is suspended, attempting to query time domains,
+play audio, or connect certain audio nodes prematurely will fail
+silently.</p>
+<p>To prevent initialization stalls, you must ensure the context is
+explicitly resumed on user interaction:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;click&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">ac</span><span class="op">.</span><span class="at">state</span> <span class="op">===</span> <span class="st">&#39;suspended&#39;</span>) {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">ac</span><span class="op">.</span><span class="fu">resume</span>()<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}<span class="op">,</span> { <span class="dt">once</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div>
+<h3 id="arraybuffer-detachment-in-decodeaudiodata">ArrayBuffer
+Detachment in decodeAudioData</h3>
+<p>A prominent quirk in WebKit involves how
+<code>AudioContext.decodeAudioData</code> handles memory. When an
+<code>ArrayBuffer</code> is passed to <code>decodeAudioData</code>,
+WebKit "neuters" or detaches the buffer to transfer its memory directly
+to the audio decoding thread.</p>
+<p>If an application attempts to reuse the original
+<code>ArrayBuffer</code>—for example, to decode the audio a second time
+or inspect its raw headers—Safari throws a
+<code>TypeError: Cannot perform Construct on a neutered ArrayBuffer</code>.
+When working with custom loaders or pre-fetched audio data in
+Wavesurfer.js, you must pass a clone of the buffer using
+<code>.slice(0)</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> bufferCopy <span class="op">=</span> originalBuffer<span class="op">.</span><span class="fu">slice</span>(<span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(audioBlob<span class="op">,</span> bufferCopy)<span class="op">;</span></span></code></pre></div>
+<h3 id="codec-and-container-incompatibilities">Codec and Container
+Incompatibilities</h3>
+<p>While Chrome and Firefox natively decode almost any WebM, Ogg, or
+Opus configuration, Safari’s support for these formats is inconsistent
+across versions:</p>
+<ul>
+<li><strong>WebM / Opus:</strong> Older versions of Safari and iOS
+Safari lack full support for Opus inside WebM containers. Passing a WebM
+file to <code>decodeAudioData</code> in Safari often rejects the promise
+with a generic <code>EncodingError</code>.</li>
+<li><strong>Variable Bitrate (VBR) MP3s:</strong> WebKit occasionally
+struggles to accurately calculate duration for certain VBR MP3 files
+during decoding. This discrepancy results in waveform peaks that drift
+out of sync with actual playback.</li>
+<li><strong>Non-Standard Sample Rates:</strong> Safari's underlying
+CoreAudio framework is sensitive to unusual sample rates (such as 11025
+Hz or 96000 Hz). In some cases, <code>decodeAudioData</code> fails
+completely instead of resampling the stream automatically.</li>
+</ul>
+<p>Standardizing audio assets on CBR (Constant Bitrate) MP3 or standard
+AAC/M4A files prevents the majority of WebKit decoding rejections.</p>
+<h3 id="ios-memory-ceilings-and-webprocess-terminations">iOS Memory
+Ceilings and WebProcess Terminations</h3>
+<p>On iOS Safari, each browser tab is subject to strict RAM limits
+imposed by the operating system. When Wavesurfer.js decodes a compressed
+audio file (like an MP3), <code>decodeAudioData</code> expands it into
+uncompressed 32-bit float PCM data in memory.</p>
+<p>A 20 MB MP3 file can easily decompress into over 200 MB of raw PCM
+audio. If an application attempts to decode multiple tracks
+simultaneously or loads a single long audio file, iOS Safari will
+abruptly terminate the <code>WebProcess</code>, causing the webpage to
+reload automatically.</p>
+<p>To bypass this limit on mobile devices, use pre-rendered waveform
+peaks instead of decoding the entire audio file in the browser:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">backend</span><span class="op">:</span> <span class="st">&#39;MediaElement&#39;</span><span class="op">,</span> <span class="co">// Relies on standard HTML5 audio streaming</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">peaks</span><span class="op">:</span> [[<span class="fl">0.1</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.8</span><span class="op">,</span> <span class="op">...</span>]<span class="op">,</span> [<span class="op">-</span><span class="fl">0.1</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.5</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.8</span><span class="op">,</span> <span class="op">...</span>]]<span class="op">,</span> <span class="co">// Pre-calculated server-side</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Using the <code>MediaElement</code> backend combined with
+pre-computed peak data eliminates the need to invoke
+<code>decodeAudioData</code> entirely, bypassing Safari's memory limits
+and decoding inconsistencies.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-audio-decoding-quirks-in-safari';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Custom Reverb to Wavesurfer.js with ConvolverNode - wavesurfer.js</title>
+    <meta name="description" content="Integrating custom impulse response (IR) reverb into Wavesurfer.js requires connecting the Web Audio API&#39;s ConvolverNode directly into the audio rendering pipeline. This article outlines how to configure an AudioContext, load and decode a custom impulse r">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/add-custom-reverb-to-wavesurfer-js-with-convolver-node">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Add Custom Reverb to Wavesurfer.js with ConvolverNode - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/add-custom-reverb-to-wavesurfer-js-with-convolver-node" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Integrating custom impulse response (IR) reverb into Wavesurfer.js requires connecting the Web Audio API&#39;s ConvolverNode directly into the audio rendering pipeline. This article outlines how to configure an AudioContext, load and decode a custom impulse r" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="add-custom-reverb-to-wavesurferjs-with-convolvernode">Add Custom
+Reverb to Wavesurfer.js with ConvolverNode</h1>
+<p>Integrating custom impulse response (IR) reverb into Wavesurfer.js
+requires connecting the Web Audio API's <code>ConvolverNode</code>
+directly into the audio rendering pipeline. This article outlines how to
+configure an <code>AudioContext</code>, load and decode a custom impulse
+response audio file, establish a parallel wet/dry routing graph, and
+bridge the entire setup to a Wavesurfer.js instance for real-time
+acoustic spatialization.</p>
+<h2 id="the-convolvernode-routing-architecture">The ConvolverNode
+Routing Architecture</h2>
+<p>A standard reverb implementation requires splitting the dry audio
+signal from Wavesurfer.js into two parallel paths: one that remains
+unaffected (dry) and one processed through the convolution engine
+(wet).</p>
+<p>The audio graph consists of:</p>
+<ol type="1">
+<li><strong>Source Node:</strong> The output audio generated or played
+by Wavesurfer.js.</li>
+<li><strong>ConvolverNode:</strong> Processes the incoming signal using
+an impulse response <code>AudioBuffer</code>.</li>
+<li><strong>GainNodes (Wet &amp; Dry):</strong> Control the balance
+between the direct signal and the reverberated reflection.</li>
+<li><strong>Destination:</strong> The final hardware audio output
+(<code>audioContext.destination</code>).</li>
+</ol>
+<pre><code>[Wavesurfer Source] ---&gt; [Dry GainNode] --------------&gt; [AudioContext Destination]
+                   |                                       ^
+                   ---&gt; [ConvolverNode] ---&gt; [Wet GainNode]-|</code></pre>
+<h2 id="step-1-loading-and-decoding-the-impulse-response">Step 1:
+Loading and Decoding the Impulse Response</h2>
+<p>The <code>ConvolverNode</code> requires an <code>AudioBuffer</code>
+containing the acoustic profile of a space. Fetch the impulse response
+file (typically a <code>.wav</code> file) as an <code>ArrayBuffer</code>
+and decode it using the active <code>AudioContext</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">loadImpulseResponse</span>(audioContext<span class="op">,</span> irUrl) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(irUrl)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> arrayBuffer <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">arrayBuffer</span>()<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="cf">await</span> audioContext<span class="op">.</span><span class="fu">decodeAudioData</span>(arrayBuffer)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="step-2-configuring-the-audio-graph">Step 2: Configuring the
+Audio Graph</h2>
+<p>Create the processing nodes and assemble the parallel wet/dry mix
+architecture.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize a shared AudioContext</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioContext <span class="op">=</span> <span class="kw">new</span> (<span class="bu">window</span><span class="op">.</span><span class="at">AudioContext</span> <span class="op">||</span> <span class="bu">window</span><span class="op">.</span><span class="at">webkitAudioContext</span>)()<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Create nodes</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> convolver <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createConvolver</span>()<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> dryGain <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createGain</span>()<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wetGain <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createGain</span>()<span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Set initial balance (e.g., 70% dry, 30% wet)</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>dryGain<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="fl">0.7</span><span class="op">,</span> audioContext<span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>wetGain<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="fl">0.3</span><span class="op">,</span> audioContext<span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Route wet path</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>convolver<span class="op">.</span><span class="fu">connect</span>(wetGain)<span class="op">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>wetGain<span class="op">.</span><span class="fu">connect</span>(audioContext<span class="op">.</span><span class="at">destination</span>)<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Route dry path</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>dryGain<span class="op">.</span><span class="fu">connect</span>(audioContext<span class="op">.</span><span class="at">destination</span>)<span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Load the IR buffer into the convolver</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="fu">loadImpulseResponse</span>(audioContext<span class="op">,</span> <span class="st">&#39;/path/to/impulse-response.wav&#39;</span>)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">then</span>((buffer) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    convolver<span class="op">.</span><span class="at">buffer</span> <span class="op">=</span> buffer<span class="op">;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span></code></pre></div>
+<h2 id="step-3-connecting-to-wavesurferjs">Step 3: Connecting to
+Wavesurfer.js</h2>
+<p>Wavesurfer.js can be integrated by binding it to the custom
+<code>AudioContext</code> and routing its media element output through
+the created audio graph.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize Wavesurfer with the shared AudioContext</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F4A85&#39;</span><span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#383351&#39;</span><span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;/path/to/track.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">audioContext</span><span class="op">:</span> audioContext<span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Once ready, pipe the media element source into the nodes</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> mediaElement <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getMediaElement</span>()<span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> source <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createMediaElementSource</span>(mediaElement)<span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Split audio source into dry and wet paths</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  source<span class="op">.</span><span class="fu">connect</span>(dryGain)<span class="op">;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  source<span class="op">.</span><span class="fu">connect</span>(convolver)<span class="op">;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="controlling-reverb-parameters">Controlling Reverb
+Parameters</h2>
+<p>Dynamic adjustments during playback can be managed by updating the
+gain values:</p>
+<ul>
+<li><strong>Adjusting Reverb Depth:</strong> Change
+<code>wetGain.gain.value</code> between <code>0</code> (no reverb) and
+<code>1</code> (full reverb).</li>
+<li><strong>Adjusting Direct Volume:</strong> Change
+<code>dryGain.gain.value</code> between <code>0</code> and
+<code>1</code>.</li>
+<li><strong>Switching Spaces:</strong> Replace the impulse response on
+the fly by decoding a new audio file and assigning the new
+<code>AudioBuffer</code> directly to <code>convolver.buffer</code>.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/add-custom-reverb-to-wavesurfer-js-with-convolver-node';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

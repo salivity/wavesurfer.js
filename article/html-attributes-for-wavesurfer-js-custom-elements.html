@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Attributes for Wavesurfer.js Custom Elements - wavesurfer.js</title>
+    <meta name="description" content="Wrapping Wavesurfer.js inside a custom HTML element (Web Component) allows developers to encapsulate audio playback logic and bind player state directly to the DOM. By mapping Wavesurfer&#39;s internal events to standard or custom HTML attributes, the compone">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/html-attributes-for-wavesurfer-js-custom-elements">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="HTML Attributes for Wavesurfer.js Custom Elements - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/html-attributes-for-wavesurfer-js-custom-elements" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wrapping Wavesurfer.js inside a custom HTML element (Web Component) allows developers to encapsulate audio playback logic and bind player state directly to the DOM. By mapping Wavesurfer&#39;s internal events to standard or custom HTML attributes, the compone" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="html-attributes-for-wavesurferjs-custom-elements">HTML
+Attributes for Wavesurfer.js Custom Elements</h1>
+<p>Wrapping Wavesurfer.js inside a custom HTML element (Web Component)
+allows developers to encapsulate audio playback logic and bind player
+state directly to the DOM. By mapping Wavesurfer's internal events to
+standard or custom HTML attributes, the component provides a declarative
+interface that can be easily styled using CSS selectors like
+<code>:host([playing])</code> or queried using standard JavaScript DOM
+methods. This article covers the essential HTML attributes used to
+reflect the playback, loading, and configuration states of a
+Wavesurfer.js custom element wrapper.</p>
+<h3 id="playback-state-attributes">Playback State Attributes</h3>
+<p>Playback states inform both the DOM and CSS whether audio is
+currently active. These are typically implemented as boolean
+attributes:</p>
+<ul>
+<li><strong><code>playing</code></strong>: Present when the audio is
+actively playing. It is typically added when Wavesurfer fires the
+<code>play</code> event and removed on <code>pause</code> or
+<code>finish</code>.</li>
+<li><strong><code>paused</code></strong>: Often toggled inversely to
+<code>playing</code>. While omitting <code>playing</code> implies a
+paused state, explicitly reflecting <code>paused</code> provides an
+intuitive selector for styling pause buttons or dimmed
+visualizations.</li>
+<li><strong><code>ended</code></strong>: Added when the playback reaches
+the end of the track (via the <code>finish</code> event). It is removed
+if playback restarts or if the user seeks to an earlier time.</li>
+</ul>
+<h3 id="lifecycle-and-loading-attributes">Lifecycle and Loading
+Attributes</h3>
+<p>Wavesurfer.js must fetch, decode, and render the audio waveform
+before full interaction is possible. Lifecycle attributes signal these
+background processes:</p>
+<ul>
+<li><strong><code>loading</code></strong>: Added as soon as a source
+file begins downloading and decoding (often listening to
+<code>load</code> or <code>loading</code> events). It is removed once
+the audio is ready for interaction.</li>
+<li><strong><code>ready</code></strong>: Added when Wavesurfer fires the
+<code>ready</code> event, indicating that the audio buffer has been
+decoded and the waveform is fully drawn. This is ideal for enabling
+transport controls.</li>
+<li><strong><code>error</code></strong>: Added if the audio source fails
+to fetch or decode via the <code>error</code> event. It can be paired
+with an attribute like <code>error-message</code> to expose
+human-readable debugging details to the DOM.</li>
+</ul>
+<h3 id="audio-configuration-attributes">Audio Configuration
+Attributes</h3>
+<p>Certain attributes reflect the runtime settings applied to the audio
+pipeline:</p>
+<ul>
+<li><strong><code>muted</code></strong>: A boolean attribute that
+reflects whether the audio output is currently muted, mapped to the
+<code>ws.setMuted()</code> method or volume change events.</li>
+<li><strong><code>volume</code></strong>: A numeric string attribute
+(e.g., <code>volume="0.8"</code>) reflecting the current volume level
+between <code>0</code> and <code>1</code>.</li>
+<li><strong><code>loop</code></strong>: A boolean attribute indicating
+whether the audio will automatically replay once it reaches the
+end.</li>
+<li><strong><code>src</code></strong>: A standard attribute defining the
+audio track URL. Changing this attribute via
+<code>attributeChangedCallback</code> typically triggers Wavesurfer's
+<code>load()</code> method to swap the active track.</li>
+</ul>
+<h3 id="time-tracking-attributes">Time Tracking Attributes</h3>
+<p>While high-frequency updates can cause DOM thrashing if not managed
+carefully, custom elements often reflect high-level time data:</p>
+<ul>
+<li><strong><code>duration</code></strong>: A numeric string
+representing the total track length in seconds, populated once the
+<code>decode</code> or <code>ready</code> event resolves.</li>
+<li><strong><code>current-time</code></strong>: Frequently throttled
+(e.g., updating once per second via the <code>timeupdate</code> event)
+to reflect current playback progress in seconds for CSS counters or
+external bindings.</li>
+</ul>
+<h3 id="implementation-pattern">Implementation Pattern</h3>
+<p>To keep attributes synchronized without performance bottlenecks,
+custom element wrappers use standard element methods inside Wavesurfer
+event listeners:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Synchronizing playing state</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;play&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> <span class="kw">this</span><span class="op">.</span><span class="fu">toggleAttribute</span>(<span class="st">&#39;playing&#39;</span><span class="op">,</span> <span class="kw">true</span>))<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;pause&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> <span class="kw">this</span><span class="op">.</span><span class="fu">removeAttribute</span>(<span class="st">&#39;playing&#39;</span>))<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Synchronizing readiness</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">this</span><span class="op">.</span><span class="fu">removeAttribute</span>(<span class="st">&#39;loading&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">this</span><span class="op">.</span><span class="fu">toggleAttribute</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Using <code>toggleAttribute()</code> within event callbacks ensures
+the host element accurately mirrors the internal state of Wavesurfer.js,
+simplifying integration across modern web applications.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/html-attributes-for-wavesurfer-js-custom-elements';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

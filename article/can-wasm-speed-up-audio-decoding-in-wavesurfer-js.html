@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Can WASM Speed Up Audio Decoding in Wavesurfer.js? - wavesurfer.js</title>
+    <meta name="description" content="Compiling Rust or C++ to WebAssembly (WASM) can significantly improve audio processing workflows in Wavesurfer.js, but whether it speeds up raw decoding depends entirely on your implementation. While modern browsers already use highly optimized C++ decode">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/can-wasm-speed-up-audio-decoding-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Can WASM Speed Up Audio Decoding in Wavesurfer.js? - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/can-wasm-speed-up-audio-decoding-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Compiling Rust or C++ to WebAssembly (WASM) can significantly improve audio processing workflows in Wavesurfer.js, but whether it speeds up raw decoding depends entirely on your implementation. While modern browsers already use highly optimized C++ decode" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="can-wasm-speed-up-audio-decoding-in-wavesurferjs">Can WASM Speed
+Up Audio Decoding in Wavesurfer.js?</h1>
+<p>Compiling Rust or C++ to WebAssembly (WASM) can significantly improve
+audio processing workflows in Wavesurfer.js, but whether it speeds up
+raw decoding depends entirely on your implementation. While modern
+browsers already use highly optimized C++ decoders for native formats,
+WASM unlocks major performance gains by enabling streaming decoders,
+progressive waveform rendering, and memory-efficient peak extraction for
+large audio files.</p>
+<p>By default, Wavesurfer.js relies on the browser's native
+<code>AudioContext.decodeAudioData()</code> method. This native method
+runs on an internal thread and is written in optimized, low-level C++
+within the browser engine itself (such as Chromium or WebKit). Because
+of this, a custom Rust or C++ library compiled to WASM decoding a
+standard MP3, WAV, or AAC file will rarely beat the raw execution speed
+of native <code>decodeAudioData()</code>, and it may introduce slight
+overhead due to memory copying between the WASM linear memory and
+JavaScript.</p>
+<p>However, native decoding introduces severe real-world bottlenecks
+that WASM easily solves:</p>
+<ol type="1">
+<li><p><strong>Progressive and Stream Decoding</strong> Native
+<code>decodeAudioData()</code> requires the entire audio file to be
+downloaded into an <code>ArrayBuffer</code> before decoding can even
+begin. For long podcasts, DJ sets, or multitrack recordings, users must
+wait seconds or even minutes before seeing a waveform. A WASM decoder
+written in Rust (using crates like <code>symphonia</code>) or C++ (using
+<code>dr_libs</code> or <code>minimp3</code>) can decode chunks
+incrementally as they stream over the network, allowing Wavesurfer.js to
+draw the waveform in real time.</p></li>
+<li><p><strong>Memory Efficiency via Peak-Only Extraction</strong> When
+visualizing audio, Wavesurfer.js only needs the min/max amplitude peaks,
+not the gigabytes of uncompressed 32-bit floating-point PCM audio data
+that <code>decodeAudioData()</code> creates. A custom WASM decoder can
+parse the audio stream, calculate the waveform peaks directly in WASM
+memory, and discard the heavy PCM data. This prevents browser tab
+crashes caused by out-of-memory errors on large files.</p></li>
+<li><p><strong>True Background Web Worker Execution</strong>
+Historically, <code>decodeAudioData()</code> behavior inside Web Workers
+varies across browsers, occasionally blocking the main thread or causing
+memory leaks. A self-contained WASM binary can run reliably inside a
+standard Web Worker without touching DOM or Web Audio contexts, ensuring
+the user interface remains completely fluid during processing.</p></li>
+<li><p><strong>Support for Non-Native Formats</strong> Web browsers
+cannot natively decode every audio format or container. If your
+application handles formats like specialized FLAC encodings, WavPack, or
+obscure game audio files, native decoding fails entirely. In this
+scenario, WASM provides an enormous speedup compared to pure JavaScript
+fallbacks.</p></li>
+</ol>
+<p>If your application only plays short, standard audio clips (under two
+to three minutes), the default Web Audio decoding in Wavesurfer.js
+remains the fastest and simplest option. But if your application deals
+with large files, requires fast visual feedback, or suffers from high
+memory consumption, compiling Rust or C++ to WASM is the most effective
+way to eliminate UI freezing and accelerate waveform generation.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/can-wasm-speed-up-audio-decoding-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

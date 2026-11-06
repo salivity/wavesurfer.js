@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimize Wavesurfer.js Canvas Memory for Thumbnails - wavesurfer.js</title>
+    <meta name="description" content="Rendering dozens of audio waveform thumbnails using Wavesurfer.js can quickly cause severe browser memory bloat and performance degradation due to HTML5 canvas memory allocation. Because a canvas element allocates memory based on raw pixel dimensions ($wi">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/optimize-wavesurfer-js-canvas-memory-for-thumbnails">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Optimize Wavesurfer.js Canvas Memory for Thumbnails - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/optimize-wavesurfer-js-canvas-memory-for-thumbnails" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Rendering dozens of audio waveform thumbnails using Wavesurfer.js can quickly cause severe browser memory bloat and performance degradation due to HTML5 canvas memory allocation. Because a canvas element allocates memory based on raw pixel dimensions ($wi" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="optimize-wavesurferjs-canvas-memory-for-thumbnails">Optimize
+Wavesurfer.js Canvas Memory for Thumbnails</h1>
+<p>Rendering dozens of audio waveform thumbnails using Wavesurfer.js can
+quickly cause severe browser memory bloat and performance degradation
+due to HTML5 canvas memory allocation. Because a canvas element
+allocates memory based on raw pixel dimensions (<span
+class="math inline">\(width \times height \times 4\)</span> bytes)
+rather than visual CSS dimensions, unoptimized waveform thumbnails
+consume significant GPU and system RAM. You can dramatically reduce the
+memory footprint of thumbnail waveforms by strictly capping the device
+pixel ratio, downscaling the internal render dimensions, utilizing
+precomputed peak data, and offloading or destroying active canvas
+contexts.</p>
+<h3 id="1-force-a-low-pixelratio">1. Force a Low
+<code>pixelRatio</code></h3>
+<p>By default, Wavesurfer.js matches the display's
+<code>window.devicePixelRatio</code>, which scales the underlying canvas
+buffer by 2x, 3x, or more on high-DPI (Retina) screens. For an 80px by
+30px thumbnail, a 3x pixel ratio inflates the canvas buffer from 2,400
+pixels to 21,600 pixels, increasing raw memory usage ninefold.</p>
+<p>Set <code>pixelRatio: 1</code> in the Wavesurfer initialization
+options. For tiny preview thumbnails, high-DPI anti-aliasing provides
+negligible visual benefit while carrying a disproportionately heavy
+memory cost.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform-thumb&#39;</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">height</span><span class="op">:</span> <span class="dv">30</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">pixelRatio</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span> <span class="co">// Prevents Retina scaling bloat</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="2-strictly-constrain-the-height-and-disable-scroll">2. Strictly
+Constrain the Height and Disable Scroll</h3>
+<p>Do not rely on CSS scaling to shrink a large canvas down to thumbnail
+size; the browser allocates memory based on the element's internal
+drawing buffer, not its CSS display size.</p>
+<ul>
+<li><strong>Set minimal <code>height</code>:</strong> Keep the
+<code>height</code> parameter set to the exact pixel height needed
+(e.g., <code>20</code> to <code>40</code>).</li>
+<li><strong>Prevent dynamic horizontal expansion:</strong> Ensure
+<code>minPxPerSec</code> is omitted or set low enough that the waveform
+does not exceed the container width. Keep <code>fillParent: true</code>
+to prevent the canvas from overflowing.</li>
+</ul>
+<h3 id="3-supply-precomputed-peak-data">3. Supply Precomputed Peak
+Data</h3>
+<p>Decoding full audio files in the browser requires significant buffer
+memory before the canvas even begins drawing. To minimize runtime
+memory:</p>
+<ul>
+<li>Extract peak data on the server during audio ingestion.</li>
+<li>Pass the downsampled array directly into the <code>peaks</code>
+option of Wavesurfer.</li>
+<li>Keep the peak array length proportional to the thumbnail width
+(e.g., 50 to 100 data points instead of thousands).</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;audio.mp3&#39;</span><span class="op">,</span> precomputedPeaksArray)<span class="op">;</span></span></code></pre></div>
+<h3
+id="4-convert-rendered-thumbnails-to-static-images-and-destroy-instances">4.
+Convert Rendered Thumbnails to Static Images and Destroy Instances</h3>
+<p>Holding dozens of active HTML5 canvas elements in the DOM keeps
+dedicated GPU memory contexts alive. If the waveform thumbnails are
+purely static previews and do not require interactive playback:</p>
+<ol type="1">
+<li>Render the waveform with Wavesurfer.js.</li>
+<li>Export the canvas as a lightweight image using
+<code>wavesurfer.exportImage('image/webp', 0.8)</code>.</li>
+<li>Swap the canvas DOM node with an <code>&lt;img&gt;</code> element
+pointing to the generated Data URL or Blob.</li>
+<li>Call <code>wavesurfer.destroy()</code> immediately.</li>
+</ol>
+<p>This releases the canvas context and garbage-collects all internal
+audio nodes, leaving behind a virtually zero-overhead static image.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/optimize-wavesurfer-js-canvas-memory-for-thumbnails';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

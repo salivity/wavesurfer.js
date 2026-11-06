@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Neon and Metallic Gradient Styling - wavesurfer.js</title>
+    <meta name="description" content="This guide covers advanced visual styling techniques for Wavesurfer.js waveforms, specifically detailing how to create metallic finishes and vibrant neon glow effects. By manipulating HTML5 Canvas gradients, leveraging luminance contrast, and applying can">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-neon-and-metallic-gradient-styling">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Neon and Metallic Gradient Styling - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-neon-and-metallic-gradient-styling" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide covers advanced visual styling techniques for Wavesurfer.js waveforms, specifically detailing how to create metallic finishes and vibrant neon glow effects. By manipulating HTML5 Canvas gradients, leveraging luminance contrast, and applying can" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-neon-and-metallic-gradient-styling">Wavesurfer.js
+Neon and Metallic Gradient Styling</h1>
+<p>This guide covers advanced visual styling techniques for
+Wavesurfer.js waveforms, specifically detailing how to create metallic
+finishes and vibrant neon glow effects. By manipulating HTML5 Canvas
+gradients, leveraging luminance contrast, and applying canvas shadow
+properties or CSS drop-shadow filters, you can transform standard flat
+audio visualizations into striking, modern user interface elements.</p>
+<h2 id="understanding-the-canvas-gradient-engine">Understanding the
+Canvas Gradient Engine</h2>
+<p>Wavesurfer.js renders waveforms using the HTML5 Canvas 2D API. The
+properties <code>waveColor</code> and <code>progressColor</code> accept
+not only hex or RGB strings, but also native <code>CanvasGradient</code>
+objects.</p>
+<p>To create custom gradients, instantiate an offscreen canvas context
+or define a gradient function that matches the height of your waveform
+container:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> canvas <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">createElement</span>(<span class="st">&#39;canvas&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ctx <span class="op">=</span> canvas<span class="op">.</span><span class="fu">getContext</span>(<span class="st">&#39;2d&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> gradient <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">128</span>)<span class="op">;</span> <span class="co">// 128px waveform height</span></span></code></pre></div>
+<h2 id="creating-a-metallic-waveform">Creating a Metallic Waveform</h2>
+<p>Metallic surfaces rely on anisotropic reflections—drastic shifts
+between bright highlights and deep ambient shadows over a narrow
+vertical space. To emulate metals like chrome, brushed steel, or gold,
+use a vertical linear gradient featuring alternating color stops of
+high-contrast values.</p>
+<h3 id="chrome--polished-silver">Chrome / Polished Silver</h3>
+<p>For chrome, compress the light reflections near the upper-middle
+section of the wave to mimic light bouncing off a curved cylinder:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> chromeGradient <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">128</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>chromeGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.0</span><span class="op">,</span> <span class="st">&#39;#2c3e50&#39;</span>)<span class="op">;</span> <span class="co">// Deep shadow top</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>chromeGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.3</span><span class="op">,</span> <span class="st">&#39;#bdc3c7&#39;</span>)<span class="op">;</span> <span class="co">// Mid metallic</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>chromeGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.5</span><span class="op">,</span> <span class="st">&#39;#ffffff&#39;</span>)<span class="op">;</span> <span class="co">// Intense specular highlight</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>chromeGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.52</span><span class="op">,</span> <span class="st">&#39;#7f8c8d&#39;</span>)<span class="op">;</span> <span class="co">// Immediate dark reflection</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>chromeGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">1.0</span><span class="op">,</span> <span class="st">&#39;#1a252f&#39;</span>)<span class="op">;</span> <span class="co">// Deep base shadow</span></span></code></pre></div>
+<h3 id="gold-and-bronze">Gold and Bronze</h3>
+<p>For gold, map similar high-contrast reflection bands using warm
+hues:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> goldGradient <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">128</span>)<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>goldGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.0</span><span class="op">,</span> <span class="st">&#39;#4a3b00&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>goldGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.3</span><span class="op">,</span> <span class="st">&#39;#d4af37&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>goldGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.48</span><span class="op">,</span> <span class="st">&#39;#fff6bd&#39;</span>)<span class="op">;</span> <span class="co">// Core highlight</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>goldGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.52</span><span class="op">,</span> <span class="st">&#39;#aa7c11&#39;</span>)<span class="op">;</span> <span class="co">// Horizon reflection</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>goldGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">1.0</span><span class="op">,</span> <span class="st">&#39;#362200&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<h2 id="crafting-the-neon-glow-effect">Crafting the Neon Glow
+Effect</h2>
+<p>A realistic neon effect requires two visual components: a
+hyper-saturated, near-white core and a diffuse, colored ambient glow
+radiating outward.</p>
+<h3 id="1-the-core-gradient">1. The Core Gradient</h3>
+<p>Neon tubes are hottest and brightest at the center. Use a vertical
+gradient where the center of the waveform peaks close to
+<code>#ffffff</code> while the edges hold pure, saturated neon
+pigments:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> neonCyan <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">128</span>)<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>neonCyan<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.0</span><span class="op">,</span> <span class="st">&#39;#00ffff&#39;</span>)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>neonCyan<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.45</span><span class="op">,</span> <span class="st">&#39;#e0ffff&#39;</span>)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>neonCyan<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.5</span><span class="op">,</span> <span class="st">&#39;#ffffff&#39;</span>)<span class="op">;</span> <span class="co">// Blinding center</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>neonCyan<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.55</span><span class="op">,</span> <span class="st">&#39;#e0ffff&#39;</span>)<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>neonCyan<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">1.0</span><span class="op">,</span> <span class="st">&#39;#00bfff&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="2-the-radiating-aura-via-css-drop-shadows">2. The Radiating Aura
+via CSS Drop Shadows</h3>
+<p>Because standard canvas gradients do not bleed outside the drawn
+pixels, the glow must be applied either through canvas context shadow
+properties or CSS filters on the Wavesurfer canvas wrapper. The CSS
+approach is faster to compute and produces a smoother blur:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Target the generated canvas inside your Wavesurfer wrapper */</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span> canvas {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">filter</span><span class="ch">:</span> <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">2</span><span class="dt">px</span> <span class="cn">#00ffff</span><span class="fu">)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>          <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">8</span><span class="dt">px</span> <span class="cn">#00aaff</span><span class="fu">)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>          <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">16</span><span class="dt">px</span> <span class="cn">#0066ff</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Stacting multiple <code>drop-shadow</code> layers with expanding
+radii creates an exponential light falloff, identical to real
+luminescence.</p>
+<h2 id="integrating-with-wavesurferjs">Integrating with
+Wavesurfer.js</h2>
+<p>Pass your constructed gradient directly to the initialization
+object:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> chromeGradient<span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> neonCyan<span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">cursorColor</span><span class="op">:</span> <span class="st">&#39;#ffffff&#39;</span><span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barWidth</span><span class="op">:</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barGap</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barRadius</span><span class="op">:</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">height</span><span class="op">:</span> <span class="dv">128</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Using thin bars with a slight gap (<code>barWidth: 2</code>,
+<code>barGap: 1</code>) enhances the metallic reflection lines, whereas
+a continuous wave (<code>barWidth: null</code>) produces the best
+surface for the neon bloom effect.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-neon-and-metallic-gradient-styling';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

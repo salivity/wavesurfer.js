@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Data Attributes on Wavesurfer.js Regions - wavesurfer.js</title>
+    <meta name="description" content="This article explains how custom data attributes function on Wavesurfer.js region DOM elements, outlining built-in identifiers and demonstrating how any standard HTML5 data- attribute can be dynamically attached to store metadata, enhance CSS styling, and">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/custom-data-attributes-on-wavesurfer-js-regions">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Custom Data Attributes on Wavesurfer.js Regions - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/custom-data-attributes-on-wavesurfer-js-regions" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how custom data attributes function on Wavesurfer.js region DOM elements, outlining built-in identifiers and demonstrating how any standard HTML5 data- attribute can be dynamically attached to store metadata, enhance CSS styling, and" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="custom-data-attributes-on-wavesurferjs-regions">Custom Data
+Attributes on Wavesurfer.js Regions</h1>
+<p>This article explains how custom data attributes function on
+Wavesurfer.js region DOM elements, outlining built-in identifiers and
+demonstrating how any standard HTML5 <code>data-*</code> attribute can
+be dynamically attached to store metadata, enhance CSS styling, and
+streamline event handling.</p>
+<h2 id="default-region-data-attributes">Default Region Data
+Attributes</h2>
+<p>When using the Wavesurfer.js Regions plugin, the library
+automatically renders a container element (typically an
+<code>HTMLDivElement</code>) for each segment created on the
+waveform.</p>
+<p>By default, the plugin assigns:</p>
+<ul>
+<li><code>data-id</code>: Stores the unique string identifier assigned
+to or generated for that specific region. Wavesurfer.js relies on this
+attribute internally to track mouse interactions, dragging, and resizing
+operations.</li>
+</ul>
+<h2 id="attaching-custom-data--attributes">Attaching Custom
+<code>data-*</code> Attributes</h2>
+<p>Because region elements are standard DOM nodes exposed via the
+Wavesurfer API, you can attach any valid HTML5 custom data attribute to
+them. HTML5 specifications permit any attribute name starting with
+<code>data-</code> followed by lowercase characters, hyphens, or
+underscores (for example, <code>data-speaker-id</code>,
+<code>data-label</code>, or <code>data-category</code>).</p>
+<p>Custom attributes are not automatically mapped from the configuration
+object in <code>regions.addRegion()</code>. Instead, you attach them
+directly to the region's DOM element using the
+<code>region.element</code> reference.</p>
+<h3 id="using-the-region-created-event">Using the
+<code>region-created</code> Event</h3>
+<p>The cleanest method to bind custom attributes is listening to the
+region lifecycle events:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wsRegions <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">registerPlugin</span>(WaveSurfer<span class="op">.</span><span class="at">Regions</span><span class="op">.</span><span class="fu">create</span>())<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>wsRegions<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;region-created&#39;</span><span class="op">,</span> (region) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Using the dataset API</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  region<span class="op">.</span><span class="at">element</span><span class="op">.</span><span class="at">dataset</span><span class="op">.</span><span class="at">category</span> <span class="op">=</span> <span class="st">&#39;vocals&#39;</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  region<span class="op">.</span><span class="at">element</span><span class="op">.</span><span class="at">dataset</span><span class="op">.</span><span class="at">timestamp</span> <span class="op">=</span> <span class="bu">Date</span><span class="op">.</span><span class="fu">now</span>()<span class="op">.</span><span class="fu">toString</span>()<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Or using setAttribute</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  region<span class="op">.</span><span class="at">element</span><span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;data-speaker-id&#39;</span><span class="op">,</span> <span class="st">&#39;speaker_01&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  region<span class="op">.</span><span class="at">element</span><span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;data-verified&#39;</span><span class="op">,</span> <span class="st">&#39;true&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="attaching-attributes-during-direct-creation">Attaching
+Attributes During Direct Creation</h3>
+<p>When creating regions programmatically, you can immediately access
+the created instance and mutate its element:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> region <span class="op">=</span> wsRegions<span class="op">.</span><span class="fu">addRegion</span>({</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">start</span><span class="op">:</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">end</span><span class="op">:</span> <span class="dv">6</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">content</span><span class="op">:</span> <span class="st">&#39;Chorus&#39;</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">color</span><span class="op">:</span> <span class="st">&#39;rgba(0, 255, 0, 0.2)&#39;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>region<span class="op">.</span><span class="at">element</span><span class="op">.</span><span class="at">dataset</span><span class="op">.</span><span class="at">type</span> <span class="op">=</span> <span class="st">&#39;chorus&#39;</span><span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>region<span class="op">.</span><span class="at">element</span><span class="op">.</span><span class="at">dataset</span><span class="op">.</span><span class="at">trackIndex</span> <span class="op">=</span> <span class="st">&#39;3&#39;</span><span class="op">;</span></span></code></pre></div>
+<h2 id="practical-applications-for-custom-attributes">Practical
+Applications for Custom Attributes</h2>
+<ul>
+<li><strong>CSS Attribute Selectors:</strong> Target and style specific
+regions using CSS without managing extra utility classes (e.g.,
+<code>.wavesurfer-region[data-type="chorus"] { border-top: 2px solid green; }</code>).</li>
+<li><strong>Database Synchronisation:</strong> Store external database
+IDs directly on the element (<code>data-db-id="12345"</code>) to make
+CRUD updates straightforward during user edits.</li>
+<li><strong>Delegated Event Handling:</strong> Inspect target attributes
+when listening to global DOM events without maintaining parallel lookup
+arrays in memory.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/custom-data-attributes-on-wavesurfer-js-regions';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

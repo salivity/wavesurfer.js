@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customize Wavesurfer.js Waveform with Gradients - wavesurfer.js</title>
+    <meta name="description" content="Customizing the visual appearance of audio waveforms using gradients can elevate the design of any web-based audio player. Wavesurfer.js allows developers to replace standard solid colors with smooth, dynamic linear gradients for both unplayed and played">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/customize-wavesurfer-js-waveform-with-gradients">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Customize Wavesurfer.js Waveform with Gradients - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/customize-wavesurfer-js-waveform-with-gradients" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Customizing the visual appearance of audio waveforms using gradients can elevate the design of any web-based audio player. Wavesurfer.js allows developers to replace standard solid colors with smooth, dynamic linear gradients for both unplayed and played" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="customize-wavesurferjs-waveform-with-gradients">Customize
+Wavesurfer.js Waveform with Gradients</h1>
+<p>Customizing the visual appearance of audio waveforms using gradients
+can elevate the design of any web-based audio player. Wavesurfer.js
+allows developers to replace standard solid colors with smooth, dynamic
+linear gradients for both unplayed and played states. This guide walks
+through how to create HTML5 canvas gradients and apply them to the
+<code>waveColor</code> and <code>progressColor</code> options in
+Wavesurfer.js.</p>
+<h3 id="understanding-canvas-gradients-in-wavesurferjs">Understanding
+Canvas Gradients in Wavesurfer.js</h3>
+<p>Wavesurfer.js renders waveforms onto an HTML5
+<code>&lt;canvas&gt;</code> element. Because the <code>waveColor</code>
+and <code>progressColor</code> configuration properties accept native
+<code>CanvasGradient</code> objects in addition to CSS color strings,
+you can generate a custom gradient using the Canvas 2D API and pass it
+directly into your Wavesurfer configuration.</p>
+<h3 id="step-1-create-a-canvas-gradient">Step 1: Create a Canvas
+Gradient</h3>
+<p>Before initializing Wavesurfer, instantiate an offscreen canvas
+context to generate your gradient. Use
+<code>createLinearGradient()</code> to define the gradient's direction
+and dimensions.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create an offscreen canvas to generate the gradient</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> canvas <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">createElement</span>(<span class="st">&#39;canvas&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ctx <span class="op">=</span> canvas<span class="op">.</span><span class="fu">getContext</span>(<span class="st">&#39;2d&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Define a vertical gradient (x0, y0, x1, y1)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Match the y1 value to the height of your waveform container</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> waveGradient <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">128</span>)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>waveGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="dv">0</span><span class="op">,</span> <span class="st">&#39;#ff5e62&#39;</span>)<span class="op">;</span>   <span class="co">// Top color</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>waveGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="dv">1</span><span class="op">,</span> <span class="st">&#39;#ff9966&#39;</span>)<span class="op">;</span>   <span class="co">// Bottom color</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Define a separate gradient for the playback progress</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> progressGradient <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">128</span>)<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>progressGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="dv">0</span><span class="op">,</span> <span class="st">&#39;#6a11cb&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>progressGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="dv">1</span><span class="op">,</span> <span class="st">&#39;#2575fc&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="step-2-pass-gradients-to-wavesurfer-configuration">Step 2: Pass
+Gradients to Wavesurfer Configuration</h3>
+<p>Assign your newly created gradient objects directly to
+<code>waveColor</code> and <code>progressColor</code> when initializing
+the player.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> waveGradient<span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> progressGradient<span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">height</span><span class="op">:</span> <span class="dv">128</span><span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barWidth</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barGap</span><span class="op">:</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barRadius</span><span class="op">:</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;path/to/audio-file.mp3&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="controlling-gradient-direction">Controlling Gradient
+Direction</h3>
+<p>The direction of your gradient is determined by the coordinates
+passed to <code>ctx.createLinearGradient(x0, y0, x1, y1)</code>:</p>
+<ul>
+<li><p><strong>Vertical Gradient (Top to Bottom):</strong> Set
+<code>x0</code> and <code>x1</code> to <code>0</code>, and set
+<code>y1</code> to the height of the waveform.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> vertical <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> height)<span class="op">;</span></span></code></pre></div></li>
+<li><p><strong>Horizontal Gradient (Left to Right):</strong> Set
+<code>y0</code> and <code>y1</code> to <code>0</code>, and set
+<code>x1</code> to the approximate width of the container.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> horizontal <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> width<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span></code></pre></div></li>
+</ul>
+<h3 id="adding-multiple-color-stops">Adding Multiple Color Stops</h3>
+<p>You can add as many color stops as needed using
+<code>addColorStop(offset, color)</code>, where <code>offset</code> is a
+float between <code>0</code> (start) and <code>1</code> (end):</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> multiStopGradient <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">128</span>)<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>multiStopGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="dv">0</span><span class="op">,</span> <span class="st">&#39;#00c6ff&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>multiStopGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="fl">0.5</span><span class="op">,</span> <span class="st">&#39;#0072ff&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>multiStopGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="dv">1</span><span class="op">,</span> <span class="st">&#39;#000b76&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<p>Passing these customized canvas gradients gives you complete control
+over the depth, contrast, and theme integration of your audio
+visualization.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/customize-wavesurfer-js-waveform-with-gradients';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDN Edge Rules for Wavesurfer.js CORS Headers - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js renders visual audio waveforms in the browser using the Web Audio API or HTML5 Canvas, both of which require direct access to raw audio data. When audio assets are hosted on a separate domain or Content Delivery Network (CDN), browsers block">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/cdn-edge-rules-for-wavesurfer-js-cors-headers">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CDN Edge Rules for Wavesurfer.js CORS Headers - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/cdn-edge-rules-for-wavesurfer-js-cors-headers" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js renders visual audio waveforms in the browser using the Web Audio API or HTML5 Canvas, both of which require direct access to raw audio data. When audio assets are hosted on a separate domain or Content Delivery Network (CDN), browsers block" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="cdn-edge-rules-for-wavesurferjs-cors-headers">CDN Edge Rules for
+Wavesurfer.js CORS Headers</h1>
+<p>Wavesurfer.js renders visual audio waveforms in the browser using the
+Web Audio API or HTML5 Canvas, both of which require direct access to
+raw audio data. When audio assets are hosted on a separate domain or
+Content Delivery Network (CDN), browsers block the fetch request unless
+appropriate Cross-Origin Resource Sharing (CORS) headers are present.
+This article explains how CDN edge rules intercept requests to append
+<code>Access-Control-Allow-Origin</code> headers dynamically, resolving
+origin blocks without modifying the underlying storage layer.</p>
+<h2 id="why-wavesurferjs-requires-explicit-cors-headers">Why
+Wavesurfer.js Requires Explicit CORS Headers</h2>
+<p>To draw peaks, calculate durations, and decode audio buffers,
+Wavesurfer.js relies on <code>fetch</code> or
+<code>XMLHttpRequest</code> along with
+<code>AudioContext.decodeAudioData()</code>. Unlike a standard
+<code>&lt;audio&gt;</code> tag that simply plays media, extracting raw
+audio byte data is subject to the browser's Same-Origin Policy.</p>
+<p>If the audio file resides on an Amazon S3 bucket, Google Cloud
+Storage, or a third-party CDN domain that does not return proper CORS
+headers, the browser will throw an error such as:</p>
+<pre class="text"><code>Access to fetch at &#39;https://cdn.example.com/audio.mp3&#39; from origin &#39;https://example.com&#39; has been blocked by CORS policy.</code></pre>
+<p>While CORS can sometimes be configured directly on origin storage,
+applying these policies at the CDN edge provides lower latency,
+centralized control, and the ability to serve different origins
+dynamically.</p>
+<h2 id="how-cdn-edge-rules-process-headers">How CDN Edge Rules Process
+Headers</h2>
+<p>CDNs operate a distributed network of edge nodes located between the
+end user and the origin server. Edge rules allow administrators to hook
+into the HTTP request and response lifecycle:</p>
+<ol type="1">
+<li><strong>Viewer Request:</strong> The browser sends an HTTP
+<code>GET</code> or preflight <code>OPTIONS</code> request for an audio
+asset, including an <code>Origin</code> header (e.g.,
+<code>Origin: https://example.com</code>).</li>
+<li><strong>Origin Request/Cache Check:</strong> The CDN checks its
+local cache. If the asset is missing, it fetches the file from the
+origin.</li>
+<li><strong>Origin Response:</strong> The origin returns the file, often
+without CORS headers.</li>
+<li><strong>Viewer Response (Edge Rule Execution):</strong> Before
+delivering the payload to the browser, the CDN edge applies rules to
+append custom HTTP headers to the response payload.</li>
+</ol>
+<p>By injecting the headers during the Viewer Response phase, the edge
+server guarantees that the browser receives valid permission tokens
+regardless of whether the file was served from cache or fetched fresh
+from the origin.</p>
+<h2 id="essential-cors-headers-for-audio-playback">Essential CORS
+Headers for Audio Playback</h2>
+<p>For Wavesurfer.js to function correctly, a CDN edge rule must inject
+more than just the primary origin header. Media loading often involves
+partial content loading (byte-range requests) and preflight
+negotiations.</p>
+<ul>
+<li><strong><code>Access-Control-Allow-Origin</code></strong>: Specifies
+permitted origins. It can be set to a wildcard (<code>*</code>) for
+public files, or configured to dynamically reflect the incoming
+<code>Origin</code> header for restricted assets.</li>
+<li><strong><code>Access-Control-Allow-Methods</code></strong>: Must
+allow <code>GET</code>, <code>HEAD</code>, and
+<code>OPTIONS</code>.</li>
+<li><strong><code>Access-Control-Allow-Headers</code></strong>: Must
+permit <code>Range</code>, <code>Accept</code>, and any custom
+client-side headers. Wavesurfer.js frequently relies on
+<code>Range</code> headers to stream or scrub audio.</li>
+<li><strong><code>Access-Control-Expose-Headers</code></strong>: Must
+expose <code>Content-Range</code>, <code>Accept-Ranges</code>, and
+<code>Content-Length</code>. Browsers require access to these headers to
+calculate total audio duration and manage buffer chunks properly.</li>
+</ul>
+<h2 id="configuring-edge-rules">Configuring Edge Rules</h2>
+<p>The configuration process varies slightly across CDN providers, but
+the fundamental logic remains uniform: match the incoming media request
+and append the required response headers.</p>
+<h3 id="cloudflare-transform-rules">Cloudflare Transform Rules</h3>
+<ol type="1">
+<li>Navigate to <strong>Rules</strong> &gt; <strong>Transform
+Rules</strong> &gt; <strong>Modify Response Header</strong>.</li>
+<li>Define an expression to match audio requests, such as
+<code>http.request.uri.path.extension in {"mp3" "wav" "ogg" "flac"}</code>.</li>
+<li>Select <strong>Set Dynamic</strong> or <strong>Set
+Static</strong>.</li>
+<li>Set the header name to <code>Access-Control-Allow-Origin</code> and
+define the value (e.g., <code>*</code> or
+<code>http.request.headers["origin"][0]</code>).</li>
+<li>Add supplemental rows for
+<code>Access-Control-Allow-Headers: Range</code> and
+<code>Access-Control-Expose-Headers: Content-Range, Content-Length, Accept-Ranges</code>.</li>
+</ol>
+<h3 id="aws-cloudfront-response-headers-policies">AWS CloudFront
+(Response Headers Policies)</h3>
+<ol type="1">
+<li>In CloudFront, navigate to <strong>Policies</strong> &gt;
+<strong>Response headers</strong> and click <strong>Create response
+headers policy</strong>.</li>
+<li>Under the <strong>Cross-origin resource sharing (CORS)</strong>
+section, enable CORS.</li>
+<li>Set <strong>Access-Control-Allow-Origin</strong> to your application
+domain or <code>*</code>.</li>
+<li>Check <strong>Origin override</strong> so CloudFront applies the
+header even if the S3 bucket does not supply one.</li>
+<li>Add <code>Range</code> to
+<strong>Access-Control-Allow-Headers</strong> and
+<code>Content-Range</code>, <code>Content-Length</code>,
+<code>Accept-Ranges</code> to
+<strong>Access-Control-Expose-Headers</strong>.</li>
+<li>Attach this policy to the CloudFront Cache Behavior governing your
+media path.</li>
+</ol>
+<h3 id="fastly-vcl">Fastly (VCL)</h3>
+<p>In your Fastly VCL file, append the headers during the
+<code>vcl_deliver</code> stage:</p>
+<pre class="vcl"><code>sub vcl_deliver {
+  # Fastly deliver logic
+  if (req.url ~ &quot;\.(mp3|wav|ogg|flac)($|\?)&quot;) {
+    set resp.http.Access-Control-Allow-Origin = &quot;*&quot;;
+    set resp.http.Access-Control-Allow-Methods = &quot;GET, HEAD, OPTIONS&quot;;
+    set resp.http.Access-Control-Allow-Headers = &quot;Range, Content-Type&quot;;
+    set resp.http.Access-Control-Expose-Headers = &quot;Content-Range, Content-Length, Accept-Ranges&quot;;
+  }
+}</code></pre>
+<h2 id="handling-edge-preflight-requests-options">Handling Edge
+Preflight Requests (OPTIONS)</h2>
+<p>When Wavesurfer.js sends complex requests with custom headers or
+methods, the browser sends an HTTP <code>OPTIONS</code> preflight
+request prior to loading the media file.</p>
+<p>To prevent origin latency or potential 403/405 errors from static
+storage buckets that do not recognize <code>OPTIONS</code> methods,
+configure your CDN edge rule to terminate <code>OPTIONS</code> calls at
+the edge. The edge rule should respond directly with an HTTP status
+<code>200</code> or <code>204</code>, along with the defined CORS
+headers and an <code>Access-Control-Max-Age</code> header (e.g.,
+<code>86400</code>) to instruct the browser to cache preflight decisions
+for 24 hours.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/cdn-edge-rules-for-wavesurfer-js-cors-headers';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

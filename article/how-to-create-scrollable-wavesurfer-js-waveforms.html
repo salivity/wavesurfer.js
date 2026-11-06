@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Create Scrollable Wavesurfer.js Waveforms - wavesurfer.js</title>
+    <meta name="description" content="Creating a scrollable waveform in Wavesurfer.js requires a combination of targeted CSS overflow properties on the host container and appropriate JavaScript configuration. This guide outlines the essential CSS rules needed to prevent layout breakage and en">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-create-scrollable-wavesurfer-js-waveforms">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Create Scrollable Wavesurfer.js Waveforms - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-create-scrollable-wavesurfer-js-waveforms" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Creating a scrollable waveform in Wavesurfer.js requires a combination of targeted CSS overflow properties on the host container and appropriate JavaScript configuration. This guide outlines the essential CSS rules needed to prevent layout breakage and en" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-create-scrollable-wavesurferjs-waveforms">How to Create
+Scrollable Wavesurfer.js Waveforms</h1>
+<p>Creating a scrollable waveform in Wavesurfer.js requires a
+combination of targeted CSS overflow properties on the host container
+and appropriate JavaScript configuration. This guide outlines the
+essential CSS rules needed to prevent layout breakage and enable smooth
+horizontal scrolling, explains how the container interacts with
+Wavesurfer's rendering engine, and provides the exact code
+implementation required for seamless audio scrubbing.</p>
+<h3 id="essential-css-overflow-properties">Essential CSS Overflow
+Properties</h3>
+<p>To make a waveform scroll horizontally, the container element passed
+to the <code>Wavesurfer.create({ container: ... })</code> option must
+constrain its layout and manage its content boundary. The primary
+required CSS rules are:</p>
+<ul>
+<li><strong><code>overflow-x: auto</code></strong> (or
+<code>overflow-x: scroll</code>): Enables horizontal scrolling when the
+rendered canvas width exceeds the container's rendered width.</li>
+<li><strong><code>overflow-y: hidden</code></strong>: Prevents vertical
+scrollbars or shifts caused by sub-pixel canvas rendering.</li>
+<li><strong><code>width: 100%</code></strong> (or a fixed
+<code>max-width</code>): Constrains the container to the visible
+viewport or parent element, preventing the wide waveform canvas from
+expanding the entire web page.</li>
+<li><strong><code>position: relative</code></strong>: Ensures that
+timeline plugins, hover overlays, and playheads render accurately
+relative to the waveform wrapper.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.waveform-container</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">width</span><span class="ch">:</span> <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">max-width</span><span class="ch">:</span> <span class="dv">800</span><span class="dt">px</span><span class="op">;</span> <span class="co">/* Optional: limits visible width */</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">overflow-x</span><span class="ch">:</span> <span class="bu">auto</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">overflow-y</span><span class="ch">:</span> <span class="dv">hidden</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">position</span><span class="ch">:</span> <span class="dv">relative</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="why-these-properties-are-necessary">Why These Properties Are
+Necessary</h3>
+<p>Wavesurfer.js renders audio peaks inside an internal wrapper element
+using one or more HTML5 <code>&lt;canvas&gt;</code> elements. When
+zoomed in, the total width of this canvas is calculated dynamically
+based on the audio duration and the zoom level.</p>
+<p>By default, an unconstrained block element allows overflowing content
+to push the boundaries of parent elements or spill outside its box
+model. Setting <code>overflow-x: auto</code> forces the browser to
+establish a scroll context specifically inside the target container,
+keeping the rest of the page layout intact while providing a native
+horizontal scrollbar.</p>
+<h3 id="required-wavesurferjs-configuration">Required Wavesurfer.js
+Configuration</h3>
+<p>CSS alone will not cause the waveform to scroll; the waveform canvas
+must be explicitly wider than its container. This is achieved by setting
+the <code>minPxPerSec</code> property during initialization or
+dynamically using the <code>zoom</code> method.</p>
+<ul>
+<li><strong><code>minPxPerSec</code></strong>: Defines the horizontal
+scale. Setting this to a value high enough (e.g., <code>50</code> to
+<code>200</code>) ensures that long audio tracks generate a canvas
+significantly wider than the container element.</li>
+<li><strong><code>autoScroll: true</code></strong>: Automatically
+scrolls the container to follow the progress cursor during audio
+playback.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;.waveform-container&#39;</span>)<span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">minPxPerSec</span><span class="op">:</span> <span class="dv">100</span><span class="op">,</span> <span class="co">// Forces the waveform to stretch horizontally</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">autoScroll</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span>  <span class="co">// Keeps cursor in view during playback</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">height</span><span class="op">:</span> <span class="dv">128</span><span class="op">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;path/to/audio.mp3&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<p>If dynamic zoom controls are needed, call
+<code>wavesurfer.zoom(pxPerSec)</code> with the desired number of pixels
+per second. When the value generates a width larger than the
+<code>.waveform-container</code>, the <code>overflow-x: auto</code> rule
+will immediately activate the horizontal scrollbar.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-create-scrollable-wavesurfer-js-waveforms';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

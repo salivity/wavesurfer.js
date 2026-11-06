@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Wavesurfer.js Handles Cross-Origin Audio (CORS) - wavesurfer.js</title>
+    <meta name="description" content="This article provides an overview of how Wavesurfer.js interacts with cross-origin audio files and explains the mechanisms required to prevent CORS-related playback and rendering failures. It covers the underlying browser security models governing the Web">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-wavesurfer-js-handles-cross-origin-audio-cors">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Wavesurfer.js Handles Cross-Origin Audio (CORS) - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-wavesurfer-js-handles-cross-origin-audio-cors" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides an overview of how Wavesurfer.js interacts with cross-origin audio files and explains the mechanisms required to prevent CORS-related playback and rendering failures. It covers the underlying browser security models governing the Web" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-wavesurferjs-handles-cross-origin-audio-cors">How
+Wavesurfer.js Handles Cross-Origin Audio (CORS)</h1>
+<p>This article provides an overview of how Wavesurfer.js interacts with
+cross-origin audio files and explains the mechanisms required to prevent
+CORS-related playback and rendering failures. It covers the underlying
+browser security models governing the Web Audio API and HTML5 canvas,
+the specific client-side parameters available in Wavesurfer.js, and the
+necessary server-side header configurations needed to seamlessly load
+remote audio assets.</p>
+<h3 id="why-cors-affects-wavesurferjs">Why CORS Affects
+Wavesurfer.js</h3>
+<p>Wavesurfer.js does not merely play audio; it visualizes the audio
+waveform. To render waveforms, the library must decode raw audio data
+using the browser's Web Audio API
+(<code>AudioContext.decodeAudioData</code>) and draw the visual
+representation onto an HTML5 <code>&lt;canvas&gt;</code> element.</p>
+<p>Browsers enforce Cross-Origin Resource Sharing (CORS) policies to
+protect users. If an audio file is hosted on a different domain,
+protocol, or port than the web application hosting Wavesurfer.js, the
+browser restricts access to the underlying binary data unless the remote
+server explicitly permits it. If cross-origin restrictions are violated,
+Wavesurfer.js will fail to fetch the audio data, throwing errors such as
+<code>DOMException: The element has no supported sources</code> or
+failing to decode audio entirely.</p>
+<h3 id="client-side-configuration-in-wavesurferjs">Client-Side
+Configuration in Wavesurfer.js</h3>
+<p>Wavesurfer.js handles audio loading differently depending on the
+configured backend and initialization options.</p>
+<h4 id="1-standard-fetch-and-webaudio-default">1. Standard Fetch and
+WebAudio (Default)</h4>
+<p>By default, Wavesurfer.js fetches audio files as binary data using
+the standard <code>fetch</code> API before passing the
+<code>ArrayBuffer</code> to <code>decodeAudioData</code>. When using the
+<code>url</code> parameter or <code>wavesurfer.load(url)</code>:</p>
+<ul>
+<li>The request automatically follows standard CORS fetch rules.</li>
+<li>If customized authentication or credentials are required, developers
+can pass custom fetch options into the <code>fetchParams</code> property
+during initialization:</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F4A85&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#383351&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;https://example-cdn.com/audio/sample.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">fetchParams</span><span class="op">:</span> {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">mode</span><span class="op">:</span> <span class="st">&#39;cors&#39;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">credentials</span><span class="op">:</span> <span class="st">&#39;omit&#39;</span><span class="op">,</span> <span class="co">// or &#39;include&#39; if cookies/auth headers are required</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="2-mediaelement-backend">2. MediaElement Backend</h4>
+<p>When working with long audio files or streaming sources, developers
+often use the <code>MediaElement</code> backend
+(<code>backend: 'MediaElement'</code>). In this mode, Wavesurfer.js
+wraps an HTML5 <code>&lt;audio&gt;</code> element.</p>
+<p>To analyze audio from an external <code>&lt;audio&gt;</code> element
+with Web Audio and draw it on a canvas, the element must declare a
+cross-origin attribute. In Wavesurfer.js, you can specify this behavior
+by passing an existing audio element or configuring the media element
+options:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioElement <span class="op">=</span> <span class="kw">new</span> <span class="fu">Audio</span>()<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>audioElement<span class="op">.</span><span class="at">crossOrigin</span> <span class="op">=</span> <span class="st">&#39;anonymous&#39;</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>audioElement<span class="op">.</span><span class="at">src</span> <span class="op">=</span> <span class="st">&#39;https://example-cdn.com/audio/sample.mp3&#39;</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">media</span><span class="op">:</span> audioElement<span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Setting <code>crossOrigin = 'anonymous'</code> ensures the browser
+requests the file with standard CORS headers, allowing the Web Audio API
+to process the stream without tainting the canvas.</p>
+<h3 id="required-server-side-headers">Required Server-Side Headers</h3>
+<p>Client-side configurations alone cannot resolve CORS restrictions.
+The server or Content Delivery Network (CDN) hosting the audio files
+must include specific HTTP response headers.</p>
+<p>The minimum required header is:</p>
+<pre class="http"><code>Access-Control-Allow-Origin: *</code></pre>
+<p><em>(Replace <code>*</code> with your specific domain in production
+environments requiring restricted access).</em></p>
+<p>If credentials such as cookies or authorization headers are sent via
+<code>fetchParams</code>, the server must also return:</p>
+<pre class="http"><code>Access-Control-Allow-Credentials: true
+Access-Control-Allow-Origin: https://yourdomain.com</code></pre>
+<p>Additionally, because browsers may initiate an <code>OPTIONS</code>
+preflight check before downloading the resource, the hosting server must
+respond to HTTP <code>OPTIONS</code> requests with:</p>
+<pre class="http"><code>Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+Access-Control-Allow-Headers: Range, Content-Type, Authorization</code></pre>
+<p>Handling the <code>Range</code> header is essential, as modern
+browsers often fetch audio using partial content requests
+(<code>206 Partial Content</code>).</p>
+<h3 id="bypassing-audio-decoding-via-precomputed-peaks">Bypassing Audio
+Decoding via Precomputed Peaks</h3>
+<p>If configuring CORS on a third-party server is impossible,
+Wavesurfer.js provides a workaround: precomputed peaks.</p>
+<p>By generating waveform data (an array of floating-point numbers) on a
+server beforehand, you can supply this data directly to Wavesurfer.js
+using the <code>peaks</code> option alongside the
+<code>MediaElement</code> backend:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;https://external-domain.com/audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">peaks</span><span class="op">:</span> [[<span class="fl">0.01</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.2</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.4</span>]<span class="op">,</span> [<span class="fl">0.02</span><span class="op">,</span> <span class="fl">0.45</span><span class="op">,</span> <span class="fl">0.18</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.38</span>]]<span class="op">,</span> <span class="co">// Pre-generated peak data</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Because Wavesurfer.js does not need to read the raw binary data to
+generate the waveform when peaks are pre-supplied, it bypasses the need
+for Web Audio decoding, eliminating CORS canvas restrictions while
+allowing the underlying media element to handle standard playback.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-wavesurfer-js-handles-cross-origin-audio-cors';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

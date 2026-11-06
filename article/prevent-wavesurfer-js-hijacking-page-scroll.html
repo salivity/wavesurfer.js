@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prevent Wavesurfer.js Hijacking Page Scroll - wavesurfer.js</title>
+    <meta name="description" content="Integrating embeddable Wavesurfer.js instances into a web page can inadvertently break parent window scrolling when the player captures mouse wheel or touch gestures to zoom and scrub audio. This article outlines the primary strategies to prevent Wavesurf">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/prevent-wavesurfer-js-hijacking-page-scroll">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Prevent Wavesurfer.js Hijacking Page Scroll - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/prevent-wavesurfer-js-hijacking-page-scroll" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Integrating embeddable Wavesurfer.js instances into a web page can inadvertently break parent window scrolling when the player captures mouse wheel or touch gestures to zoom and scrub audio. This article outlines the primary strategies to prevent Wavesurf" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="prevent-wavesurferjs-hijacking-page-scroll">Prevent
+Wavesurfer.js Hijacking Page Scroll</h1>
+<p>Integrating embeddable Wavesurfer.js instances into a web page can
+inadvertently break parent window scrolling when the player captures
+mouse wheel or touch gestures to zoom and scrub audio. This article
+outlines the primary strategies to prevent Wavesurfer.js from hijacking
+parent page navigation, focusing on adjusting initialization settings,
+managing passive event listeners, using modifier keys for zoom controls,
+and applying CSS touch properties.</p>
+<h3 id="1-require-modifier-keys-for-waveform-zooming">1. Require
+Modifier Keys for Waveform Zooming</h3>
+<p>A common cause of scroll hijacking is mapping the mouse wheel
+directly to the <code>wavesurfer.zoom()</code> method. When users scroll
+over the waveform expecting the page to move vertically, the player
+intercepts the wheel event and zooms in or out instead.</p>
+<p>To fix this, require a modifier key (such as <code>Ctrl</code> or
+<code>Cmd</code>) before triggering the zoom action:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> container <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;#waveform&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;wheel&#39;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="at">ctrlKey</span> <span class="op">||</span> <span class="bu">event</span><span class="op">.</span><span class="at">metaKey</span>) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> currentZoom <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">options</span><span class="op">.</span><span class="at">minPxPerSec</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> zoomDelta <span class="op">=</span> <span class="bu">event</span><span class="op">.</span><span class="at">deltaY</span> <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">?</span> <span class="dv">10</span> <span class="op">:</span> <span class="op">-</span><span class="dv">10</span><span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">zoom</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="dv">1</span><span class="op">,</span> currentZoom <span class="op">+</span> zoomDelta))<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Without the modifier key, the event bubbles normally, allowing parent window scrolling.</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}<span class="op">,</span> { <span class="dt">passive</span><span class="op">:</span> <span class="kw">false</span> })<span class="op">;</span></span></code></pre></div>
+<h3 id="2-configure-native-touch-and-drag-settings">2. Configure Native
+Touch and Drag Settings</h3>
+<p>On mobile devices, touch actions on the canvas can prevent natural
+page scrolling if the player attempts to register touch-based scrubbing
+immediately.</p>
+<ul>
+<li><strong>Disable Drag-to-Seek if Unnecessary</strong>: If immediate
+drag-to-seek is not essential, avoid enabling options that capture
+horizontal touch moves before the browser determines vertical scroll
+intent.</li>
+<li><strong>Use CSS <code>touch-action</code></strong>: Apply
+<code>touch-action: pan-y;</code> to the waveform container element.
+This explicitly instructs the mobile browser that vertical swipe
+gestures belong to parent page scrolling, preventing Wavesurfer from
+claiming touch interactions meant for scrolling.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">touch-action</span><span class="ch">:</span> <span class="dv">pan-y</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="3-ensure-passive-event-listeners">3. Ensure Passive Event
+Listeners</h3>
+<p>When adding custom listeners to the waveform or handling container
+events, ensure they do not accidentally invoke
+<code>event.preventDefault()</code> on standard scroll events. If you
+must listen for scroll or wheel movements to update player state,
+declare them with <code>{ passive: true }</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;wheel&#39;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Read event data without interrupting browser scroll behavior</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>}<span class="op">,</span> { <span class="dt">passive</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div>
+<p>Marking listeners as passive prevents performance bottlenecks and
+guarantees that the browser's thread handles page scrolling without
+interruption.</p>
+<h3 id="4-handle-iframe-embed-isolation">4. Handle Iframe Embed
+Isolation</h3>
+<p>When Wavesurfer.js is served inside an embedded
+<code>&lt;iframe&gt;</code> (common for third-party audio widgets), the
+iframe can trap wheel events entirely, blocking the parent window from
+scrolling while the cursor is inside the frame.</p>
+<ul>
+<li><strong>Constrain the Frame Size</strong>: Keep the iframe height
+strictly limited to the player controls so users do not accidentally
+land their cursor in a wide dead zone while scrolling.</li>
+<li><strong>Forward Wheel Events via PostMessage</strong>: If the player
+must occupy a large area inside an iframe, listen to unhandled
+<code>wheel</code> events within the frame and relay <code>deltaY</code>
+values to the parent window via <code>window.postMessage()</code>. The
+parent window can then manually advance its scroll position via
+<code>window.scrollBy()</code>.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/prevent-wavesurfer-js-hijacking-page-scroll';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

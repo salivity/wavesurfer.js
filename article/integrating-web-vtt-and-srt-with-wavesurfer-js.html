@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrating WebVTT and SRT with Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Integrating timed cues into Wavesurfer.js allows developers to display synchronized text, markers, and audio segments directly on top of an interactive waveform. This guide outlines how standard subtitle formats like WebVTT and SRT integrate with the Wave">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/integrating-web-vtt-and-srt-with-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Integrating WebVTT and SRT with Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/integrating-web-vtt-and-srt-with-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Integrating timed cues into Wavesurfer.js allows developers to display synchronized text, markers, and audio segments directly on top of an interactive waveform. This guide outlines how standard subtitle formats like WebVTT and SRT integrate with the Wave" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="integrating-webvtt-and-srt-with-wavesurferjs">Integrating WebVTT
+and SRT with Wavesurfer.js</h1>
+<p>Integrating timed cues into Wavesurfer.js allows developers to
+display synchronized text, markers, and audio segments directly on top
+of an interactive waveform. This guide outlines how standard subtitle
+formats like WebVTT and SRT integrate with the Wavesurfer.js Regions
+plugin, highlighting their parsing mechanics, standard timecode
+conversions, and practical steps to map cue data directly into
+interactive regions.</p>
+<h2 id="webvtt-vtt">WebVTT (.vtt)</h2>
+<p>WebVTT (Web Video Text Tracks) is the most natural fit for
+browser-based audio applications. Because it is the HTML5 standard for
+timed text tracks, it integrates seamlessly into web environments.</p>
+<ul>
+<li><strong>Timecode Syntax:</strong> Hours, minutes, seconds, and
+milliseconds separated by periods (e.g.,
+<code>00:01:23.456</code>).</li>
+<li><strong>Ease of Integration:</strong> High. Modern browsers can
+parse WebVTT natively using the native <code>VTTCue</code> and
+<code>TextTrack</code> interfaces, or you can use lightweight utility
+parsers without loading heavy third-party dependencies.</li>
+<li><strong>Region Mapping:</strong> The <code>startTime</code> and
+<code>endTime</code> values from a parsed WebVTT cue are already
+represented as floating-point numbers in seconds, which is the exact
+format required by the Wavesurfer.js Regions plugin.</li>
+</ul>
+<h2 id="subrip-srt">SubRip (.srt)</h2>
+<p>SRT is one of the most widely available subtitle formats in media
+production. While it does not have native browser parsing support, it is
+simple to load into Wavesurfer.js using small parsing libraries.</p>
+<ul>
+<li><strong>Timecode Syntax:</strong> Hours, minutes, seconds, and
+milliseconds separated by a comma (e.g.,
+<code>00:01:23,456</code>).</li>
+<li><strong>Ease of Integration:</strong> Moderate. SRT files require
+converting the millisecond separator from a comma to a period, or
+running the text through an external parser such as
+<code>srt-parser-2</code> or <code>subtitles-parser</code>.</li>
+<li><strong>Region Mapping:</strong> Once parsed, timecodes must be
+converted into total seconds (e.g.,
+<code>(hours * 3600) + (minutes * 60) + seconds + (milliseconds / 1000)</code>)
+before passing them to the region configuration.</li>
+</ul>
+<h2 id="direct-json-timestamps">Direct JSON Timestamps</h2>
+<p>If you have control over the data pipeline, JSON is the most
+efficient data format for Wavesurfer.js. It avoids the need to parse raw
+string-based timing files entirely.</p>
+<ul>
+<li><strong>Structure:</strong> An array of objects specifying
+<code>start</code>, <code>end</code>, and optional metadata such as
+<code>content</code>, <code>id</code>, or <code>color</code>.</li>
+<li><strong>Ease of Integration:</strong> Highest. Requires zero text
+parsing or timecode conversion because the values are already native
+numbers.</li>
+</ul>
+<h2 id="how-to-convert-timing-cues-to-wavesurfer-regions">How to Convert
+Timing Cues to Wavesurfer Regions</h2>
+<p>Wavesurfer.js handles visual cues via its Regions plugin
+(<code>wavesurfer.js/dist/plugins/regions.esm.js</code>). The plugin
+exposes an <code>addRegion</code> method that accepts start and end
+points in seconds.</p>
+<h3 id="implementation-workflow">Implementation Workflow</h3>
+<ol type="1">
+<li><p><strong>Initialize Wavesurfer and the Regions Plugin:</strong>
+Create the Wavesurfer instance and register the Regions plugin to manage
+cue overlays.</p></li>
+<li><p><strong>Fetch and Parse the File:</strong> Load the
+<code>.vtt</code> or <code>.srt</code> file using standard asynchronous
+fetch requests. Pass the resulting text into your parser of
+choice.</p></li>
+<li><p><strong>Loop Over Parsed Cues:</strong> Extract the cue start
+time, end time, and cue text.</p></li>
+<li><p><strong>Instantiate Regions:</strong> Call
+<code>wsRegions.addRegion()</code> for every cue in the file:</p></li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example: Mapping parsed cue objects to Wavesurfer regions</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>parsedCues<span class="op">.</span><span class="fu">forEach</span>(cue <span class="kw">=&gt;</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  wsRegions<span class="op">.</span><span class="fu">addRegion</span>({</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">start</span><span class="op">:</span> cue<span class="op">.</span><span class="at">startTime</span><span class="op">,</span> <span class="co">// in seconds</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">end</span><span class="op">:</span> cue<span class="op">.</span><span class="at">endTime</span><span class="op">,</span>     <span class="co">// in seconds</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">content</span><span class="op">:</span> cue<span class="op">.</span><span class="at">text</span><span class="op">,</span>    <span class="co">// cue caption or label</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">color</span><span class="op">:</span> <span class="st">&#39;rgba(0, 123, 255, 0.2)&#39;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">drag</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">resize</span><span class="op">:</span> <span class="kw">false</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="summary-recommendation">Summary Recommendation</h2>
+<ul>
+<li>Choose <strong>WebVTT</strong> if you are delivering text over
+standard web protocols and want compatibility with native HTML5 media
+elements.</li>
+<li>Choose <strong>SRT</strong> if you are working with legacy video
+workflows or desktop tools, paired with a small client-side parser.</li>
+<li>Choose <strong>JSON</strong> if you generate cue points from an API
+or database, as it eliminates parsing overhead completely.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/integrating-web-vtt-and-srt-with-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

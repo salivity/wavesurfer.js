@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Static Wavesurfer.js Waveforms in Node.js - wavesurfer.js</title>
+    <meta name="description" content="This article explains how to generate static waveform images on a Node.js server that visually match Wavesurfer.js renders. By shifting the intensive tasks of audio decoding, peak extraction, and visual plotting to the backend, applications can significan">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/generate-static-wavesurfer-js-waveforms-in-node-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Generate Static Wavesurfer.js Waveforms in Node.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/generate-static-wavesurfer-js-waveforms-in-node-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to generate static waveform images on a Node.js server that visually match Wavesurfer.js renders. By shifting the intensive tasks of audio decoding, peak extraction, and visual plotting to the backend, applications can significan" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="generate-static-wavesurferjs-waveforms-in-nodejs">Generate
+Static Wavesurfer.js Waveforms in Node.js</h1>
+<p>This article explains how to generate static waveform images on a
+Node.js server that visually match Wavesurfer.js renders. By shifting
+the intensive tasks of audio decoding, peak extraction, and visual
+plotting to the backend, applications can significantly improve
+client-side performance, eliminate audio processing lag, and serve
+pre-rendered waveforms alongside streaming audio.</p>
+<h3 id="the-rendering-pipeline">The Rendering Pipeline</h3>
+<p>To create an image identical to Wavesurfer.js, a Node.js script must
+replicate the browser's audio processing and canvas rendering
+operations. The process consists of three distinct stages:</p>
+<ol type="1">
+<li><strong>Decoding the Audio:</strong> Extracting raw Pulse-Code
+Modulation (PCM) data from an audio container (such as MP3, WAV, or
+AAC).</li>
+<li><strong>Extracting Peaks:</strong> Downsampling millions of raw
+audio samples into an array of min/max amplitude pairs that correspond
+to pixel coordinates.</li>
+<li><strong>Drawing the Waveform:</strong> Rendering those peaks onto an
+offscreen canvas using the styling configurations used by Wavesurfer.js,
+then exporting the result as an image format like PNG, WebP, or
+SVG.</li>
+</ol>
+<h3 id="step-1-decoding-audio-on-the-server">Step 1: Decoding Audio on
+the Server</h3>
+<p>In the browser, Wavesurfer.js relies on the Web Audio API
+(<code>AudioContext.decodeAudioData</code>) to read audio files. In
+Node.js, native audio APIs are unavailable, requiring external decoders
+or binary utilities.</p>
+<p>The two most common approaches are:</p>
+<ul>
+<li><strong>FFmpeg / Fluent-FFmpeg:</strong> Pipes the input file
+through an FFmpeg process to output raw, uncompressed 16-bit or 32-bit
+floating-point PCM audio data directly into Node.js readable
+streams.</li>
+<li><strong>BBC <code>audiowaveform</code>:</strong> A fast,
+purpose-built C++ command-line tool that decodes audio files and
+directly outputs peak data in binary or JSON formats natively understood
+by Wavesurfer.js.</li>
+</ul>
+<h3 id="step-2-peak-extraction-and-normalization">Step 2: Peak
+Extraction and Normalization</h3>
+<p>A static image has a fixed width (for example, 1000 pixels). If an
+audio file has 10 million audio samples, those samples must be grouped
+into 1000 equal bins.</p>
+<p>For each bin:</p>
+<ol type="1">
+<li>Iterate over the samples belonging to that slice of time.</li>
+<li>Find the minimum and maximum sample values (typically ranging
+between -1.0 and 1.0).</li>
+<li>Store these values. Wavesurfer.js uses both positive and negative
+peaks to render symmetrical or asymmetrical waveforms.</li>
+</ol>
+<p>If multi-channel audio is used, calculate peaks separately per
+channel or merge channels into a mono representation by averaging sample
+amplitudes before binning.</p>
+<h3 id="step-3-server-side-canvas-rendering">Step 3: Server-Side Canvas
+Rendering</h3>
+<p>To output an image, use a server-side graphics library such as
+<code>@napi-rs/canvas</code> or <code>canvas</code> (Cairo-backed).</p>
+<p>The script configures the canvas dimensions based on the target image
+size:</p>
+<ul>
+<li><strong>Dimensions:</strong> Set the width to the number of segments
+desired (accounting for device pixel ratio if serving high-density
+displays) and set the height to match the player container.</li>
+<li><strong>Replicating Wavesurfer Parameters:</strong>
+<ul>
+<li><strong>Bar Width and Gap:</strong> If replicating Wavesurfer's bar
+style, draw individual rectangles using <code>ctx.fillRect()</code>.
+Advance the X position by <code>barWidth + barGap</code> for each
+entry.</li>
+<li><strong>Wave Form Style:</strong> If replicating a continuous
+waveform, construct a path with <code>ctx.beginPath()</code>, trace the
+upper peaks from left to right, trace the lower peaks from right to
+left, and close the path.</li>
+<li><strong>Vertical Centering:</strong> The zero point of the audio
+sits at <code>canvas.height / 2</code>. The peak values (normalized
+between 0 and 1) scale to half the canvas height to mirror above and
+below the baseline.</li>
+<li><strong>Colors and Gradients:</strong> Apply linear canvas gradients
+(<code>ctx.createLinearGradient</code>) to mimic Wavesurfer’s
+<code>waveColor</code> configurations.</li>
+</ul></li>
+</ul>
+<h3 id="step-4-exporting-the-output">Step 4: Exporting the Output</h3>
+<p>Once drawn, convert the canvas instance to a buffer:</p>
+<ul>
+<li><strong>PNG/WebP:</strong> Use
+<code>canvas.toBuffer('image/png')</code> to write the image to disk,
+upload it to cloud storage, or stream it directly in an HTTP
+response.</li>
+<li><strong>SVG Alternative:</strong> If resolution independence is
+required, build an SVG string by converting the peak coordinates into
+SVG <code>&lt;rect&gt;</code> or <code>&lt;path&gt;</code> elements
+rather than using a raster canvas.</li>
+</ul>
+<h3 id="integration-with-wavesurferjs">Integration with
+Wavesurfer.js</h3>
+<p>To utilize these static images effectively on the client:</p>
+<ol type="1">
+<li>Load the pre-rendered image as an immediate visual placeholder
+inside the audio container while the media loads.</li>
+<li>If full interactivity (scrubbing, seeking, zooming) is needed, pair
+the static workflow with JSON peak exports. By passing the same
+precomputed peaks into Wavesurfer.js via its <code>peaks</code>
+initialization parameter, the client library can immediately draw its
+interactive canvas without downloading or decoding the full audio file
+in the browser.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/generate-static-wavesurfer-js-waveforms-in-node-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

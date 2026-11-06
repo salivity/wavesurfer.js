@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client-Side MP3 Encoding for Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js excels at client-side audio visualization and manipulation, but it natively outputs raw audio formats such as PCM or uncompressed WAV. To convert this exported audio to an MP3 format directly inside the user&#39;s browser without server-side pro">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/client-side-mp-3-encoding-for-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Client-Side MP3 Encoding for Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/client-side-mp-3-encoding-for-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js excels at client-side audio visualization and manipulation, but it natively outputs raw audio formats such as PCM or uncompressed WAV. To convert this exported audio to an MP3 format directly inside the user&#39;s browser without server-side pro" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="client-side-mp3-encoding-for-wavesurferjs">Client-Side MP3
+Encoding for Wavesurfer.js</h1>
+<p>Wavesurfer.js excels at client-side audio visualization and
+manipulation, but it natively outputs raw audio formats such as PCM or
+uncompressed WAV. To convert this exported audio to an MP3 format
+directly inside the user's browser without server-side processing,
+developers rely on WebAssembly (Wasm) ports of established audio
+encoding libraries. This guide outlines the best WebAssembly libraries
+for client-side MP3 encoding, how to extract audio from Wavesurfer.js
+for processing, and the primary technical considerations for
+implementation.</p>
+<h2 id="extracting-audio-from-wavesurferjs">Extracting Audio from
+Wavesurfer.js</h2>
+<p>Before encoding to MP3, you must access the raw audio data stored
+within Wavesurfer.js. Wavesurfer processes audio through the Web Audio
+API using an <code>AudioBuffer</code>.</p>
+<p>You can extract this data using the <code>getDecodedData()</code>
+method:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioBuffer <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getDecodedData</span>()<span class="op">;</span></span></code></pre></div>
+<p>An <code>AudioBuffer</code> provides:</p>
+<ul>
+<li><strong>Sample Rate:</strong> <code>audioBuffer.sampleRate</code>
+(typically 44100 or 48000 Hz)</li>
+<li><strong>Channel Count:</strong>
+<code>audioBuffer.numberOfChannels</code> (1 for mono, 2 for
+stereo)</li>
+<li><strong>PCM Data:</strong>
+<code>audioBuffer.getChannelData(channelIndex)</code> which returns a
+<code>Float32Array</code> of audio samples ranging between -1.0 and
+1.0.</li>
+</ul>
+<p>WebAssembly encoders typically require this PCM data to be passed as
+either <code>Float32Array</code> or interleaved <code>Int16Array</code>
+buffers.</p>
+<hr />
+<h2 id="top-webassembly-libraries-for-mp3-encoding">Top WebAssembly
+Libraries for MP3 Encoding</h2>
+<h3 id="1-vmsg">1. vmsg</h3>
+<p><code>vmsg</code> is a lightweight library built specifically for
+encoding MP3 audio in the browser using the LAME encoder compiled to
+WebAssembly. While originally designed for microphone recording, its
+underlying Wasm core can process raw PCM chunks directly.</p>
+<ul>
+<li><strong>Underlying Engine:</strong> LAME</li>
+<li><strong>Strengths:</strong> Extremely small binary size (~80KB Wasm
+file), fast execution, and zero native browser dependencies.</li>
+<li><strong>Usage Context:</strong> Ideal for voice recordings,
+podcasts, and simple audio exports where bundle size is a priority.</li>
+</ul>
+<h3 id="2-ffmpegffmpeg-ffmpegwasm">2. <span class="citation"
+data-cites="ffmpeg/ffmpeg">@ffmpeg/ffmpeg</span> (FFmpeg.wasm)</h3>
+<p><code>@ffmpeg/ffmpeg</code> is a complete port of FFmpeg to
+WebAssembly. It contains <code>libmp3lame</code> alongside extensive
+audio manipulation filters, format converters, and multiplexers.</p>
+<ul>
+<li><strong>Underlying Engine:</strong> FFmpeg with
+<code>libmp3lame</code></li>
+<li><strong>Strengths:</strong> Maximum flexibility. In addition to MP3
+encoding, it can resample audio, adjust bitrates, normalize loudness,
+and handle multi-track audio.</li>
+<li><strong>Trade-offs:</strong> Large bundle size (multi-megabyte
+download) and requires specific HTTP response headers
+(<code>Cross-Origin-Opener-Policy: same-origin</code> and
+<code>Cross-Origin-Embedder-Policy: require-corp</code>) to enable
+SharedArrayBuffer multithreading.</li>
+<li><strong>Usage Context:</strong> Best when you need full audio
+processing pipelines, sample rate conversion, and complex filtering
+alongside MP3 encoding.</li>
+</ul>
+<h3 id="3-wasm-lame--lame-wasm">3. wasm-lame / lame-wasm</h3>
+<p>Several standalone open-source ports compile the C implementation of
+LAME directly to WebAssembly using Emscripten. Packages such as
+<code>@breezystack/lamejs</code> offer pure JavaScript implementations,
+while packages like <code>wasm-lame</code> or customized Emscripten
+wrappers expose the raw <code>lame_encode_buffer</code> functions.</p>
+<ul>
+<li><strong>Underlying Engine:</strong> LAME C codebase compiled via
+Emscripten</li>
+<li><strong>Strengths:</strong> Much faster execution than pure
+JavaScript alternatives (such as legacy <code>lamejs</code>), lower
+memory consumption, and predictable CPU usage on long tracks.</li>
+<li><strong>Usage Context:</strong> Best for standard stereo or mono
+track exports when you do not need the full overhead of FFmpeg.</li>
+</ul>
+<hr />
+<h2 id="general-implementation-workflow">General Implementation
+Workflow</h2>
+<p>Regardless of the selected library, the client-side pipeline follows
+four consistent steps:</p>
+<ol type="1">
+<li><p><strong>Obtain the Buffer:</strong> Call
+<code>wavesurfer.getDecodedData()</code> to retrieve the
+<code>AudioBuffer</code>.</p></li>
+<li><p><strong>Format Conversion:</strong> Most LAME-based Wasm ports
+expect 16-bit signed integers (<code>Int16Array</code>). Convert the
+<code>Float32Array</code> values:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">floatToInt16</span>(float32Array) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> int16Array <span class="op">=</span> <span class="kw">new</span> <span class="bu">Int16Array</span>(float32Array<span class="op">.</span><span class="at">length</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> float32Array<span class="op">.</span><span class="at">length</span><span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> s <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="op">-</span><span class="dv">1</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">min</span>(<span class="dv">1</span><span class="op">,</span> float32Array[i]))<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    int16Array[i] <span class="op">=</span> s <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">?</span> s <span class="op">*</span> <span class="bn">0x8000</span> <span class="op">:</span> s <span class="op">*</span> <span class="bn">0x7FFF</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> int16Array<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div></li>
+<li><p><strong>Encode via Web Worker:</strong> Push the PCM data to a
+Web Worker running your WebAssembly module to prevent the encoding
+process from freezing the browser UI and Wavesurfer waveform
+rendering.</p></li>
+<li><p><strong>Generate File Blob:</strong> Collect the output bytes
+from the encoder, create an MP3 Blob, and trigger a download or
+upload:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> mp3Blob <span class="op">=</span> <span class="kw">new</span> <span class="bu">Blob</span>([encodedBuffer]<span class="op">,</span> { <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;audio/mp3&#39;</span> })<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> url <span class="op">=</span> URL<span class="op">.</span><span class="fu">createObjectURL</span>(mp3Blob)<span class="op">;</span></span></code></pre></div></li>
+</ol>
+<hr />
+<h2 id="technical-considerations">Technical Considerations</h2>
+<ul>
+<li><strong>Thread Blocking:</strong> MP3 encoding is computationally
+intensive. Always run your WebAssembly module inside a dedicated Web
+Worker to maintain 60 FPS UI performance in Wavesurfer.js.</li>
+<li><strong>Interleaving Stereo Channels:</strong> If the
+<code>AudioBuffer</code> has two channels, most Wasm encoders require
+interleaved samples (Left, Right, Left, Right) rather than two separate
+arrays. Ensure your conversion step interleaves the channels if the
+library does not provide dedicated multi-channel parameters.</li>
+<li><strong>Sample Rate Matching:</strong> Ensure the target encoder
+configuration matches the <code>audioBuffer.sampleRate</code> of your
+Wavesurfer instance to prevent pitch and playback speed distortion.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/client-side-mp-3-encoding-for-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

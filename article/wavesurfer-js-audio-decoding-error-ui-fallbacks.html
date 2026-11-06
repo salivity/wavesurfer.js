@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Audio Decoding Error UI Fallbacks - wavesurfer.js</title>
+    <meta name="description" content="When audio files fail to decode in Wavesurfer.js due to corrupt data, unsupported codecs, or interrupted transfers, the waveform canvas fails to render and can leave an empty, unresponsive space in your application. This guide outlines the essential user">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-audio-decoding-error-ui-fallbacks">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Audio Decoding Error UI Fallbacks - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-audio-decoding-error-ui-fallbacks" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When audio files fail to decode in Wavesurfer.js due to corrupt data, unsupported codecs, or interrupted transfers, the waveform canvas fails to render and can leave an empty, unresponsive space in your application. This guide outlines the essential user" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-audio-decoding-error-ui-fallbacks">Wavesurfer.js
+Audio Decoding Error UI Fallbacks</h1>
+<p>When audio files fail to decode in Wavesurfer.js due to corrupt data,
+unsupported codecs, or interrupted transfers, the waveform canvas fails
+to render and can leave an empty, unresponsive space in your
+application. This guide outlines the essential user interface fallback
+strategies to implement when audio decoding errors occur, ensuring users
+receive clear feedback and alternative playback options instead of a
+broken interface.</p>
+<h3 id="catching-the-error-state">Catching the Error State</h3>
+<p>Wavesurfer.js emits an <code>error</code> event whenever it fails to
+fetch or decode an audio source. Capturing this event is the
+prerequisite for triggering any fallback UI:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;error&#39;</span><span class="op">,</span> (err) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="st">&#39;Wavesurfer decoding error:&#39;</span><span class="op">,</span> err)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">displayAudioFallback</span>(err)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="key-ui-fallback-components">Key UI Fallback Components</h3>
+<p>When the error event triggers, the visual waveform container should
+immediately transition to one of the following fallback designs.</p>
+<h4 id="1-native-html5-audio-player">1. Native HTML5 Audio Player</h4>
+<p>The Web Audio API context used by Wavesurfer.js sometimes fails to
+decode formats that the browser's native media engine can still stream
+and play. When a decoding error occurs, hide the waveform container and
+render a standard HTML5 <code>&lt;audio controls&gt;</code> element
+pointing to the same source URL. This provides functional playback
+controls even if visual peaks cannot be generated.</p>
+<h4 id="2-static-placeholder-with-inline-alert">2. Static Placeholder
+with Inline Alert</h4>
+<p>If playback is entirely impossible, replace the waveform container
+with a static, styled container matching the dimensions of the original
+player. This prevents sudden layout shifts (CLS) on the page. The
+container should feature:</p>
+<ul>
+<li><strong>A distinct warning/alert state:</strong> A neutral or muted
+background with an error icon.</li>
+<li><strong>Plain-language explanation:</strong> Avoid exposing raw Web
+Audio API errors. Use concise text such as <em>"Unable to process audio
+format"</em> or <em>"Audio playback failed"</em>.</li>
+</ul>
+<h4 id="3-actionable-recovery-controls">3. Actionable Recovery
+Controls</h4>
+<p>A proper fallback UI must guide the user on what to do next rather
+than presenting a dead end:</p>
+<ul>
+<li><strong>Retry Button:</strong> Allow users to re-attempt the network
+request and decoding process in case the failure was caused by an
+unstable connection.</li>
+<li><strong>Direct Download Link:</strong> Provide an anchor link (e.g.,
+<code>Download File</code>) so the user can download the raw audio file
+to play in an external media application.</li>
+<li><strong>Format Recommendation:</strong> If the error is identified
+as a codec incompatibility, display a brief note recommending supported
+formats such as MP3, WAV, or OGG.</li>
+</ul>
+<h3 id="accessibility-considerations">Accessibility Considerations</h3>
+<p>When rendering fallback states dynamically, ensure the container
+includes appropriate ARIA attributes. Use <code>role="alert"</code> or
+an <code>aria-live="polite"</code> region on the message container so
+screen readers immediately inform the user of the failure without
+requiring manual navigation to the broken element.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-audio-decoding-error-ui-fallbacks';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

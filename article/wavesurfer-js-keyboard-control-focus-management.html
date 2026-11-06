@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Keyboard Control Focus Management - wavesurfer.js</title>
+    <meta name="description" content="Implementing keyboard navigation in Wavesurfer.js without interfering with the rest of your web application requires deliberate focus management. This article explains the technical rules and DOM patterns necessary to ensure that keyboard shortcuts—such a">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-keyboard-control-focus-management">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Keyboard Control Focus Management - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-keyboard-control-focus-management" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Implementing keyboard navigation in Wavesurfer.js without interfering with the rest of your web application requires deliberate focus management. This article explains the technical rules and DOM patterns necessary to ensure that keyboard shortcuts—such a" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-keyboard-control-focus-management">Wavesurfer.js
+Keyboard Control Focus Management</h1>
+<p>Implementing keyboard navigation in Wavesurfer.js without interfering
+with the rest of your web application requires deliberate focus
+management. This article explains the technical rules and DOM patterns
+necessary to ensure that keyboard shortcuts—such as play, pause, and
+seeking—activate only when the audio waveform container has explicit
+user focus, preventing accidental triggers during normal page
+navigation.</p>
+<h3 id="1-make-the-container-programmatically-focusable">1. Make the
+Container Programmatically Focusable</h3>
+<p>By default, generic HTML elements like <code>&lt;div&gt;</code>
+cannot receive keyboard focus. To make the Wavesurfer.js wrapper
+focusable via keyboard navigation (Tab key) or script, you must
+explicitly assign a <code>tabindex</code> attribute.</p>
+<ul>
+<li><strong>Assign <code>tabindex="0"</code>:</strong> Add
+<code>tabindex="0"</code> to the waveform's host element. This includes
+the container in the natural tab order of the document.</li>
+<li><strong>Assign an Accessible Role:</strong> Add
+<code>role="region"</code> and an
+<code>aria-label="Audio Player Waveform"</code> so screen readers
+identify the element as an interactive zone.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> id</span><span class="op">=</span><span class="st">&quot;waveform&quot;</span><span class="ot"> tabindex</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="ot"> role</span><span class="op">=</span><span class="st">&quot;region&quot;</span><span class="ot"> aria-label</span><span class="op">=</span><span class="st">&quot;Audio Waveform&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
+<h3 id="2-scope-keyboard-event-listeners-to-the-container">2. Scope
+Keyboard Event Listeners to the Container</h3>
+<p>A common mistake is binding keyboard events directly to
+<code>document</code> or <code>window</code>. To restrict controls to
+the Wavesurfer instance, bind the <code>keydown</code> listener directly
+to the container element rather than globally.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> waveformContainer <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;waveform&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>waveformContainer<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;keydown&#39;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">switch</span> (<span class="bu">event</span><span class="op">.</span><span class="at">code</span>) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&#39;Space&#39;</span><span class="op">:</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span> <span class="co">// Prevents page scrolling</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      wavesurfer<span class="op">.</span><span class="fu">playPause</span>()<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&#39;ArrowLeft&#39;</span><span class="op">:</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      wavesurfer<span class="op">.</span><span class="fu">skip</span>(<span class="op">-</span><span class="dv">5</span>)<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&#39;ArrowRight&#39;</span><span class="op">:</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      wavesurfer<span class="op">.</span><span class="fu">skip</span>(<span class="dv">5</span>)<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Because native keyboard events bubble up, attaching the listener
+strictly to the container guarantees that events only trigger when that
+element or one of its internal descendants has focus.</p>
+<h3 id="3-check-documentactiveelement-for-global-listeners">3. Check
+<code>document.activeElement</code> for Global Listeners</h3>
+<p>If your architecture requires handling keyboard shortcuts through a
+centralized application manager, you must verify that the Wavesurfer
+container is the active element before executing any playback
+actions.</p>
+<ul>
+<li>Compare <code>document.activeElement</code> against your waveform
+container or verify containment using
+<code>waveformContainer.contains(document.activeElement)</code>.</li>
+<li>If the active element is an input, textarea, or unrelated component,
+terminate the handler immediately.</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;keydown&#39;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> waveformContainer <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;waveform&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">document</span><span class="op">.</span><span class="at">activeElement</span> <span class="op">!==</span> waveformContainer) {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span><span class="op">;</span> <span class="co">// Exit if the container does not have focus</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="at">code</span> <span class="op">===</span> <span class="st">&#39;Space&#39;</span>) {</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">playPause</span>()<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="4-provide-visual-focus-indicators">4. Provide Visual Focus
+Indicators</h3>
+<p>Focus management must be clearly communicated visually. When users
+tab into the Wavesurfer container, the browser should display an
+unambiguous focus indicator.</p>
+<ul>
+<li>Never set <code>outline: none</code> without providing an
+alternative <code>:focus</code> or <code>:focus-visible</code> CSS
+rule.</li>
+<li>Apply a high-contrast border or outline to the container to show
+keyboard users that shortcuts are currently enabled.</li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span><span class="in">:focus-visible</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">outline</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">px</span> <span class="dv">solid</span> <span class="cn">#005fcc</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">outline-offset</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="5-release-focus-gracefully">5. Release Focus Gracefully</h3>
+<p>Users must have an intuitive way to exit the keyboard-controlled
+region:</p>
+<ul>
+<li><strong>Escape Key Handling:</strong> Allow users to press
+<code>Escape</code> to blur the container
+(<code>waveformContainer.blur()</code>), returning control to the
+standard page environment.</li>
+<li><strong>Click-Outside Behavior:</strong> Ensure clicking outside the
+waveform drops focus naturally so that regular browser shortcuts resume
+instantly.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-keyboard-control-focus-management';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

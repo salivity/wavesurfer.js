@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configure CSP worker-src for Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This guide explains how to properly configure the Content Security Policy (CSP) worker-src directive to allow Wavesurfer.js to run without security violations. You will learn why Wavesurfer.js triggers CSP errors, the exact directives required to resolve">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/configure-csp-worker-src-for-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Configure CSP worker-src for Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/configure-csp-worker-src-for-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide explains how to properly configure the Content Security Policy (CSP) worker-src directive to allow Wavesurfer.js to run without security violations. You will learn why Wavesurfer.js triggers CSP errors, the exact directives required to resolve" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="configure-csp-worker-src-for-wavesurferjs">Configure CSP
+worker-src for Wavesurfer.js</h1>
+<p>This guide explains how to properly configure the Content Security
+Policy (CSP) <code>worker-src</code> directive to allow Wavesurfer.js to
+run without security violations. You will learn why Wavesurfer.js
+triggers CSP errors, the exact directives required to resolve them, and
+how to implement the policy via HTTP headers or HTML meta tags.</p>
+<h3 id="why-wavesurferjs-triggers-csp-violations">Why Wavesurfer.js
+Triggers CSP Violations</h3>
+<p>Wavesurfer.js relies on Web Workers to process and render audio
+waveforms asynchronously without freezing the user interface. By
+default, Wavesurfer.js and its related plugins often construct these
+workers on the fly using inline <code>Blob</code> objects generated via
+<code>URL.createObjectURL()</code>.</p>
+<p>When a strict CSP is present, modern browsers block these inline
+background threads unless the <code>blob:</code> scheme is explicitly
+permitted. Without this permission, the browser console will display an
+error similar to:</p>
+<pre class="text"><code>Refused to create a worker from &#39;blob:https://example.com/...&#39; because it violates the following Content Security Policy directive: &quot;worker-src &#39;self&#39;&quot;.</code></pre>
+<h3 id="the-required-worker-src-configuration">The Required
+<code>worker-src</code> Configuration</h3>
+<p>To permit Wavesurfer.js to instantiate its background threads, you
+must add the <code>blob:</code> source expression to your
+<code>worker-src</code> directive alongside <code>'self'</code>.</p>
+<pre class="http"><code>worker-src &#39;self&#39; blob:;</code></pre>
+<p>If your application hosts the Wavesurfer script or dedicated worker
+files on an external Content Delivery Network (CDN), include the CDN
+host as well:</p>
+<pre class="http"><code>worker-src &#39;self&#39; blob: https://cdnjs.cloudflare.com;</code></pre>
+<h3 id="implementation-methods">Implementation Methods</h3>
+<p>Depending on your web server stack, implement the updated CSP using
+one of the following methods.</p>
+<h4 id="1-http-response-header-recommended">1. HTTP Response Header
+(Recommended)</h4>
+<p>Configuring CSP through your web server or application framework
+provides the most robust security.</p>
+<p><strong>Nginx Configuration:</strong></p>
+<pre class="nginx"><code>add_header Content-Security-Policy &quot;default-src &#39;self&#39;; worker-src &#39;self&#39; blob:; media-src &#39;self&#39; blob:; connect-src &#39;self&#39;;&quot;;</code></pre>
+<p><strong>Apache Configuration:</strong></p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode apache"><code class="sourceCode apache"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Header<span class="st"> set Content-Security-Policy &quot;default-src &#39;self&#39;; worker-src &#39;self&#39; blob:; media-src &#39;self&#39; blob:; connect-src &#39;self&#39;;&quot;</span></span></code></pre></div>
+<p><strong>Node.js (Express with Helmet):</strong></p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>app<span class="op">.</span><span class="fu">use</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  helmet<span class="op">.</span><span class="fu">contentSecurityPolicy</span>({</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">directives</span><span class="op">:</span> {</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">defaultSrc</span><span class="op">:</span> [<span class="st">&quot;&#39;self&#39;&quot;</span>]<span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">workerSrc</span><span class="op">:</span> [<span class="st">&quot;&#39;self&#39;&quot;</span><span class="op">,</span> <span class="st">&quot;blob:&quot;</span>]<span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">mediaSrc</span><span class="op">:</span> [<span class="st">&quot;&#39;self&#39;&quot;</span><span class="op">,</span> <span class="st">&quot;blob:&quot;</span>]<span class="op">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">connectSrc</span><span class="op">:</span> [<span class="st">&quot;&#39;self&#39;&quot;</span>]<span class="op">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span></code></pre></div>
+<h4 id="2-html-meta-tag">2. HTML Meta Tag</h4>
+<p>If you cannot modify server headers, insert the policy directly into
+the <code>&lt;head&gt;</code> of your HTML document:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> </span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  http-equiv</span><span class="op">=</span><span class="st">&quot;Content-Security-Policy&quot;</span><span class="ot"> </span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ot">  content</span><span class="op">=</span><span class="st">&quot;default-src &#39;self&#39;; worker-src &#39;self&#39; blob:; media-src &#39;self&#39; blob:;&quot;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&gt;</span></span></code></pre></div>
+<h3 id="supporting-legacy-browsers-with-child-src">Supporting Legacy
+Browsers with <code>child-src</code></h3>
+<p>The <code>worker-src</code> directive is defined in CSP Level 3.
+Older browsers (such as older versions of Safari or Chrome) look to the
+<code>child-src</code> or <code>script-src</code> directives to govern
+Web Workers.</p>
+<p>To ensure complete cross-browser compatibility, define
+<code>child-src</code> identically to <code>worker-src</code>:</p>
+<pre class="http"><code>Content-Security-Policy: worker-src &#39;self&#39; blob:; child-src &#39;self&#39; blob:;</code></pre>
+<p>Modern browsers that support <code>worker-src</code> will ignore
+<code>child-src</code> for workers, while older browsers will fall back
+to <code>child-src</code> and allow the audio rendering thread to
+execute.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/configure-csp-worker-src-for-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is the Wavesurfer.js Minimap Plugin? - wavesurfer.js</title>
+    <meta name="description" content="This article provides a comprehensive overview of the Minimap plugin in Wavesurfer.js, explaining its core purpose, key features, and implementation. You will learn how the plugin enhances user experience by providing a high-level visual representation of">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/what-is-the-wavesurfer-js-minimap-plugin">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is the Wavesurfer.js Minimap Plugin? - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/what-is-the-wavesurfer-js-minimap-plugin" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides a comprehensive overview of the Minimap plugin in Wavesurfer.js, explaining its core purpose, key features, and implementation. You will learn how the plugin enhances user experience by providing a high-level visual representation of" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-the-wavesurferjs-minimap-plugin">What Is the
+Wavesurfer.js Minimap Plugin?</h1>
+<p>This article provides a comprehensive overview of the Minimap plugin
+in Wavesurfer.js, explaining its core purpose, key features, and
+implementation. You will learn how the plugin enhances user experience
+by providing a high-level visual representation of an entire audio
+track, making navigation seamless, particularly within zoomed-in or
+extended audio interfaces.</p>
+<h2 id="understanding-the-minimap-plugin">Understanding the Minimap
+Plugin</h2>
+<p>The Minimap plugin is an official extension for Wavesurfer.js, a
+popular open-source audio visualization library for the web. While the
+primary Wavesurfer canvas often zooms into specific sections of an audio
+file for detailed inspection or editing, the Minimap plugin renders a
+secondary, smaller waveform that always displays the entire duration of
+the track.</p>
+<p>It acts as a condensed navigation map, similar to the minimap found
+in code editors or video games, allowing users to maintain visual
+context regardless of the current zoom level of the main waveform.</p>
+<h2 id="core-features-and-capabilities">Core Features and
+Capabilities</h2>
+<ul>
+<li><strong>Full-Track Visibility:</strong> It renders the complete
+audio file as a simplified, low-profile waveform, ensuring the user
+never loses their place within the track.</li>
+<li><strong>Synchronized Viewport Indicator:</strong> The minimap
+displays an overlay box (often called a viewport or lens) that
+highlights the exact portion of the audio currently visible in the main
+waveform container.</li>
+<li><strong>Interactive Navigation:</strong> Users can click anywhere on
+the minimap or drag the viewport overlay to instantly scrub through the
+audio and reposition the main display.</li>
+<li><strong>Customizable Appearance:</strong> Developers can style the
+minimap independently from the main player, customizing wave colors,
+progress colors, height, and overlay styling to match the application's
+user interface.</li>
+</ul>
+<h2 id="common-use-cases">Common Use Cases</h2>
+<p>The Minimap plugin is particularly useful in applications that
+require precise audio manipulation or the handling of long audio
+recordings:</p>
+<ul>
+<li><strong>Digital Audio Workstations (DAWs):</strong> In web-based
+audio editors, zooming in to make precise cuts can disorient the user.
+The minimap keeps the broader timeline visible.</li>
+<li><strong>Transcription and Dictation Software:</strong> For long
+interviews or lectures, users need to quickly jump between distant
+timestamps while transcribing specific sections.</li>
+<li><strong>Podcast and Audiobook Players:</strong> It provides a
+lightweight scrubber that makes seeking across hour-long media files
+faster and more accurate than a standard timeline slider.</li>
+</ul>
+<h2 id="how-it-works-in-code">How It Works in Code</h2>
+<p>The Minimap plugin is instantiated alongside the main Wavesurfer
+instance. It listens to the playback and zoom events of the parent
+player, updating its viewport overlay dynamically as the user navigates
+the track.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> Minimap <span class="im">from</span> <span class="st">&#39;wavesurfer.js/dist/plugins/minimap.esm.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize Wavesurfer with the Minimap plugin</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F4A85&#39;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#383351&#39;</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">minPxPerSec</span><span class="op">:</span> <span class="dv">100</span><span class="op">,</span> <span class="co">// Zoomed in view</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">plugins</span><span class="op">:</span> [</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    Minimap<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">height</span><span class="op">:</span> <span class="dv">30</span><span class="op">,</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#ddd&#39;</span><span class="op">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#999&#39;</span><span class="op">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#minimap&#39;</span><span class="op">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    })<span class="op">,</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  ]<span class="op">,</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;audio-file.mp3&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<p>By decoupling the macro-level navigation from the micro-level
+waveform inspection, the Minimap plugin provides an intuitive,
+high-performance solution for web-based audio exploration.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/what-is-the-wavesurfer-js-minimap-plugin';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

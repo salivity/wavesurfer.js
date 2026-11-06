@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Wavesurfer.js Waveform Previews with Peaks - wavesurfer.js</title>
+    <meta name="description" content="Rendering audio files directly in Wavesurfer.js often introduces noticeable latency because the client must download and decode the full audio file before drawing the canvas. This article covers the progressive waveform loading strategy: using precomputed">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/fast-wavesurfer-js-waveform-previews-with-peaks">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fast Wavesurfer.js Waveform Previews with Peaks - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/fast-wavesurfer-js-waveform-previews-with-peaks" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Rendering audio files directly in Wavesurfer.js often introduces noticeable latency because the client must download and decode the full audio file before drawing the canvas. This article covers the progressive waveform loading strategy: using precomputed" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="fast-wavesurferjs-waveform-previews-with-peaks">Fast
+Wavesurfer.js Waveform Previews with Peaks</h1>
+<p>Rendering audio files directly in Wavesurfer.js often introduces
+noticeable latency because the client must download and decode the full
+audio file before drawing the canvas. This article covers the
+progressive waveform loading strategy: using precomputed, low-resolution
+peak data to render an instant visual placeholder while deferring
+full-fidelity audio loading and decoding in the background.</p>
+<h3 id="the-strategy-two-stage-peak-loading">The Strategy: Two-Stage
+Peak Loading</h3>
+<p>The most effective method for displaying an instant waveform is
+bypassing client-side audio decoding on initial render. Web browsers
+struggle with decoding large MP3 or WAV files via the Web Audio API,
+which blocks the main thread and delays the UI.</p>
+<p>To solve this, implement a two-stage strategy:</p>
+<ol type="1">
+<li><strong>Precompute peak data on the server:</strong> Generate a
+tiny, low-resolution array of amplitude values (peaks) during audio
+upload or via a background job.</li>
+<li><strong>Initial render with low-res data:</strong> Supply this tiny
+array directly to Wavesurfer's initialization config so the waveform
+paints immediately without fetching the full media file.</li>
+<li><strong>Progressive enhancement:</strong> Stream or fetch the actual
+audio file and higher-density peaks in the background, updating the
+visual detail seamlessly.</li>
+</ol>
+<h3 id="step-1-precompute-low-resolution-peaks">Step 1: Precompute
+Low-Resolution Peaks</h3>
+<p>Use a fast server-side tool like <code>audiowaveform</code> (C++) or
+FFmpeg to extract amplitude points from your audio file. For an
+immediate preview, generate a coarse dataset—typically between 100 and
+300 data points. A low-resolution peak array of this size produces a
+payload of less than 1 KB in JSON format.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">audiowaveform</span> <span class="at">-i</span> input.mp3 <span class="at">-o</span> peaks-low.json <span class="at">--pixels-per-second</span> 1 <span class="at">-b</span> 8</span></code></pre></div>
+<h3 id="step-2-immediate-initialization-in-wavesurferjs">Step 2:
+Immediate Initialization in Wavesurfer.js</h3>
+<p>In your frontend application, fetch the lightweight low-res JSON
+alongside your metadata, or embed it directly into the initial page HTML
+payload.</p>
+<p>Initialize Wavesurfer by passing the peak array directly to the
+<code>peaks</code> property. This bypasses the need for an immediate
+audio source download:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize with low-res peaks</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#d1d5db&#39;</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#3b82f6&#39;</span><span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">peaks</span><span class="op">:</span> [lowResPeaksData]<span class="op">,</span> <span class="co">// Array of normalized numbers (0 to 1) or [-1 to 1]</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">duration</span><span class="op">:</span> totalAudioDurationInSeconds<span class="op">,</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Because <code>peaks</code> and <code>duration</code> are provided,
+Wavesurfer.js draws the visual waveform canvas instantly upon script
+execution.</p>
+<h3 id="step-3-upgrade-to-full-resolution">Step 3: Upgrade to Full
+Resolution</h3>
+<p>Once the UI is visible to the user, load the actual media file using
+the <code>load</code> method. You can load the file directly, allowing
+Wavesurfer to decode the full-fidelity waveform natively, or provide an
+accompanying high-resolution peaks array (e.g., 1000+ points) to prevent
+client-side decode overhead entirely:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Load the actual audio source in the background</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Setting high-res peaks prevents the browser from decoding audio locally</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;https://example.com/audio.mp3&#39;</span><span class="op">,</span> highResPeaksData)<span class="op">;</span></span></code></pre></div>
+<p>When <code>load()</code> resolves, Wavesurfer redraws the waveform
+canvas with the refined peak density and synchronizes the playback
+cursor with the loaded HTML5 media element.</p>
+<h3 id="benefits-of-this-approach">Benefits of This Approach</h3>
+<ul>
+<li><strong>Zero Time-to-First-Paint:</strong> The waveform renders
+concurrently with the DOM, eliminating loading spinners.</li>
+<li><strong>Reduced Bandwidth for Previews:</strong> Users browsing a
+feed or playlist do not download multi-megabyte audio files simply to
+view waveforms.</li>
+<li><strong>Lower CPU Overhead:</strong> Client devices do not spend CPU
+cycles decoding audio buffers until the user explicitly decides to
+listen.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/fast-wavesurfer-js-waveform-previews-with-peaks';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

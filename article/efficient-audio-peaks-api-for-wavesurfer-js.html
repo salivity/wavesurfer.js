@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Efficient Audio Peaks API for Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Rendering waveforms using Wavesurfer.js without requiring clients to download and decode full audio files depends on delivering pre-computed peak arrays. This article outlines the optimal backend API design to extract, serialize, cache, and serve waveform">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/efficient-audio-peaks-api-for-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Efficient Audio Peaks API for Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/efficient-audio-peaks-api-for-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Rendering waveforms using Wavesurfer.js without requiring clients to download and decode full audio files depends on delivering pre-computed peak arrays. This article outlines the optimal backend API design to extract, serialize, cache, and serve waveform" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="efficient-audio-peaks-api-for-wavesurferjs">Efficient Audio
+Peaks API for Wavesurfer.js</h1>
+<p>Rendering waveforms using Wavesurfer.js without requiring clients to
+download and decode full audio files depends on delivering pre-computed
+peak arrays. This article outlines the optimal backend API design to
+extract, serialize, cache, and serve waveform peak data efficiently to
+the client side. By decoupling peak data generation from client
+playback, applications achieve near-instant waveform rendering, lower
+client-side memory usage, and significantly reduced bandwidth
+overhead.</p>
+<h3 id="offline-peak-generation">Offline Peak Generation</h3>
+<p>Peaks should never be calculated synchronously during user requests.
+Instead, process audio files asynchronously upon upload using
+high-performance command-line utilities such as
+<code>audiowaveform</code> (developed by the BBC) or FFmpeg.</p>
+<p>Using <code>audiowaveform</code>, you can extract min/max waveform
+points directly to 8-bit or 16-bit binary files or JSON:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">audiowaveform</span> <span class="at">-i</span> input.mp3 <span class="at">-o</span> output.json <span class="at">-b</span> 8 <span class="at">--pixels-per-second</span> 20</span></code></pre></div>
+<p>Normalize the output to a consistent resolution or a fixed number of
+samples (typically between 800 and 2,000 points, depending on your UI
+container width) to avoid generating unnecessarily large datasets for
+long audio tracks.</p>
+<h3 id="selecting-the-right-data-serialization">Selecting the Right Data
+Serialization</h3>
+<p>Wavesurfer.js accepts pre-computed peaks either as flat arrays or
+multi-channel arrays containing alternating minimum and maximum values.
+You have two main formats to deliver these arrays:</p>
+<ol type="1">
+<li><p><strong>JSON (<code>application/json</code>):</strong><br />
+The simplest approach is storing peaks as normalized floating-point
+numbers between -1 and 1 or scaled integers between -128 and 127. While
+JSON payloads have text overhead, applying Brotli or Gzip compression
+reduces the payload to just a few kilobytes.</p></li>
+<li><p><strong>Binary Arrays
+(<code>application/octet-stream</code>):</strong><br />
+For production systems handling extensive audio catalogs, serve raw
+binary formats (such as 8-bit signed integers in an
+<code>ArrayBuffer</code>). Binary files cut network payloads by 50% to
+70% compared to uncompressed JSON. The frontend reads the raw buffer
+using a <code>DataView</code> or <code>Int8Array</code> and maps it
+directly into the format Wavesurfer.js expects.</p></li>
+</ol>
+<h3 id="storage-and-cdn-delivery-architecture">Storage and CDN Delivery
+Architecture</h3>
+<p>Do not route peak data retrieval through dynamic application logic.
+Once the audio processing worker outputs the peaks file:</p>
+<ol type="1">
+<li><p>Write the peaks file to an object store (e.g., AWS S3, Cloudflare
+R2, or Google Cloud Storage) under a predictable key format, such as
+<code>/waveforms/{track_id}.json</code>.</p></li>
+<li><p>Place a Content Delivery Network (CDN) in front of the storage
+bucket.</p></li>
+<li><p>Configure immutable cache headers, as peak data for a given audio
+file is deterministic and never changes:</p>
+<pre class="http"><code>Cache-Control: public, max-age=31536000, immutable
+Content-Encoding: gzip</code></pre></li>
+</ol>
+<h3 id="api-endpoint-pattern">API Endpoint Pattern</h3>
+<p>Provide a direct, lightweight URL structure:</p>
+<ul>
+<li><strong>Static Direct Route (Recommended):</strong>
+<code>https://cdn.example.com/peaks/{track_id}.json</code><br />
+Bypasses backend application servers entirely and fetches the waveform
+data from the edge cache.</li>
+<li><strong>REST Proxy Route:</strong>
+<code>GET /api/v1/tracks/{track_id}/peaks</code><br />
+Useful if audio access permissions must be strictly verified. The
+backend verifies authorization and issues an HTTP 302 redirect to a
+pre-signed CDN URL, or pipes the stream directly with edge-caching
+enabled.</li>
+</ul>
+<h3 id="client-side-consumption">Client-Side Consumption</h3>
+<p>To consume the peak data without forcing Wavesurfer.js to re-decode
+the media file, configure Wavesurfer to use the HTML5 Media Element
+rather than Web Audio decoding, and supply the peak array directly to
+the <code>load</code> method:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">backend</span><span class="op">:</span> <span class="st">&#39;MediaElement&#39;</span><span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#4338CA&#39;</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Fetch pre-computed peaks and audio concurrently</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">initializePlayer</span>(audioUrl<span class="op">,</span> peaksUrl) {</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(peaksUrl)<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { <span class="dt">data</span><span class="op">:</span> peaks } <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">json</span>()<span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Load the audio using the pre-computed peaks</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">load</span>(audioUrl<span class="op">,</span> peaks)<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This decoupled architecture shifts computational load away from user
+devices and dynamically scaled APIs, isolating peak extraction into a
+one-time background task while serving fast, static, edge-cached assets
+to the browser.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/efficient-audio-peaks-api-for-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

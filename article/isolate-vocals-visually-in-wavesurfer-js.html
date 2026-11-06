@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isolate Vocals Visually in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Isolating vocalisations visually in Wavesurfer.js requires moving beyond standard time-domain amplitude waveforms to frequency-based visualization and targeted audio filtering. Because standard waveforms only plot raw volume over time, voice components of">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/isolate-vocals-visually-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Isolate Vocals Visually in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/isolate-vocals-visually-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Isolating vocalisations visually in Wavesurfer.js requires moving beyond standard time-domain amplitude waveforms to frequency-based visualization and targeted audio filtering. Because standard waveforms only plot raw volume over time, voice components of" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="isolate-vocals-visually-in-wavesurferjs">Isolate Vocals Visually
+in Wavesurfer.js</h1>
+<p>Isolating vocalisations visually in Wavesurfer.js requires moving
+beyond standard time-domain amplitude waveforms to frequency-based
+visualization and targeted audio filtering. Because standard waveforms
+only plot raw volume over time, voice components often blend invisibly
+with instruments and background noise. Developers achieve clear visual
+vocal isolation primarily by integrating the Wavesurfer.js Spectrogram
+plugin, applying bandpass pre-filtering via the Web Audio API, or
+highlighting vocal boundaries using the Regions plugin alongside Voice
+Activity Detection (VAD).</p>
+<h3 id="1-utilizing-the-spectrogram-plugin">1. Utilizing the Spectrogram
+Plugin</h3>
+<p>The primary technique for visually isolating vocalisations is
+replacing or augmenting the default waveform with a spectrogram via the
+official <code>@wavesurfer/spectrogram</code> plugin.</p>
+<p>Human speech possesses distinct harmonic signatures known as
+formants, typically concentrated between 300 Hz and 3,400 Hz (with
+fundamental frequencies between 85 Hz and 255 Hz). While a waveform
+flattens these frequencies into generic peaks, a spectrogram displays
+time on the horizontal axis, frequency on the vertical axis, and
+intensity through color.</p>
+<p>To isolate speech visually:</p>
+<ul>
+<li>Set an FFT (Fast Fourier Transform) size between 512 and 2048 to
+achieve the optimal balance between time and frequency resolution.</li>
+<li>Adjust the frequency scale to focus on the human vocal range (0 Hz
+to roughly 4,000–5,000 Hz) to eliminate non-vocal low-end rumble and
+high-end percussion.</li>
+<li>Configure custom color maps to make the energy clusters
+corresponding to vowel formants and consonant bursts stand out clearly
+against background audio.</li>
+</ul>
+<h3 id="2-bandpass-pre-filtering-the-audio-buffer">2. Bandpass
+Pre-Filtering the Audio Buffer</h3>
+<p>If an amplitude-style waveform is preferred over a spectrogram,
+vocalisations can be isolated by pre-filtering the audio data before
+rendering.</p>
+<p>Using the browser's native <code>OfflineAudioContext</code>, the
+audio file can be processed through a bandpass filter (or combined
+highpass and lowpass <code>BiquadFilterNode</code> filters) calibrated
+specifically to the vocal range (e.g., passing 300 Hz to 3,000 Hz) prior
+to decoding. When the resulting audio buffer is loaded into
+Wavesurfer.js, the waveform amplitude directly reflects vocal energy
+rather than bass lines or high-frequency instruments, effectively
+isolating the presence of the human voice.</p>
+<h3 id="3-combining-voice-activity-detection-with-the-regions-plugin">3.
+Combining Voice Activity Detection with the Regions Plugin</h3>
+<p>To clearly delineate vocal boundaries on top of a rendered waveform,
+developers use the Regions plugin (<code>@wavesurfer/regions</code>)
+paired with Voice Activity Detection (VAD).</p>
+<p>By analyzing the audio using a client-side or server-side VAD
+algorithm (such as Silero VAD or WebRTC VAD), exact start and end
+timestamps of speech segments are identified. These timestamps are then
+passed into Wavesurfer's Regions plugin, which programmatically renders
+colored overlays across the waveform to highlight precisely where vocal
+tracks appear.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/isolate-vocals-visually-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

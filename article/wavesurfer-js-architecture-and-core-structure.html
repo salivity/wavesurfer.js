@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Architecture and Core Structure - wavesurfer.js</title>
+    <meta name="description" content="This article breaks down the primary architectural components that make up the base repository structure of Wavesurfer.js. It details how the library separates concerns across audio decoding, visual rendering, media playback, and event management to maint">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-architecture-and-core-structure">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Architecture and Core Structure - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-architecture-and-core-structure" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article breaks down the primary architectural components that make up the base repository structure of Wavesurfer.js. It details how the library separates concerns across audio decoding, visual rendering, media playback, and event management to maint" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-architecture-and-core-structure">Wavesurfer.js
+Architecture and Core Structure</h1>
+<p>This article breaks down the primary architectural components that
+make up the base repository structure of Wavesurfer.js. It details how
+the library separates concerns across audio decoding, visual rendering,
+media playback, and event management to maintain a modular, lightweight,
+and customizable audio visualization engine.</p>
+<h3 id="the-main-controller-wavesurfer">The Main Controller
+(<code>WaveSurfer</code>)</h3>
+<p>At the root of the repository sits the primary
+<code>WaveSurfer</code> class, typically defined in
+<code>src/wavesurfer.ts</code>. This module acts as the orchestrator and
+public API surface for consumers. Rather than executing complex tasks
+directly, the controller initializes and coordinates the underlying
+subsystems, such as the renderer, player, and decoder. It provides
+unified methods for loading audio, tracking playback states, zooming,
+and seeking.</p>
+<h3 id="the-playback-engine-player">The Playback Engine
+(<code>Player</code>)</h3>
+<p>Located within <code>src/player.ts</code>, the player abstraction
+manages media playback and audio output. Depending on the configuration,
+it primarily wraps an HTML5 <code>HTMLMediaElement</code> (such as
+<code>&lt;audio&gt;</code> or <code>&lt;video&gt;</code>) or interacts
+with the Web Audio API's <code>AudioNode</code> graph. This component
+encapsulates basic transport controls—play, pause, seek, playback rate,
+and volume—ensuring that audio synchronization remains decoupled from
+visual updates.</p>
+<h3 id="audio-decoding-decoder">Audio Decoding
+(<code>Decoder</code>)</h3>
+<p>The decoding component (<code>src/decoder.ts</code>) is responsible
+for processing raw audio sources into usable numerical data. When an
+audio file or stream is passed to Wavesurfer.js, the decoder uses an
+<code>AudioContext</code> to decode the audio buffer into channel data.
+It processes these raw audio samples into normalized peak arrays (min
+and max values) representing amplitude over time, which are then passed
+directly to the renderer.</p>
+<h3 id="visual-rendering-engine-renderer">Visual Rendering Engine
+(<code>Renderer</code>)</h3>
+<p>The <code>Renderer</code> component (<code>src/renderer.ts</code>)
+manages the DOM representation and graphical output of the waveform. It
+contains the logic for creating and manipulating HTML
+<code>&lt;canvas&gt;</code> elements, handling high-DPI scaling, and
+rendering waveform bars, progress overlays, and cursors. The renderer
+translates audio peaks into visual coordinates, updates the display on
+playback or zoom events, and listens for native pointer interactions to
+calculate drag-and-seek positions.</p>
+<h3 id="the-event-system-eventemitter">The Event System
+(<code>EventEmitter</code>)</h3>
+<p>Wavesurfer.js relies on an internal pub/sub pattern implemented via
+<code>EventEmitter</code> (found in <code>src/event-emitter.ts</code>).
+Because the visual renderer, playback engine, and plugins run
+independently, the event emitter allows them to communicate
+asynchronously without direct dependencies. Key lifecycle events—such as
+<code>ready</code>, <code>play</code>, <code>pause</code>,
+<code>timeupdate</code>, and <code>seeking</code>—are broadcast through
+this mechanism to both internal components and external listeners.</p>
+<h3 id="the-plugin-subsystem-baseplugin">The Plugin Subsystem
+(<code>BasePlugin</code>)</h3>
+<p>To keep the core bundle lightweight, extended features are isolated
+in the <code>plugins/</code> directory. Each plugin extends a shared
+base class (<code>src/base-plugin.ts</code>) that hooks directly into
+the host <code>WaveSurfer</code> instance. Plugins such as Regions,
+Timeline, Spectrogram, and Minimap consume core events and access the
+renderer or player instances to add functionality without modifying base
+repository code.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-architecture-and-core-structure';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

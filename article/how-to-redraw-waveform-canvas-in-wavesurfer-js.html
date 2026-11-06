@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Redraw Waveform Canvas in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="When developing dynamic web applications with Wavesurfer.js, modifying container dimensions, switching visual themes, or updating audio settings often requires a manual redraw of the waveform. Depending on whether you are using Wavesurfer.js version 7 or">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-redraw-waveform-canvas-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Redraw Waveform Canvas in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-redraw-waveform-canvas-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When developing dynamic web applications with Wavesurfer.js, modifying container dimensions, switching visual themes, or updating audio settings often requires a manual redraw of the waveform. Depending on whether you are using Wavesurfer.js version 7 or" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-redraw-waveform-canvas-in-wavesurferjs">How to Redraw
+Waveform Canvas in Wavesurfer.js</h1>
+<p>When developing dynamic web applications with Wavesurfer.js,
+modifying container dimensions, switching visual themes, or updating
+audio settings often requires a manual redraw of the waveform. Depending
+on whether you are using Wavesurfer.js version 7 or legacy versions (v6
+and below), different methods are used to refresh and re-render the
+canvas elements efficiently without reloading the audio file.</p>
+<h3 id="for-wavesurferjs-v6-and-below-drawbuffer">For Wavesurfer.js v6
+and Below: <code>drawBuffer()</code></h3>
+<p>In Wavesurfer.js version 6 and earlier, the dedicated method to force
+a canvas redraw is <code>drawBuffer()</code>. This method recalculates
+the peaks and redraws the canvas using the existing decoded audio data
+stored in memory.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Redraw the waveform on demand</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">drawBuffer</span>()<span class="op">;</span></span></code></pre></div>
+<p>A common use case involves redrawing the canvas during a window or
+container resize event:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;resize&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">drawBuffer</span>()<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Calling <code>drawBuffer()</code> updates the waveform to fit new
+container dimensions instantly without making redundant network requests
+or re-decoding the audio file.</p>
+<hr />
+<h3 id="for-wavesurferjs-v7-and-newer-rendererrender-and-setoptions">For
+Wavesurfer.js v7 and Newer: <code>renderer.render()</code> and
+<code>setOptions()</code></h3>
+<p>In Wavesurfer.js version 7, the rendering pipeline was completely
+rewritten. By default, Wavesurfer v7 employs a built-in
+<code>ResizeObserver</code>, meaning manual redraws upon container
+resizing are often handled automatically.</p>
+<p>However, if you need to manually force a redraw—such as after
+modifying audio peaks or canvas rendering properties—you invoke the
+<code>render</code> method on the renderer instance:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Manually redraw the canvas using the current decoded audio data</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="at">renderer</span><span class="op">.</span><span class="fu">render</span>(wavesurfer<span class="op">.</span><span class="fu">getDecodedData</span>())<span class="op">;</span></span></code></pre></div>
+<p>Alternatively, if your redraw is triggered by changes to visual
+options (such as <code>waveColor</code>, <code>progressColor</code>, or
+<code>barWidth</code>), you can use <code>setOptions()</code>, which
+applies the updates and automatically triggers a re-render:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">setOptions</span>({</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#ff0000&#39;</span><span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#00ff00&#39;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>If you only need to adjust the horizontal scaling or pixel density,
+using the <code>zoom</code> method also recalculates and repaints the
+canvas:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">zoom</span>(wavesurfer<span class="op">.</span><span class="at">options</span><span class="op">.</span><span class="at">minPxPerSec</span>)<span class="op">;</span></span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-redraw-waveform-canvas-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

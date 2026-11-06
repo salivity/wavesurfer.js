@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Can Wavesurfer.js Visualize FLAC and AAC Streams? - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js can visualize FLAC and AAC audio files without transcoding, provided the target browser natively supports decoding these formats and the delivery method aligns with Web Audio API constraints. Because Wavesurfer.js relies entirely on underlyi">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/can-wavesurfer-js-visualize-flac-and-aac-streams">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Can Wavesurfer.js Visualize FLAC and AAC Streams? - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/can-wavesurfer-js-visualize-flac-and-aac-streams" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js can visualize FLAC and AAC audio files without transcoding, provided the target browser natively supports decoding these formats and the delivery method aligns with Web Audio API constraints. Because Wavesurfer.js relies entirely on underlyi" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="can-wavesurferjs-visualize-flac-and-aac-streams">Can
+Wavesurfer.js Visualize FLAC and AAC Streams?</h1>
+<p>Wavesurfer.js can visualize FLAC and AAC audio files without
+transcoding, provided the target browser natively supports decoding
+these formats and the delivery method aligns with Web Audio API
+constraints. Because Wavesurfer.js relies entirely on underlying browser
+capabilities for rendering waveforms, understanding the difference
+between static HTTP delivery and continuous live streaming is essential
+for implementing seamless playback and visualization.</p>
+<h3 id="native-codec-support">Native Codec Support</h3>
+<p>Wavesurfer.js does not contain proprietary decoders for audio
+formats. Instead, it relies on the browser's native Web Audio API
+(<code>AudioContext.decodeAudioData()</code>) or the standard HTML5
+<code>&lt;audio&gt;</code> element (<code>MediaElement</code>
+backend).</p>
+<p>Modern browsers—including Google Chrome, Mozilla Firefox, Apple
+Safari, and Microsoft Edge—provide built-in support for both AAC and
+FLAC containers. Because the browser handles the decompression, you do
+not need to transcode your FLAC or AAC assets into uncompressed WAV or
+MP3 formats before passing them to the visualizer.</p>
+<h3 id="static-files-vs-continuous-audio-streams">Static Files vs.
+Continuous Audio Streams</h3>
+<p>While static files work out of the box, the behavior changes
+depending on how the audio is served:</p>
+<ul>
+<li><strong>Static Audio Files:</strong> If the FLAC or AAC file is
+hosted as a complete static file, Wavesurfer.js fetches the entire audio
+file as an <code>ArrayBuffer</code> and passes it to
+<code>decodeAudioData()</code>. The browser decodes the full file into
+raw PCM audio data, from which Wavesurfer.js calculates the peak values
+and renders the waveform.</li>
+<li><strong>Continuous or Live Streams:</strong> The Web Audio API
+cannot natively process continuous, indefinite live streams (such as
+Icecast, HLS, or DASH) via <code>decodeAudioData()</code>, because that
+method expects a complete, finite buffer before decoding begins.
+Visualizing a live FLAC or AAC stream as it plays requires using an
+<code>AnalyserNode</code> in real time or generating waveform peaks on
+the server.</li>
+</ul>
+<h3 id="the-precomputed-peaks-alternative">The Precomputed Peaks
+Alternative</h3>
+<p>Decoding high-resolution formats like FLAC or high-bitrate AAC
+directly in the client browser can consume significant CPU and memory,
+especially on mobile devices or with long recordings.</p>
+<p>To visualize these files efficiently without transcoding the
+underlying audio, you can generate waveform peak data beforehand on the
+server. By passing a pre-generated array of peak values into the
+<code>peaks</code> configuration option of Wavesurfer.js, the library
+instantly draws the waveform without having to download the entire FLAC
+or AAC file upfront. When combined with the <code>MediaElement</code>
+backend, playback begins immediately via standard browser streaming
+mechanisms while the waveform remains fully interactive.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/can-wavesurfer-js-visualize-flac-and-aac-streams';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

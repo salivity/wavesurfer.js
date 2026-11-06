@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finding Wavesurfer.js Memory Leaks in Chrome DevTools - wavesurfer.js</title>
+    <meta name="description" content="This article explains how Chrome DevTools isolates uncollected Wavesurfer.js instances that persist in memory after their parent components are removed. Readers will learn the mechanics behind audio-related memory leaks, how to capture and compare Heap Sn">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/finding-wavesurfer-js-memory-leaks-in-chrome-dev-tools">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Finding Wavesurfer.js Memory Leaks in Chrome DevTools - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/finding-wavesurfer-js-memory-leaks-in-chrome-dev-tools" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how Chrome DevTools isolates uncollected Wavesurfer.js instances that persist in memory after their parent components are removed. Readers will learn the mechanics behind audio-related memory leaks, how to capture and compare Heap Sn" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="finding-wavesurferjs-memory-leaks-in-chrome-devtools">Finding
+Wavesurfer.js Memory Leaks in Chrome DevTools</h1>
+<p>This article explains how Chrome DevTools isolates uncollected
+Wavesurfer.js instances that persist in memory after their parent
+components are removed. Readers will learn the mechanics behind
+audio-related memory leaks, how to capture and compare Heap Snapshots to
+expose detached canvas elements and Web Audio nodes, and how to trace
+the retainer graph back to the root cause preventing garbage
+collection.</p>
+<p>Wavesurfer.js relies heavily on browser-level resources, including
+the Web Audio API (<code>AudioContext</code>), dynamic DOM structures,
+and <code>&lt;canvas&gt;</code> rendering contexts. When an application
+initializes a Wavesurfer instance inside a component, the player binds
+multiple internal event listeners to the DOM and global window. If a
+developer fails to call <code>wavesurfer.destroy()</code> or leaves
+dangling closures and event subscriptions intact when dismantling the
+UI, the Garbage Collector (GC) cannot clean up the instance, creating a
+memory leak.</p>
+<p>To isolate these lingering instances, developers use the
+<strong>Memory</strong> panel in Chrome DevTools via <strong>Heap
+Snapshots</strong>. The standard methodology involves taking a baseline
+snapshot, performing the action that creates and destroys the Wavesurfer
+player (such as mounting and unmounting a route), forcing a garbage
+collection using the trash can icon, and taking a second snapshot.</p>
+<p>Switching the view from "Summary" to "Comparison" highlights objects
+allocated between the two states that were not reclaimed. By searching
+for <code>WaveSurfer</code> in the class filter, developers can
+immediately determine if constructor instances still exist. If the
+instance count increases with every mount/unmount cycle, the player is
+definitively leaking.</p>
+<p>Beyond the <code>WaveSurfer</code> constructor itself, DevTools helps
+identify leaks through associated detached DOM nodes. Wavesurfer
+generates canvas elements for waveform rendering. In the Heap Snapshot,
+filtering for <code>Detached HTMLCanvasElement</code> reveals whether
+visual elements remain pinned in memory without being attached to the
+active document tree. Similarly, filtering for <code>AudioNode</code> or
+<code>AudioContext</code> exposes retained native audio threads that
+silently consume system memory.</p>
+<p>The critical tool for diagnosis is the <strong>Retainers</strong>
+pane at the bottom of the Memory panel. Selecting a retained
+<code>WaveSurfer</code> instance displays its retaining tree—the chain
+of references leading all the way to a Garbage Collection (GC) root.
+Common culprits revealed in this pane include:</p>
+<ul>
+<li><strong>Global Event Listeners:</strong> Window resize or custom
+document events bound during setup that were not removed with
+<code>removeEventListener</code>.</li>
+<li><strong>Framework Component References:</strong> Persistent React
+<code>useRef</code>, Vue reactive states, or Angular properties holding
+onto the player instance.</li>
+<li><strong>Dangling Closures:</strong> Asynchronous callbacks (such as
+<code>setTimeout</code>, audio decoding promises, or fetch completions)
+that capture the <code>wavesurfer</code> variable in their scope.</li>
+</ul>
+<p>For temporal tracking, the <strong>Allocation instrumentation on
+timeline</strong> tool can be used. This tool records memory allocations
+in real-time, plotting them as vertical blue bars. When an instance is
+unmounted, these bars should turn gray, indicating that the allocated
+memory was successfully reclaimed. If the bars remain blue after
+component teardown, it confirms an active reference leak.</p>
+<p>Resolving these leaks requires invoking
+<code>wavesurfer.destroy()</code> during the component unmount
+lifecycle, closing or disconnecting active <code>AudioContext</code>
+instances if managed externally, and setting any local variables
+referencing the Wavesurfer object to <code>null</code>. DevTools
+confirms the resolution when subsequent Heap Snapshot comparisons show
+zero delta for <code>WaveSurfer</code> and detached canvas elements.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/finding-wavesurfer-js-memory-leaks-in-chrome-dev-tools';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

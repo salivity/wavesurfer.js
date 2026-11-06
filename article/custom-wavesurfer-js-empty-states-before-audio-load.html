@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Wavesurfer.js Empty States Before Audio Load - wavesurfer.js</title>
+    <meta name="description" content="This article examines how developers display custom empty state visuals inside Wavesurfer.js containers before an audio file is chosen or loaded. By default, Wavesurfer.js provides no visual output until an audio source is actively processed, making custo">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/custom-wavesurfer-js-empty-states-before-audio-load">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Custom Wavesurfer.js Empty States Before Audio Load - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/custom-wavesurfer-js-empty-states-before-audio-load" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article examines how developers display custom empty state visuals inside Wavesurfer.js containers before an audio file is chosen or loaded. By default, Wavesurfer.js provides no visual output until an audio source is actively processed, making custo" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="custom-wavesurferjs-empty-states-before-audio-load">Custom
+Wavesurfer.js Empty States Before Audio Load</h1>
+<p>This article examines how developers display custom empty state
+visuals inside Wavesurfer.js containers before an audio file is chosen
+or loaded. By default, Wavesurfer.js provides no visual output until an
+audio source is actively processed, making custom empty states essential
+for user orientation. The following sections outline the standard visual
+patterns deployed inside the player container, including placeholder
+waveforms, file drop zones, skeleton loaders, and functional
+implementation strategies.</p>
+<h3 id="default-wavesurferjs-behavior">Default Wavesurfer.js
+Behavior</h3>
+<p>When Wavesurfer.js initializes via its <code>create()</code> method,
+it attaches internal canvas elements or Web Audio nodes to the specified
+wrapper element. If no audio URL or file blob is provided immediately,
+the container remains completely transparent or blank. Because this
+empty space can confuse users into thinking the application is broken or
+incomplete, developers overlay custom graphics and instructional
+elements within the container prior to audio selection.</p>
+<h3 id="drag-and-drop-target-zones">Drag-and-Drop Target Zones</h3>
+<p>The most functional empty state visual is an interactive drop zone.
+Instead of a blank container, developers style the player wrapper to
+accept audio files directly:</p>
+<ul>
+<li><strong>Outlines and Icons:</strong> Dotted or dashed boundaries
+accompanied by standardized audio, folder, or cloud upload icons.</li>
+<li><strong>Instructional Copy:</strong> Prompts such as "Drag and drop
+an audio file here" or "Click to browse local files."</li>
+<li><strong>File Input Triggers:</strong> The empty state visual is
+often bound to a hidden
+<code>&lt;input type="file" accept="audio/*"&gt;</code> element,
+allowing users to click anywhere within the Wavesurfer container to open
+a system file dialog.</li>
+</ul>
+<h3 id="placeholder-and-dummy-waveforms">Placeholder and Dummy
+Waveforms</h3>
+<p>To visually communicate that the empty space is an audio player,
+developers render non-functional waveform graphics:</p>
+<ul>
+<li><strong>Zero-Amplitude Centerline:</strong> A flat, muted horizontal
+line that mimics a traditional audio track with no signal
+amplitude.</li>
+<li><strong>Muted Static SVGs:</strong> A pre-rendered SVG silhouette of
+a generic audio waveform displayed with low opacity or a neutral gray
+color palette.</li>
+<li><strong>Ghost Peaks:</strong> Generated pseudo-peaks rendered via
+pure CSS or static canvas drawings that disappear the moment live audio
+data generates real peaks.</li>
+</ul>
+<h3 id="skeleton-loaders-and-shimmer-bars">Skeleton Loaders and Shimmer
+Bars</h3>
+<p>When audio is expected to load automatically or via API fetch,
+skeleton loading states are commonly placed inside the player area:</p>
+<ul>
+<li><strong>Shimmering Bars:</strong> Vertical bars of varying heights
+that mimic audio bars, enhanced with a CSS linear-gradient animation
+that sweeps across the container.</li>
+<li><strong>Progress Placeholders:</strong> Subtle pulsing animations
+that signal the player is waiting for either user action or network data
+before drawing the Web Audio canvas.</li>
+</ul>
+<h3 id="call-to-action-cta-centered-overlays">Call-to-Action (CTA)
+Centered Overlays</h3>
+<p>In multi-functional recording or editing applications, the empty
+container displays primary action buttons:</p>
+<ul>
+<li><strong>Microphone/Record Prompts:</strong> A central record button
+prompting the user to capture live audio, frequently integrated with the
+Wavesurfer.js Record plugin.</li>
+<li><strong>Pre-loaded Samples:</strong> Quick-select chips or buttons
+allowing users to load demo or sample audio tracks to test the interface
+without uploading personal files.</li>
+</ul>
+<h3 id="technical-implementation-pattern">Technical Implementation
+Pattern</h3>
+<p>These visuals are typically achieved by treating the Wavesurfer
+container as a positioned parent:</p>
+<ol type="1">
+<li>Set the Wavesurfer container's CSS to
+<code>position: relative</code>.</li>
+<li>Insert an empty state overlay element with
+<code>position: absolute</code>, inset to cover 100% of the parent width
+and height, positioned above the canvas layer via
+<code>z-index</code>.</li>
+<li>Listen for Wavesurfer.js events or user input:
+<ul>
+<li>When a file is selected or the Wavesurfer <code>load</code> process
+begins, set the overlay's display property to <code>none</code> or fade
+it out via CSS transitions.</li>
+<li>On the Wavesurfer <code>ready</code> event, ensure the overlay is
+fully removed from the DOM to allow direct interaction with the
+generated waveform and timeline.</li>
+<li>If the audio is cleared or destroyed via
+<code>wavesurfer.destroy()</code> or <code>wavesurfer.empty()</code>,
+toggle the empty state overlay back into view.</li>
+</ul></li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/custom-wavesurfer-js-empty-states-before-audio-load';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

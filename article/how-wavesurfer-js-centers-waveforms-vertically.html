@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Wavesurfer.js Centers Waveforms Vertically - wavesurfer.js</title>
+    <meta name="description" content="This article explains the internal mechanics of vertical waveform alignment in Wavesurfer.js. By understanding how the library translates raw audio buffer data into pixel coordinates on an HTML5 &lt;canvas&gt;, developers can better manipulate rendering behavio">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-wavesurfer-js-centers-waveforms-vertically">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Wavesurfer.js Centers Waveforms Vertically - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-wavesurfer-js-centers-waveforms-vertically" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains the internal mechanics of vertical waveform alignment in Wavesurfer.js. By understanding how the library translates raw audio buffer data into pixel coordinates on an HTML5 &lt;canvas&gt;, developers can better manipulate rendering behavio" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-wavesurferjs-centers-waveforms-vertically">How Wavesurfer.js
+Centers Waveforms Vertically</h1>
+<p>This article explains the internal mechanics of vertical waveform
+alignment in Wavesurfer.js. By understanding how the library translates
+raw audio buffer data into pixel coordinates on an HTML5
+<code>&lt;canvas&gt;</code>, developers can better manipulate rendering
+behaviors, customize visual appearances, and troubleshoot alignment
+issues across mono and multi-channel audio tracks.</p>
+<h3 id="the-canvas-coordinate-baseline">The Canvas Coordinate
+Baseline</h3>
+<p>Wavesurfer.js renders visual audio representations using HTML5
+<code>&lt;canvas&gt;</code> elements. In standard canvas rendering, the
+coordinate origin <code>(0, 0)</code> is positioned at the top-left
+corner, with the Y-axis increasing downward.</p>
+<p>To center a waveform vertically, Wavesurfer.js establishes an
+artificial baseline at half the total canvas height:</p>
+<p><span class="math display">\[\text{Center Y} = \frac{\text{Canvas
+Height}}{2}\]</span></p>
+<p>This mid-point represents silence (a zero-amplitude state) in
+standard audio signals.</p>
+<h3 id="peak-normalization-and-amplitude-mapping">Peak Normalization and
+Amplitude Mapping</h3>
+<p>During audio decoding, Wavesurfer extracts channel data consisting of
+floating-point values typically ranging between <code>-1.0</code> and
+<code>1.0</code>. These values are extracted into an array of min/max
+peak pairs:</p>
+<ol type="1">
+<li><strong>Min/Max Pairs:</strong> For each horizontal pixel column (or
+bar), the library calculates the maximum positive peak and the minimum
+negative peak within that slice of time.</li>
+<li><strong>Scaling to Height:</strong> The peak values are multiplied
+by half of the canvas height. A maximum peak of <code>1.0</code> extends
+to the very top edge (<code>Y = 0</code>), and a minimum peak of
+<code>-1.0</code> extends to the very bottom edge
+(<code>Y = Canvas Height</code>).</li>
+<li><strong>Drawing the Slice:</strong> For each vertical slice, the
+engine draws a line from
+<code>(Center Y - positivePeak * halfHeight)</code> down to
+<code>(Center Y - negativePeak * halfHeight)</code>. Because the
+positive and negative limits scale equally outward from the center
+baseline, the waveform remains centered.</li>
+</ol>
+<h3 id="bar-alignment-options">Bar Alignment Options</h3>
+<p>In modern versions of Wavesurfer.js, the vertical centering behavior
+can be explicitly configured via rendering options.</p>
+<ul>
+<li><strong>Default (Centered):</strong> Omitting alignment settings or
+setting <code>barAlign</code> to center ensures that peaks extend
+equally upward and downward from the middle of the track.</li>
+<li><strong>Top Alignment (<code>barAlign: 'top'</code>):</strong> The
+baseline shifts to <code>Y = 0</code>. The visual waveform hangs
+downward from the top edge.</li>
+<li><strong>Bottom Alignment (<code>barAlign: 'bottom'</code>):</strong>
+The baseline shifts to <code>Y = Canvas Height</code>. Waveform peaks
+project upward from the bottom of the container.</li>
+</ul>
+<h3 id="multi-channel-audio-and-centering">Multi-Channel Audio and
+Centering</h3>
+<p>When handling stereo or multi-channel audio:</p>
+<ul>
+<li><strong>Merged View (Default):</strong> The library averages or
+composites the channels together and draws a single waveform centered
+along the main vertical axis.</li>
+<li><strong>Split Channels (<code>splitChannels: true</code>):</strong>
+Wavesurfer divides the container into distinct sub-canvases for each
+audio channel. Each channel is assigned its own dedicated canvas with
+its own relative center line at <code>canvas.height / 2</code>, ensuring
+every individual channel remains independently centered.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-wavesurfer-js-centers-waveforms-vertically';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

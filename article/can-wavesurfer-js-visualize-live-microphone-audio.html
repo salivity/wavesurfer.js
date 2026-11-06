@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Can Wavesurfer.js Visualize Live Microphone Audio? - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js can visualize live microphone audio input in real time. Although it is primarily known for rendering waveforms from pre-recorded audio files, it natively supports live audio streams through dedicated plugins. By leveraging the browser&#39;s Medi">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/can-wavesurfer-js-visualize-live-microphone-audio">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Can Wavesurfer.js Visualize Live Microphone Audio? - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/can-wavesurfer-js-visualize-live-microphone-audio" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js can visualize live microphone audio input in real time. Although it is primarily known for rendering waveforms from pre-recorded audio files, it natively supports live audio streams through dedicated plugins. By leveraging the browser&#39;s Medi" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="can-wavesurferjs-visualize-live-microphone-audio">Can
+Wavesurfer.js Visualize Live Microphone Audio?</h1>
+<p>Wavesurfer.js can visualize live microphone audio input in real time.
+Although it is primarily known for rendering waveforms from pre-recorded
+audio files, it natively supports live audio streams through dedicated
+plugins. By leveraging the browser's MediaStreams and the Web Audio API,
+developers can capture microphone input and generate an interactive,
+real-time waveform display directly in a web application.</p>
+<h3 id="how-it-works">How It Works</h3>
+<p>Wavesurfer.js relies on the browser's
+<code>navigator.mediaDevices.getUserMedia()</code> API to access the
+user's microphone. The captured audio stream is piped through the Web
+Audio API (<code>AudioContext</code> and <code>AnalyserNode</code>),
+which extracts real-time frequency and time-domain data. Wavesurfer.js
+then renders this data dynamically onto an HTML5 canvas element as a
+continuous, scrolling waveform.</p>
+<h3 id="implementing-live-audio-with-the-record-plugin">Implementing
+Live Audio with the Record Plugin</h3>
+<p>In the modern versions of Wavesurfer.js (v7 and newer), live input
+visualization is handled by the official <strong>Record
+Plugin</strong>.</p>
+<p>To implement live visualization:</p>
+<ol type="1">
+<li><strong>Initialize Wavesurfer</strong>: Create the primary
+Wavesurfer instance defining the container, dimensions, and visual
+styling (such as wave color and progress color).</li>
+<li><strong>Register the Record Plugin</strong>: Attach the
+<code>RecordPlugin</code> to the instance. This plugin handles device
+selection, stream management, and the visual rendering of the incoming
+stream.</li>
+<li><strong>Request Microphone Access</strong>: Call the plugin's stream
+activation method, which prompts the user for microphone
+permissions.</li>
+<li><strong>Render the Stream</strong>: Once permission is granted, the
+plugin begins piping the stream directly to the waveform canvas,
+displaying live amplitude changes as the user speaks.</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> RecordPlugin <span class="im">from</span> <span class="st">&#39;wavesurfer.js/dist/plugins/record.esm.js&#39;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Create the instance</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#mic-container&#39;</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">height</span><span class="op">:</span> <span class="dv">100</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Initialize the Record plugin</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> record <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">registerPlugin</span>(</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  RecordPlugin<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">scrollingWaveform</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">renderRecordedAudio</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Start the live visualizer</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>record<span class="op">.</span><span class="fu">startMic</span>()</span></code></pre></div>
+<h3 id="key-capabilities-and-features">Key Capabilities and
+Features</h3>
+<ul>
+<li><strong>Scrolling Waveform</strong>: The visualizer can either
+render a static canvas that refreshes periodically or a scrolling
+waveform that moves horizontally as new audio data arrives.</li>
+<li><strong>Seamless Recording</strong>: In addition to visualization,
+the plugin can simultaneously record the input into a <code>Blob</code>
+(typically WebM or WAV format) and immediately display the recorded file
+for playback and editing once recording stops.</li>
+<li><strong>Device Selection</strong>: Developers can enumerate
+connected audio input devices and route specific microphones to the
+visualizer using standard browser APIs.</li>
+</ul>
+<h3 id="important-technical-considerations">Important Technical
+Considerations</h3>
+<ul>
+<li><strong>Secure Context Required</strong>: Browsers restrict
+microphone access to secure contexts. The application must be served
+over <code>https://</code> or <code>localhost</code> for
+<code>getUserMedia</code> to function.</li>
+<li><strong>Resource Management</strong>: Live visualization requires
+continuous canvas repaints. Ensure streams and audio contexts are
+properly destroyed or disconnected when the component unmounts to
+prevent memory leaks and unnecessary CPU usage.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/can-wavesurfer-js-visualize-live-microphone-audio';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

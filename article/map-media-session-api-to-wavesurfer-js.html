@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map MediaSession API to Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This article explains how to connect the browser’s Media Session API with Wavesurfer.js to control audio playback through hardware keys, notification widgets, and lock screens. It outlines the specific Media Session action handlers that map directly to th">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/map-media-session-api-to-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Map MediaSession API to Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/map-media-session-api-to-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to connect the browser’s Media Session API with Wavesurfer.js to control audio playback through hardware keys, notification widgets, and lock screens. It outlines the specific Media Session action handlers that map directly to th" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="map-mediasession-api-to-wavesurferjs">Map MediaSession API to
+Wavesurfer.js</h1>
+<p>This article explains how to connect the browser’s Media Session API
+with Wavesurfer.js to control audio playback through hardware keys,
+notification widgets, and lock screens. It outlines the specific Media
+Session action handlers that map directly to the <code>play</code>,
+<code>pause</code>, and <code>seek</code> methods in Wavesurfer.js,
+providing practical code examples for seamless integration.</p>
+<h3 id="core-action-handler-mappings">Core Action Handler Mappings</h3>
+<p>The <code>navigator.mediaSession.setActionHandler</code> method
+listens for user input from the operating system or browser UI. To
+control a Wavesurfer.js instance, register the standard media action
+names and call the corresponding Wavesurfer methods inside the
+callbacks.</p>
+<h4 id="1-play-play">1. Play (<code>play</code>)</h4>
+<p>The <code>play</code> action triggers when the user presses a
+hardware play button, clicks play on a notification, or interacts with a
+media remote control.</p>
+<ul>
+<li><strong>MediaSession Action:</strong> <code>'play'</code></li>
+<li><strong>Wavesurfer Method:</strong>
+<code>wavesurfer.play()</code></li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">navigator</span><span class="op">.</span><span class="at">mediaSession</span><span class="op">.</span><span class="fu">setActionHandler</span>(<span class="st">&#39;play&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">play</span>()<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="2-pause-pause">2. Pause (<code>pause</code>)</h4>
+<p>The <code>pause</code> action captures pause commands from the
+interface or external devices.</p>
+<ul>
+<li><strong>MediaSession Action:</strong> <code>'pause'</code></li>
+<li><strong>Wavesurfer Method:</strong>
+<code>wavesurfer.pause()</code></li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">navigator</span><span class="op">.</span><span class="at">mediaSession</span><span class="op">.</span><span class="fu">setActionHandler</span>(<span class="st">&#39;pause&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">pause</span>()<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="3-absolute-seeking-seekto">3. Absolute Seeking
+(<code>seekto</code>)</h4>
+<p>The <code>seekto</code> action fires when a user drags the progress
+scrubber on a lock screen or system media card. The callback receives a
+<code>details</code> object containing <code>seekTime</code> (in
+seconds).</p>
+<ul>
+<li><strong>MediaSession Action:</strong> <code>'seekto'</code></li>
+<li><strong>Wavesurfer Method:</strong>
+<code>wavesurfer.setTime(details.seekTime)</code> (Wavesurfer v7+)</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">navigator</span><span class="op">.</span><span class="at">mediaSession</span><span class="op">.</span><span class="fu">setActionHandler</span>(<span class="st">&#39;seekto&#39;</span><span class="op">,</span> (details) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (details<span class="op">.</span><span class="at">seekTime</span> <span class="op">!==</span> <span class="kw">undefined</span>) {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">setTime</span>(details<span class="op">.</span><span class="at">seekTime</span>)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p><em>(Note: In Wavesurfer v6 and earlier, absolute seeking is
+performed using a normalized value from 0 to 1:
+<code>wavesurfer.seekTo(details.seekTime / wavesurfer.getDuration())</code>.)</em></p>
+<h4 id="4-relative-seeking-seekbackward-and-seekforward">4. Relative
+Seeking (<code>seekbackward</code> and <code>seekforward</code>)</h4>
+<p>These actions fire when users click native "skip back" or "skip
+forward" interval buttons. The <code>details</code> object may supply a
+<code>seekOffset</code> (in seconds), but typically defaults to 10
+seconds if undefined.</p>
+<ul>
+<li><strong>MediaSession Actions:</strong> <code>'seekbackward'</code>,
+<code>'seekforward'</code></li>
+<li><strong>Wavesurfer Method:</strong>
+<code>wavesurfer.skip(seconds)</code></li>
+</ul>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> defaultSkipTime <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">navigator</span><span class="op">.</span><span class="at">mediaSession</span><span class="op">.</span><span class="fu">setActionHandler</span>(<span class="st">&#39;seekbackward&#39;</span><span class="op">,</span> (details) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> skipTime <span class="op">=</span> details<span class="op">.</span><span class="at">seekOffset</span> <span class="op">||</span> defaultSkipTime<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">skip</span>(<span class="op">-</span>skipTime)<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="bu">navigator</span><span class="op">.</span><span class="at">mediaSession</span><span class="op">.</span><span class="fu">setActionHandler</span>(<span class="st">&#39;seekforward&#39;</span><span class="op">,</span> (details) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> skipTime <span class="op">=</span> details<span class="op">.</span><span class="at">seekOffset</span> <span class="op">||</span> defaultSkipTime<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">skip</span>(skipTime)<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="synchronizing-position-state">Synchronizing Position State</h3>
+<p>To ensure the system UI correctly displays the playhead and scrub
+bar, update the Media Session position state whenever Wavesurfer changes
+position or playback state:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">updatePositionState</span>() {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="st">&#39;setPositionState&#39;</span> <span class="kw">in</span> <span class="bu">navigator</span><span class="op">.</span><span class="at">mediaSession</span>) {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">navigator</span><span class="op">.</span><span class="at">mediaSession</span><span class="op">.</span><span class="fu">setPositionState</span>({</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">duration</span><span class="op">:</span> wavesurfer<span class="op">.</span><span class="fu">getDuration</span>() <span class="op">||</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">playbackRate</span><span class="op">:</span> wavesurfer<span class="op">.</span><span class="fu">getPlaybackRate</span>() <span class="op">||</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">position</span><span class="op">:</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>() <span class="op">||</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;play&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="bu">navigator</span><span class="op">.</span><span class="at">mediaSession</span><span class="op">.</span><span class="at">playbackState</span> <span class="op">=</span> <span class="st">&#39;playing&#39;</span><span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">updatePositionState</span>()<span class="op">;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;pause&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="bu">navigator</span><span class="op">.</span><span class="at">mediaSession</span><span class="op">.</span><span class="at">playbackState</span> <span class="op">=</span> <span class="st">&#39;paused&#39;</span><span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">updatePositionState</span>()<span class="op">;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;timeupdate&#39;</span><span class="op">,</span> updatePositionState)<span class="op">;</span></span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/map-media-session-api-to-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

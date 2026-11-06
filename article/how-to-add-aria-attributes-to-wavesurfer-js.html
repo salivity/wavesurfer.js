@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Add ARIA Attributes to Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js creates customizable, interactive audio waveforms using the HTML5 Canvas or Web Audio API, but it does not include accessible Rich Internet Applications (ARIA) attributes by default. This guide explains how to add essential ARIA roles, stati">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-add-aria-attributes-to-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Add ARIA Attributes to Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-add-aria-attributes-to-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js creates customizable, interactive audio waveforms using the HTML5 Canvas or Web Audio API, but it does not include accessible Rich Internet Applications (ARIA) attributes by default. This guide explains how to add essential ARIA roles, stati" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-add-aria-attributes-to-wavesurferjs">How to Add ARIA
+Attributes to Wavesurfer.js</h1>
+<p>Wavesurfer.js creates customizable, interactive audio waveforms using
+the HTML5 Canvas or Web Audio API, but it does not include accessible
+Rich Internet Applications (ARIA) attributes by default. This guide
+explains how to add essential ARIA roles, static labels, and dynamic
+states to your Wavesurfer.js container so screen readers and other
+assistive technologies can interpret and interact with the audio
+waveform.</p>
+<h3 id="1-set-up-initial-container-attributes">1. Set Up Initial
+Container Attributes</h3>
+<p>Because a waveform serves both as an audio visualizer and an
+interactive scrubber, the container element should typically be
+designated with <code>role="slider"</code> or
+<code>role="region"</code>. If users can click or drag across the
+waveform to seek audio, treating it as a slider is best for
+accessibility.</p>
+<p>You can declare static ARIA attributes directly in your HTML
+container:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> </span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  id</span><span class="op">=</span><span class="st">&quot;waveform&quot;</span><span class="ot"> </span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ot">  role</span><span class="op">=</span><span class="st">&quot;slider&quot;</span><span class="ot"> </span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  tabindex</span><span class="op">=</span><span class="st">&quot;0&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ot">  aria-label</span><span class="op">=</span><span class="st">&quot;Audio scrubber&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  aria-valuemin</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="ot"> </span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ot">  aria-valuenow</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="ot"> </span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ot">  aria-valuetext</span><span class="op">=</span><span class="st">&quot;0 seconds&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>Alternatively, you can attach these attributes programmatically via
+JavaScript using <code>setAttribute</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> container <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;#waveform&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;role&#39;</span><span class="op">,</span> <span class="st">&#39;slider&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;tabindex&#39;</span><span class="op">,</span> <span class="st">&#39;0&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;aria-label&#39;</span><span class="op">,</span> <span class="st">&#39;Audio scrubber&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;aria-valuemin&#39;</span><span class="op">,</span> <span class="st">&#39;0&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;aria-valuenow&#39;</span><span class="op">,</span> <span class="st">&#39;0&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="2-update-dynamic-values-with-wavesurfer-events">2. Update
+Dynamic Values with Wavesurfer Events</h3>
+<p>For an interactive scrubber, screen readers require dynamic updates
+to <code>aria-valuemax</code>, <code>aria-valuenow</code>, and
+human-readable formats via <code>aria-valuetext</code>. Listen to
+Wavesurfer.js lifecycle events—specifically <code>ready</code> and
+<code>timeupdate</code> (or <code>audioprocess</code> in older
+versions)—to update these values.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> container <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;waveform&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> container<span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F4A85&#39;</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#383351&#39;</span><span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;/path/to/audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Update maximum value once the audio file metadata is loaded</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> duration <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">round</span>(wavesurfer<span class="op">.</span><span class="fu">getDuration</span>())<span class="op">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  container<span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;aria-valuemax&#39;</span><span class="op">,</span> duration)<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Update current progress during playback or seeking</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;timeupdate&#39;</span><span class="op">,</span> (currentTime) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> currentSeconds <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">round</span>(currentTime)<span class="op">;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  container<span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;aria-valuenow&#39;</span><span class="op">,</span> currentSeconds)<span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  container<span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;aria-valuetext&#39;</span><span class="op">,</span> <span class="vs">`</span><span class="sc">${</span>currentSeconds<span class="sc">}</span><span class="vs"> seconds`</span>)<span class="op">;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="3-add-keyboard-navigation-support">3. Add Keyboard Navigation
+Support</h3>
+<p>Adding ARIA roles such as <code>role="slider"</code> creates an
+expectation that the element can be manipulated via keyboard inputs
+(such as the Left and Right Arrow keys). Add a standard keyboard event
+listener to the container to alter audio playback position
+accordingly:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;keydown&#39;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> step <span class="op">=</span> <span class="dv">5</span><span class="op">;</span> <span class="co">// Skip duration in seconds</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> currentTime <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>()<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> duration <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getDuration</span>()<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="fu">key</span> <span class="op">===</span> <span class="st">&#39;ArrowRight&#39;</span>) {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">setTime</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">min</span>(currentTime <span class="op">+</span> step<span class="op">,</span> duration))<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="fu">key</span> <span class="op">===</span> <span class="st">&#39;ArrowLeft&#39;</span>) {</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">setTime</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(currentTime <span class="op">-</span> step<span class="op">,</span> <span class="dv">0</span>))<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="fu">key</span> <span class="op">===</span> <span class="st">&#39; &#39;</span>) {</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">playPause</span>()<span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="4-hide-generated-canvas-elements-from-assistive-tech">4. Hide
+Generated Canvas Elements from Assistive Tech</h3>
+<p>Wavesurfer.js automatically injects shadow DOM elements, wrappers, or
+<code>&lt;canvas&gt;</code> elements into the designated container.
+Because these elements are purely visual representations of the audio
+signal, they can confuse screen readers. Set
+<code>aria-hidden="true"</code> on internal canvas elements once
+initialized:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> visualElements <span class="op">=</span> container<span class="op">.</span><span class="fu">querySelectorAll</span>(<span class="st">&#39;canvas&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  visualElements<span class="op">.</span><span class="fu">forEach</span>((el) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    el<span class="op">.</span><span class="fu">setAttribute</span>(<span class="st">&#39;aria-hidden&#39;</span><span class="op">,</span> <span class="st">&#39;true&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-add-aria-attributes-to-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

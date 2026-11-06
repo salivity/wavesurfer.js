@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless Audio Peak Extraction for Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Rendering interactive audio waveforms in web applications can severely degrade frontend performance if the browser is forced to download and decode full audio files on the fly. Automating audio peak extraction via serverless functions solves this issue by">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/serverless-audio-peak-extraction-for-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Serverless Audio Peak Extraction for Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/serverless-audio-peak-extraction-for-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Rendering interactive audio waveforms in web applications can severely degrade frontend performance if the browser is forced to download and decode full audio files on the fly. Automating audio peak extraction via serverless functions solves this issue by" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="serverless-audio-peak-extraction-for-wavesurferjs">Serverless
+Audio Peak Extraction for Wavesurfer.js</h1>
+<p>Rendering interactive audio waveforms in web applications can
+severely degrade frontend performance if the browser is forced to
+download and decode full audio files on the fly. Automating audio peak
+extraction via serverless functions solves this issue by shifting the
+heavy computational burden to the cloud immediately upon file upload.
+This architecture pre-computes the waveform data, outputting a
+lightweight JSON array of audio peaks that can be instantly consumed by
+Wavesurfer.js for near-instantaneous visualization and minimal
+client-side resource usage.</p>
+<h3 id="the-problem-with-client-side-peak-generation">The Problem with
+Client-Side Peak Generation</h3>
+<p>By default, Wavesurfer.js uses the browser's Web Audio API to
+download the entire audio file into an <code>AudioBuffer</code> and
+calculate peak values locally. For multi-megabyte MP3s, podcast
+episodes, or lossless WAV files, this process causes noticeable delays,
+consumes high CPU and memory, drains mobile battery life, and increases
+bandwidth consumption. Pre-generating waveform peak data eliminates
+these drawbacks.</p>
+<h3 id="the-automated-serverless-workflow">The Automated Serverless
+Workflow</h3>
+<p>The serverless peak extraction pipeline operates asynchronously
+through event-driven cloud architecture, typically involving object
+storage and a compute runtime (such as AWS Lambda, Google Cloud
+Functions, or Cloudflare Workers).</p>
+<ol type="1">
+<li><strong>Client Upload</strong>: The user uploads an audio track
+directly from the browser to cloud storage (e.g., an AWS S3 bucket)
+using a secure presigned URL.</li>
+<li><strong>Event Trigger</strong>: The storage provider detects the new
+<code>ObjectCreated</code> event and immediately invokes a designated
+serverless function, passing the file metadata in the event
+payload.</li>
+<li><strong>Audio Processing</strong>: The serverless runtime downloads
+or streams the uploaded file. Using an optimized binary such as BBC's
+<code>audiowaveform</code> utility or an FFmpeg wrapper bundled in a
+container image or runtime layer, the function processes the raw audio
+samples and computes minimum/maximum amplitude peaks.</li>
+<li><strong>Data Persistence</strong>: The function outputs a compact
+JSON file containing the normalized peak array (and optionally duration
+metadata) and writes it back to storage alongside the original audio
+file, or saves the array directly to an application database.</li>
+</ol>
+<h3 id="integration-with-wavesurferjs">Integration with
+Wavesurfer.js</h3>
+<p>Once the serverless function completes the extraction, the frontend
+application can render the visual waveform immediately without waiting
+for the full audio stream to decode.</p>
+<p>Wavesurfer.js natively supports pre-rendered peaks through its
+configuration options. When initializing the player, pass the extracted
+JSON data to the <code>peaks</code> parameter:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Fetch the pre-generated peaks JSON from your storage/API</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(<span class="st">&#39;https://cdn.example.com/audio-peaks/track-123.json&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> peakData <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">json</span>()<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;https://cdn.example.com/audio/track-123.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">peaks</span><span class="op">:</span> peakData<span class="op">.</span><span class="at">data</span><span class="op">,</span> <span class="co">// Pre-computed array of peak values</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">duration</span><span class="op">:</span> peakData<span class="op">.</span><span class="at">duration</span><span class="op">,</span> <span class="co">// Skips duration calculation overhead</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>When the <code>peaks</code> array is provided, Wavesurfer.js skips
+the Web Audio API decoding step entirely and draws the waveform
+instantly on the canvas. The browser only needs to stream the audio when
+the user presses play.</p>
+<h3 id="benefits-of-the-serverless-approach">Benefits of the Serverless
+Approach</h3>
+<ul>
+<li><strong>Instant UI Feedback</strong>: Waveforms display in
+milliseconds because the client only downloads a few kilobytes of JSON
+data rather than megabytes of audio.</li>
+<li><strong>Elastic Scalability</strong>: Serverless functions
+automatically scale up to handle sudden spikes in user uploads and scale
+down to zero when idle, avoiding the need for dedicated transcoding
+servers.</li>
+<li><strong>Cost Efficiency</strong>: You only pay for the exact compute
+time used to parse the audio files, which typically takes only a few
+seconds per track.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/serverless-audio-peak-extraction-for-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

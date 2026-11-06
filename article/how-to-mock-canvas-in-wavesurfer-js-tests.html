@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Mock Canvas in Wavesurfer.js Tests - wavesurfer.js</title>
+    <meta name="description" content="Running automated unit or integration tests for Wavesurfer.js often results in failures because headless environments like Jest and jsdom do not natively implement the HTML5 Canvas API. Wavesurfer relies heavily on the 2d rendering context to draw wavefor">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-mock-canvas-in-wavesurfer-js-tests">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Mock Canvas in Wavesurfer.js Tests - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-mock-canvas-in-wavesurfer-js-tests" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Running automated unit or integration tests for Wavesurfer.js often results in failures because headless environments like Jest and jsdom do not natively implement the HTML5 Canvas API. Wavesurfer relies heavily on the 2d rendering context to draw wavefor" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-mock-canvas-in-wavesurferjs-tests">How to Mock Canvas in
+Wavesurfer.js Tests</h1>
+<p>Running automated unit or integration tests for Wavesurfer.js often
+results in failures because headless environments like Jest and jsdom do
+not natively implement the HTML5 Canvas API. Wavesurfer relies heavily
+on the <code>2d</code> rendering context to draw waveforms, meaning you
+must provide mock implementations of canvas methods to allow your test
+suite to run without crashing. This guide explains why these failures
+occur and provides both automated and manual methods to mock the canvas
+context for Wavesurfer.js.</p>
+<h3 id="why-canvas-needs-to-be-mocked">Why Canvas Needs to Be
+Mocked</h3>
+<p>In Node-based testing environments such as Jest, Vitest, or Mocha
+running on top of <code>jsdom</code>,
+<code>HTMLCanvasElement.prototype.getContext('2d')</code> returns
+<code>null</code> or throws an error by default. When Wavesurfer
+initializes, it attempts to access this context to measure dimensions
+and render audio peaks. Without an active context, Wavesurfer will throw
+runtime exceptions such as
+<code>TypeError: Cannot read properties of null (reading 'fillRect')</code>
+or fail to complete rendering hooks.</p>
+<hr />
+<h3 id="method-1-using-jest-canvas-mock-recommended">Method 1: Using
+<code>jest-canvas-mock</code> (Recommended)</h3>
+<p>The standard and most comprehensive approach for Jest and Vitest is
+to use the <code>jest-canvas-mock</code> package. It provides a full
+mock implementation of the Canvas API.</p>
+<h4 id="1-install-the-package">1. Install the Package</h4>
+<p>Run the following command in your terminal:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install <span class="at">--save-dev</span> jest-canvas-mock</span></code></pre></div>
+<h4 id="2-configure-your-test-setup">2. Configure Your Test Setup</h4>
+<p>If you are using Jest, add the library to your
+<code>setupFiles</code> array inside <code>jest.config.js</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>module<span class="op">.</span><span class="at">exports</span> <span class="op">=</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">setupFiles</span><span class="op">:</span> [<span class="st">&#39;jest-canvas-mock&#39;</span>]<span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">testEnvironment</span><span class="op">:</span> <span class="st">&#39;jsdom&#39;</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>Alternatively, you can import it directly inside your dedicated test
+setup file (e.g., <code>setupTests.js</code>):</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="st">&#39;jest-canvas-mock&#39;</span><span class="op">;</span></span></code></pre></div>
+<p>If using Vitest, import <code>jest-canvas-mock</code> inside your
+<code>setupFiles</code> script defined in
+<code>vitest.config.ts</code>.</p>
+<hr />
+<h3 id="method-2-manual-context-mocking">Method 2: Manual Context
+Mocking</h3>
+<p>If you prefer to avoid adding external dependencies, you can manually
+stub <code>HTMLCanvasElement.prototype.getContext</code> before your
+tests run. Wavesurfer only calls a subset of the 2D context methods
+during typical lifecycle events.</p>
+<p>Add this setup script in a test setup file or before initializing
+Wavesurfer:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">beforeAll</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">HTMLCanvasElement</span><span class="op">.</span><span class="at">prototype</span><span class="op">.</span><span class="at">getContext</span> <span class="op">=</span> <span class="kw">function</span> (contextType) {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (contextType <span class="op">===</span> <span class="st">&#39;2d&#39;</span>) {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">canvas</span><span class="op">:</span> <span class="kw">this</span><span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">fillRect</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">clearRect</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">getImageData</span><span class="op">:</span> (x<span class="op">,</span> y<span class="op">,</span> w<span class="op">,</span> h) <span class="kw">=&gt;</span> ({</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>          <span class="dt">data</span><span class="op">:</span> <span class="kw">new</span> <span class="bu">Uint8ClampedArray</span>(w <span class="op">*</span> h <span class="op">*</span> <span class="dv">4</span>)<span class="op">,</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        })<span class="op">,</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">putImageData</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">createImageData</span><span class="op">:</span> () <span class="kw">=&gt;</span> []<span class="op">,</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">setTransform</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">drawImage</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        <span class="dt">save</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">fillText</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">restore</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        <span class="dt">beginPath</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">moveTo</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        <span class="dt">lineTo</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        <span class="dt">closePath</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>        <span class="dt">stroke</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        <span class="dt">translate</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        <span class="dt">scale</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>        <span class="dt">rotate</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        <span class="dt">arc</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>        <span class="dt">fill</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        <span class="dt">measureText</span><span class="op">:</span> () <span class="kw">=&gt;</span> ({ <span class="dt">width</span><span class="op">:</span> <span class="dv">0</span> })<span class="op">,</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">transform</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">rect</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>        <span class="dt">clip</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>        <span class="dt">createLinearGradient</span><span class="op">:</span> () <span class="kw">=&gt;</span> ({</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>          <span class="dt">addColorStop</span><span class="op">:</span> () <span class="kw">=&gt;</span> {}<span class="op">,</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>        })<span class="op">,</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>      }<span class="op">;</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<hr />
+<h3 id="additional-requirement-mocking-web-audio">Additional
+Requirement: Mocking Web Audio</h3>
+<p>In addition to Canvas, Wavesurfer.js requires the Web Audio API
+(<code>AudioContext</code>), which is also missing in
+<code>jsdom</code>. To prevent audio-related exceptions during your
+canvas tests, mock <code>AudioContext</code> and
+<code>OfflineAudioContext</code> alongside your canvas mock:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="at">AudioContext</span> <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">AudioContext</span> <span class="op">||</span> <span class="kw">class</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">createGain</span>() {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> { <span class="dt">connect</span><span class="op">:</span> () <span class="kw">=&gt;</span> {} }<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">createMediaElementSource</span>() {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> { <span class="dt">connect</span><span class="op">:</span> () <span class="kw">=&gt;</span> {} }<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">close</span>() {</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">Promise</span><span class="op">.</span><span class="fu">resolve</span>()<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="at">OfflineAudioContext</span> <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">OfflineAudioContext</span> <span class="op">||</span> <span class="bu">window</span><span class="op">.</span><span class="at">AudioContext</span><span class="op">;</span></span></code></pre></div>
+<hr />
+<h3 id="verifying-the-setup">Verifying the Setup</h3>
+<p>You can verify that your context mock works as expected with a simple
+test verifying Wavesurfer initialization:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">describe</span>(<span class="st">&#39;Wavesurfer Initialization&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> container<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">beforeEach</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    container <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">createElement</span>(<span class="st">&#39;div&#39;</span>)<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">document</span><span class="op">.</span><span class="at">body</span><span class="op">.</span><span class="fu">appendChild</span>(container)<span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">afterEach</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    container<span class="op">.</span><span class="fu">remove</span>()<span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">it</span>(<span class="st">&#39;initializes without throwing canvas errors&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">expect</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> ws <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        container<span class="op">,</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#ff0000&#39;</span><span class="op">,</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#0000ff&#39;</span><span class="op">,</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>      })<span class="op">;</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>      ws<span class="op">.</span><span class="fu">destroy</span>()<span class="op">;</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    })<span class="op">.</span><span class="at">not</span><span class="op">.</span><span class="fu">toThrow</span>()<span class="op">;</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-mock-canvas-in-wavesurfer-js-tests';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

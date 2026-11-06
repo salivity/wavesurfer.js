@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Accessibility: Key Visual Indicators - wavesurfer.js</title>
+    <meta name="description" content="Making audio players built with Wavesurfer.js accessible requires bridging the gap between auditory content and visual interface cues. This article outlines the essential visual indicators—including high-contrast waveforms, prominent focus states, dynamic">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-accessibility-key-visual-indicators">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Accessibility: Key Visual Indicators - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-accessibility-key-visual-indicators" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Making audio players built with Wavesurfer.js accessible requires bridging the gap between auditory content and visual interface cues. This article outlines the essential visual indicators—including high-contrast waveforms, prominent focus states, dynamic" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-accessibility-key-visual-indicators">Wavesurfer.js
+Accessibility: Key Visual Indicators</h1>
+<p>Making audio players built with Wavesurfer.js accessible requires
+bridging the gap between auditory content and visual interface cues.
+This article outlines the essential visual indicators—including
+high-contrast waveforms, prominent focus states, dynamic playback icons,
+time scrubbers, and region labels—that improve accessibility for users
+who are deaf, hard of hearing, visually impaired, or navigating via
+keyboard.</p>
+<h3 id="high-contrast-waveform-colors">High-Contrast Waveform
+Colors</h3>
+<p>Default waveform themes often use subtle, muted colors that fail WCAG
+contrast requirements. To make the waveform usable for users with low
+vision or color blindness:</p>
+<ul>
+<li><strong>Differentiate Progress Clearly:</strong> Ensure a
+significant contrast ratio (at least 3:1 for graphical objects, ideally
+4.5:1) between the <code>waveColor</code> (unplayed audio) and the
+<code>progressColor</code> (played audio).</li>
+<li><strong>Background Separation:</strong> Both the wave and progress
+colors must contrast sharply against the container's background color to
+maintain the shape's visibility.</li>
+</ul>
+<h3 id="distinct-playhead-and-cursor-tracking">Distinct Playhead and
+Cursor Tracking</h3>
+<p>Wavesurfer.js renders audio via an HTML5 canvas, which can make
+tracking the current playback position difficult if not styled
+properly.</p>
+<ul>
+<li><strong>Prominent Cursor Line:</strong> Increase the
+<code>cursorWidth</code> (e.g., 2px or 3px) and assign a high-contrast
+<code>cursorColor</code> so users can instantly locate the
+playhead.</li>
+<li><strong>Handle Markers:</strong> If scrubbing is enabled, supplement
+the thin vertical line with a top or bottom visual handle (a small
+triangular or circular marker) to clearly denote the draggable playback
+point.</li>
+</ul>
+<h3 id="clear-focus-rings-for-keyboard-navigation">Clear Focus Rings for
+Keyboard Navigation</h3>
+<p>Because Wavesurfer.js renders primarily onto a
+<code>&lt;canvas&gt;</code> element, it does not provide native keyboard
+focus indicators out of the box.</p>
+<ul>
+<li><strong>Interactive Wrapper Focus:</strong> Wrap the waveform or
+make the canvas focusable (<code>tabindex="0"</code>) and implement a
+distinct, non-color-only CSS focus indicator (such as a 2px solid
+outline with offset).</li>
+<li><strong>Button States:</strong> Ensure external transport controls
+(Play, Pause, Stop, Skip) display explicit <code>:focus-visible</code>
+styles when navigated via a keyboard or switch device.</li>
+</ul>
+<h3 id="dynamic-playback-and-state-indicators">Dynamic Playback and
+State Indicators</h3>
+<p>Audio playback state should always be visible without relying on
+sound.</p>
+<ul>
+<li><strong>Icon and Text Pairing:</strong> Toggle between universally
+recognized Play and Pause icons paired with visible text labels (e.g.,
+"Play" / "Pause") rather than relying on icons alone.</li>
+<li><strong>Loading and Buffering Cues:</strong> Display an active
+spinner, skeleton wave, or progress bar during audio decoding and
+buffering so users know the player is working rather than broken.</li>
+<li><strong>Volume and Mute Status:</strong> Provide a stepped visual
+meter for volume levels alongside an icon indicating whether audio is
+actively muted.</li>
+</ul>
+<h3 id="scrubbing-and-hover-time-previews">Scrubbing and Hover Time
+Previews</h3>
+<p>Users navigating visual audio representations need
+spatial-to-temporal clarity.</p>
+<ul>
+<li><strong>Hover Timestamp Badges:</strong> Utilize the Wavesurfer.js
+Hover plugin to display a high-contrast tooltip indicating the exact
+timestamp at the cursor's position.</li>
+<li><strong>Current Time vs. Total Duration:</strong> Display static,
+visible text counters showing elapsed time and total duration adjacent
+to the waveform rather than relying solely on visual estimation.</li>
+</ul>
+<h3 id="labeled-regions-and-markers">Labeled Regions and Markers</h3>
+<p>When using the Wavesurfer.js Regions plugin for annotations or audio
+slicing:</p>
+<ul>
+<li><strong>Border Contours:</strong> Give regions a defined border
+rather than just a semi-transparent background fill, ensuring boundaries
+are visible to color-deficient users.</li>
+<li><strong>Text Labels:</strong> Always include visible, legible text
+labels or badges inside or immediately above regions to convey their
+purpose without requiring user interaction.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-accessibility-key-visual-indicators';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

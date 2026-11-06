@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimizing Wavesurfer.js with Screen Orientation Locks - wavesurfer.js</title>
+    <meta name="description" content="Locking screen orientation transforms mobile audio editing and visualization by providing a dedicated, uninterrupted environment for full-screen waveform scrubbing in Wavesurfer.js. This article explores how pairing the Screen Orientation API with Wavesur">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/optimizing-wavesurfer-js-with-screen-orientation-locks">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Optimizing Wavesurfer.js with Screen Orientation Locks - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/optimizing-wavesurfer-js-with-screen-orientation-locks" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Locking screen orientation transforms mobile audio editing and visualization by providing a dedicated, uninterrupted environment for full-screen waveform scrubbing in Wavesurfer.js. This article explores how pairing the Screen Orientation API with Wavesur" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="optimizing-wavesurferjs-with-screen-orientation-locks">Optimizing
+Wavesurfer.js with Screen Orientation Locks</h1>
+<p>Locking screen orientation transforms mobile audio editing and
+visualization by providing a dedicated, uninterrupted environment for
+full-screen waveform scrubbing in Wavesurfer.js. This article explores
+how pairing the Screen Orientation API with Wavesurfer.js maximizes
+horizontal display space, eliminates disruptive canvas re-renders,
+stabilizes touch gestures during continuous audio scrubbing, and
+delivers an experience comparable to a native desktop or mobile digital
+audio workstation (DAW).</p>
+<h3 id="maximizing-horizontal-timeline-resolution">Maximizing Horizontal
+Timeline Resolution</h3>
+<p>Audio scrubbing inherently requires horizontal real estate. Sound
+waves evolve over time, meaning the X-axis of a waveform display
+represents temporal data. On mobile screens in portrait mode, the narrow
+width severely compresses the visual representation of the audio file,
+making individual peaks, transients, and silence difficult to
+distinguish.</p>
+<p>By locking the screen orientation to landscape mode when an
+application enters full-screen mode, developers provide Wavesurfer.js
+with the maximum possible horizontal canvas width. This increased pixel
+width directly translates to higher visual resolution per millisecond of
+audio. Users can pinpoint edit markers, cue points, and micro-edits
+without needing extreme visual zoom levels that might otherwise
+disorient the context of the overall track.</p>
+<h3 id="eliminating-disruptive-canvas-re-renders">Eliminating Disruptive
+Canvas Re-renders</h3>
+<p>Wavesurfer.js renders waveforms onto HTML5
+<code>&lt;canvas&gt;</code> elements based on the dimensions of its
+parent container. When a mobile device rotates between portrait and
+landscape modes, the viewport dimensions change dramatically, forcing
+Wavesurfer.js to clear, resize, and completely redraw the canvas.</p>
+<p>During active audio scrubbing, a re-render can cause:</p>
+<ul>
+<li>Visual stutter and frame drops.</li>
+<li>Momentary loss of touch focus or scrub position.</li>
+<li>Unnecessary CPU and GPU overhead, which degrades
+responsiveness.</li>
+</ul>
+<p>Enforcing an orientation lock keeps the canvas dimensions constant,
+ensuring smooth frame rates and uninterrupted rendering during intensive
+scrub operations.</p>
+<h3 id="stabilizing-touch-scrubbing-ergonomics">Stabilizing Touch
+Scrubbing Ergonomics</h3>
+<p>Mobile scrubbing relies on drag-and-drop interactions across the
+screen. When users hold a device to scrub with their thumbs or fingers,
+subtle tilts are inevitable. Without an orientation lock, minor hand
+shifts can trigger the operating system's auto-rotate feature.</p>
+<p>An unexpected rotation in the middle of a gesture cancels touch
+events, jumps the playhead to an unintended timestamp, and interrupts
+the playback buffer. Orientation locks maintain a fixed interaction
+plane, allowing users to grip the device securely with both hands and
+scrub quickly or slowly across the entire length of the waveform without
+fear of breaking the touch tracking lifecycle.</p>
+<h3 id="implementing-orientation-locks-with-wavesurferjs">Implementing
+Orientation Locks with Wavesurfer.js</h3>
+<p>Developers can implement this functionality using the standard Screen
+Orientation API combined with the Fullscreen API alongside
+Wavesurfer.js.</p>
+<p>When the user triggers a full-screen scrubbing mode:</p>
+<ol type="1">
+<li>Request full-screen status on the player container using
+<code>element.requestFullscreen()</code>.</li>
+<li>Lock the orientation using
+<code>screen.orientation.lock('landscape')</code>.</li>
+<li>Instruct Wavesurfer.js to re-calculate its layout once using
+<code>wavesurfer.setOptions()</code> or triggering
+<code>wavesurfer.drawer.recalculateWidth()</code>.</li>
+</ol>
+<p>When exiting full-screen mode, invoking
+<code>screen.orientation.unlock()</code> returns device orientation
+behavior to the system default, preserving the broader usability of the
+host application. This workflow delivers a focused, highly precise
+editing environment whenever detailed waveform scrubbing is
+required.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/optimizing-wavesurfer-js-with-screen-orientation-locks';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

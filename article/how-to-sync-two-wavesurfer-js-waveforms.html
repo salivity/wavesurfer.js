@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Sync Two Wavesurfer.js Waveforms - wavesurfer.js</title>
+    <meta name="description" content="Synchronizing two distinct audio waveforms in Wavesurfer.js is essential for comparative audio tools, multitrack players, and A/B testing interfaces. This article breaks down the primary technique for achieving sample-accurate synchronization between two">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-sync-two-wavesurfer-js-waveforms">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Sync Two Wavesurfer.js Waveforms - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-sync-two-wavesurfer-js-waveforms" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Synchronizing two distinct audio waveforms in Wavesurfer.js is essential for comparative audio tools, multitrack players, and A/B testing interfaces. This article breaks down the primary technique for achieving sample-accurate synchronization between two" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-sync-two-wavesurferjs-waveforms">How to Sync Two
+Wavesurfer.js Waveforms</h1>
+<p>Synchronizing two distinct audio waveforms in Wavesurfer.js is
+essential for comparative audio tools, multitrack players, and A/B
+testing interfaces. This article breaks down the primary technique for
+achieving sample-accurate synchronization between two separate
+Wavesurfer instances: bidirectional event bridging with state-lock
+guards. You will learn how to align playback, handle seeking, and
+prevent recursive feedback loops to keep both audio tracks and visual
+cursors perfectly aligned.</p>
+<h3 id="the-core-technique-bidirectional-event-synchronization">The Core
+Technique: Bidirectional Event Synchronization</h3>
+<p>The most effective way to keep two separate Wavesurfer instances
+synchronized is through bidirectional event listening paired with an
+execution guard (a boolean lock).</p>
+<p>When Track A plays, pauses, or seeks, it triggers corresponding
+methods on Track B, and vice versa. However, directly mirroring these
+events causes an infinite feedback loop (Track A updates Track B, which
+in turn updates Track A). A synchronization flag prevents this
+recursion.</p>
+<h3 id="implementing-the-state-lock">Implementing the State Lock</h3>
+<p>To prevent event loops, declare a boolean state variable such as
+<code>isSynchronizing = false</code>. When an interaction occurs on one
+waveform, set the flag to <code>true</code>, update the second waveform,
+and reset the flag to <code>false</code>.</p>
+<h4 id="1-synchronizing-play-and-pause">1. Synchronizing Play and
+Pause</h4>
+<p>Ensure that starting or stopping playback on either instance
+instantly mirrors the state to the other:</p>
+<ul>
+<li>Listen for the <code>play</code> event on Instance A, and call
+<code>instanceB.play()</code> only if <code>isSynchronizing</code> is
+<code>false</code>.</li>
+<li>Listen for the <code>pause</code> event on Instance A, and call
+<code>instanceB.pause()</code> under the same condition.</li>
+<li>Repeat the exact reverse bindings from Instance B to Instance
+A.</li>
+</ul>
+<h4 id="2-synchronizing-seeks-and-clicks">2. Synchronizing Seeks and
+Clicks</h4>
+<p>User interaction on a waveform—such as clicking or dragging the
+timeline—dispatches a <code>seeking</code> or <code>interaction</code>
+event.</p>
+<p>When a user seeks on Waveform A:</p>
+<ol type="1">
+<li>Check if <code>isSynchronizing</code> is active; if so, exit.</li>
+<li>Set <code>isSynchronizing = true</code>.</li>
+<li>Read the progress value (a normalized float between <code>0</code>
+and <code>1</code>) or the precise current time via
+<code>instanceA.getCurrentTime()</code>.</li>
+<li>Call <code>instanceB.setTime(time)</code> or
+<code>instanceB.seekTo(progress)</code>.</li>
+<li>Reset <code>isSynchronizing = false</code>.</li>
+</ol>
+<h3 id="mitigating-audio-drift">Mitigating Audio Drift</h3>
+<p>Even if playback starts simultaneously, independent HTML5 audio
+elements can experience slight timing drift over time due to differences
+in decoding, system performance, or sample rates.</p>
+<p>To eliminate drift:</p>
+<ul>
+<li><strong>Designate a Master:</strong> Treat one instance as the
+"master" time source (typically the primary or longer track).</li>
+<li><strong>Periodic Correction:</strong> Listen to the master's
+<code>timeupdate</code> event. Compare
+<code>master.getCurrentTime()</code> with
+<code>slave.getCurrentTime()</code>. If the absolute difference exceeds
+a small threshold (such as 20–30 milliseconds), adjust the slave's
+playback position to match the master using
+<code>slave.setTime()</code>.</li>
+</ul>
+<h3 id="alternative-shared-web-audio-context">Alternative: Shared Web
+Audio Context</h3>
+<p>If both tracks are loaded simultaneously and drift must be zero by
+design, use a single shared Web Audio <code>AudioContext</code>.</p>
+<p>By configuring both Wavesurfer instances to route through the same
+<code>AudioContext</code> via Wavesurfer's backend options, both
+waveforms share a single hardware-level clock
+(<code>AudioContext.currentTime</code>). Combining a shared context with
+event-mirrored controls delivers the most accurate sync possible in the
+browser.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-sync-two-wavesurfer-js-waveforms';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

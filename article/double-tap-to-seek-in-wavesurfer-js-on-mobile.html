@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Double Tap to Seek in Wavesurfer.js on Mobile - wavesurfer.js</title>
+    <meta name="description" content="Implementing touch gestures like double-tap in a custom Wavesurfer.js audio player enables mobile users to skip forward or backward efficiently, mirroring popular media streaming interfaces. This guide details how to intercept native mobile touch events,">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/double-tap-to-seek-in-wavesurfer-js-on-mobile">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Double Tap to Seek in Wavesurfer.js on Mobile - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/double-tap-to-seek-in-wavesurfer-js-on-mobile" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Implementing touch gestures like double-tap in a custom Wavesurfer.js audio player enables mobile users to skip forward or backward efficiently, mirroring popular media streaming interfaces. This guide details how to intercept native mobile touch events," />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="double-tap-to-seek-in-wavesurferjs-on-mobile">Double Tap to Seek
+in Wavesurfer.js on Mobile</h1>
+<p>Implementing touch gestures like double-tap in a custom Wavesurfer.js
+audio player enables mobile users to skip forward or backward
+efficiently, mirroring popular media streaming interfaces. This guide
+details how to intercept native mobile touch events, distinguish
+double-taps from standard interactions, determine the seek direction,
+and programmatically adjust playback positions using the Wavesurfer.js
+API.</p>
+<h3 id="the-mechanism-behind-gesture-based-seeking">The Mechanism Behind
+Gesture-Based Seeking</h3>
+<p>Wavesurfer.js handles standard pointer interactions such as dragging
+and tapping on the waveform to reposition playback. However, it does not
+include native multi-tap gesture detection. To implement double-tap
+seeking, developers overlay a transparent gesture layer on top of the
+waveform or listen directly to touch events on the player container.</p>
+<p>The process involves four key steps:</p>
+<ol type="1">
+<li>Capturing <code>touchstart</code> or <code>touchend</code>
+events.</li>
+<li>Tracking the time interval and spatial distance between consecutive
+taps.</li>
+<li>Evaluating the horizontal position of the tap to determine whether
+to skip backward or forward.</li>
+<li>Calling Wavesurfer.js methods to shift playback by a fixed time
+offset.</li>
+</ol>
+<h3 id="capturing-and-identifying-double-taps">Capturing and Identifying
+Double-Taps</h3>
+<p>Mobile browsers do not provide a native <code>doubletap</code> event,
+requiring detection through manual state tracking. An effective
+implementation monitors the timestamp and coordinates of touch
+events:</p>
+<ul>
+<li><strong>Time threshold:</strong> Two taps occurring within roughly
+250 to 300 milliseconds represent a double-tap.</li>
+<li><strong>Distance threshold:</strong> The distance between tap
+coordinates should remain within a small radius (typically 20 to 30
+pixels) to avoid mistaking swipes or scrolling for double-taps.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> lastTapTime <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> lastTapX <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> TAP_DELAY <span class="op">=</span> <span class="dv">300</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> TAP_MAX_DISTANCE <span class="op">=</span> <span class="dv">30</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> gestureContainer <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;waveform-container&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>gestureContainer<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;touchend&#39;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> currentTime <span class="op">=</span> <span class="kw">new</span> <span class="bu">Date</span>()<span class="op">.</span><span class="fu">getTime</span>()<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> tapLength <span class="op">=</span> currentTime <span class="op">-</span> lastTapTime<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> touch <span class="op">=</span> e<span class="op">.</span><span class="at">changedTouches</span>[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> currentX <span class="op">=</span> touch<span class="op">.</span><span class="at">clientX</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> distance <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(currentX <span class="op">-</span> lastTapX)<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (tapLength <span class="op">&lt;</span> TAP_DELAY <span class="op">&amp;&amp;</span> tapLength <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> distance <span class="op">&lt;</span> TAP_MAX_DISTANCE) {</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Double-tap detected</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">handleDoubleTap</span>(touch<span class="op">,</span> gestureContainer)<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    e<span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span> <span class="co">// Prevent default zoom or synthetic click actions</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  lastTapTime <span class="op">=</span> currentTime<span class="op">;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  lastTapX <span class="op">=</span> currentX<span class="op">;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="determining-seek-direction">Determining Seek Direction</h3>
+<p>Once a double-tap is verified, the player must decide whether to jump
+backward or forward. This is achieved by comparing the touch's
+horizontal screen coordinate against the bounding box of the player
+container:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">handleDoubleTap</span>(touch<span class="op">,</span> container) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rect <span class="op">=</span> container<span class="op">.</span><span class="fu">getBoundingClientRect</span>()<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> tapOffset <span class="op">=</span> touch<span class="op">.</span><span class="at">clientX</span> <span class="op">-</span> rect<span class="op">.</span><span class="at">left</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> containerWidth <span class="op">=</span> rect<span class="op">.</span><span class="at">width</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Split container into left and right zones</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (tapOffset <span class="op">&lt;</span> containerWidth <span class="op">/</span> <span class="dv">2</span>) {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">seekRelative</span>(<span class="op">-</span><span class="dv">10</span>)<span class="op">;</span> <span class="co">// Rewind 10 seconds</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">seekRelative</span>(<span class="dv">10</span>)<span class="op">;</span>  <span class="co">// Skip forward 10 seconds</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="applying-the-seek-in-wavesurferjs">Applying the Seek in
+Wavesurfer.js</h3>
+<p>Depending on the version of Wavesurfer.js in use, the method to
+update the audio position varies:</p>
+<ul>
+<li><strong>Wavesurfer.js v7+:</strong> Use
+<code>wavesurfer.setTime(seconds)</code>.</li>
+<li><strong>Wavesurfer.js v6 and earlier:</strong> Use
+<code>wavesurfer.seekTo(progress)</code>, where progress is a normalized
+value between <code>0</code> and <code>1</code>.</li>
+</ul>
+<p>In modern Wavesurfer.js implementations, relative seeking is computed
+using <code>getCurrentTime()</code> and <code>getDuration()</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">seekRelative</span>(seconds) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> currentTime <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>()<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> duration <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getDuration</span>()<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Calculate new time clamped between 0 and track duration</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> targetTime <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">min</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(currentTime <span class="op">+</span> seconds<span class="op">,</span> <span class="dv">0</span>)<span class="op">,</span> duration)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">setTime</span>(targetTime)<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="resolving-interaction-conflicts">Resolving Interaction
+Conflicts</h3>
+<p>A primary challenge with custom touch gestures is preventing
+conflicts with Wavesurfer’s built-in click-to-seek functionality:</p>
+<ol type="1">
+<li><strong>Dedicated Gesture Overlays:</strong> Placing a dedicated
+touch layer over the player allows complete isolation of touch events.
+Single taps can be held in a timer buffer (e.g., 250ms) to verify that a
+second tap does not follow before passing a single-seek or play/pause
+command to Wavesurfer.</li>
+<li><strong>Disabling Built-in Interactivity:</strong> Setting
+<code>interact: false</code> in the Wavesurfer configuration completely
+disables default waveform click-and-drag listeners. This gives the
+custom gesture handler total control over all seeking, scrubbing, and
+tapping behaviors.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/double-tap-to-seek-in-wavesurfer-js-on-mobile';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

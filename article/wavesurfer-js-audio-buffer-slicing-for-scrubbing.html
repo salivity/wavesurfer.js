@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Audio Buffer Slicing for Scrubbing - wavesurfer.js</title>
+    <meta name="description" content="This article examines how Web Audio buffer slicing enables responsive audio snippet playback during scrubbing in Wavesurfer.js. It details the underlying Web Audio API mechanics—specifically utilizing playback offset scheduling on an AudioBufferSourceNode">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-audio-buffer-slicing-for-scrubbing">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Audio Buffer Slicing for Scrubbing - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-audio-buffer-slicing-for-scrubbing" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article examines how Web Audio buffer slicing enables responsive audio snippet playback during scrubbing in Wavesurfer.js. It details the underlying Web Audio API mechanics—specifically utilizing playback offset scheduling on an AudioBufferSourceNode" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-audio-buffer-slicing-for-scrubbing">Wavesurfer.js
+Audio Buffer Slicing for Scrubbing</h1>
+<p>This article examines how Web Audio buffer slicing enables responsive
+audio snippet playback during scrubbing in Wavesurfer.js. It details the
+underlying Web Audio API mechanics—specifically utilizing playback
+offset scheduling on an <code>AudioBufferSourceNode</code> alongside
+channel-level PCM data slicing—to produce smooth, low-latency
+micro-previews as a user interacts with the waveform display.</p>
+<h3 id="virtual-buffer-slicing-via-audiobuffersourcenode">Virtual Buffer
+Slicing via AudioBufferSourceNode</h3>
+<p>In most Wavesurfer.js implementations, snippet playback during
+scrubbing does not require physically splitting or copying the
+underlying <code>AudioBuffer</code>. Instead, non-destructive, virtual
+buffer slicing is achieved using the playback parameters of the Web
+Audio API's native <code>AudioBufferSourceNode.start()</code>
+method:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>sourceNode<span class="op">.</span><span class="fu">start</span>(when<span class="op">,</span> offset<span class="op">,</span> duration)<span class="op">;</span></span></code></pre></div>
+<p>When a user drags across the waveform:</p>
+<ol type="1">
+<li><strong><code>offset</code></strong> marks the exact timestamp (in
+seconds) corresponding to the cursor position on the timeline.</li>
+<li><strong><code>duration</code></strong> defines the length of the
+preview snippet (typically between 30ms and 100ms).</li>
+<li><strong><code>when</code></strong> is set to
+<code>audioContext.currentTime</code> for immediate execution.</li>
+</ol>
+<p>By pointing directly to the master <code>AudioBuffer</code> already
+stored in memory, this technique creates instantaneous audio slices on
+the fly with zero memory allocation overhead.</p>
+<h3 id="physical-buffer-slicing-with-float32array-subarrays">Physical
+Buffer Slicing with Float32Array Subarrays</h3>
+<p>When physical extraction of a slice is required—such as caching
+micro-buffers for granular synthesis or custom export tasks—Web Audio
+channels must be sliced at the PCM data level. Because an
+<code>AudioBuffer</code> does not feature a native <code>.slice()</code>
+method, slicing is handled via
+<code>Float32Array.prototype.subarray()</code> or
+<code>AudioBuffer.copyFromChannel()</code>.</p>
+<p>To create an isolated snippet buffer:</p>
+<ol type="1">
+<li>Allocate a destination buffer using
+<code>audioContext.createBuffer()</code> with the exact sample count
+matching the desired snippet duration
+(<code>durationInSeconds * sampleRate</code>).</li>
+<li>Read the source samples from each channel using
+<code>sourceAudioBuffer.getChannelData(channelIndex)</code>.</li>
+<li>Extract the slice using
+<code>.subarray(startSample, endSample)</code>.</li>
+<li>Write the sliced array into the new buffer using
+<code>destinationAudioBuffer.copyToChannel()</code>.</li>
+</ol>
+<h3 id="handling-scrubbing-artifacts-and-concurrency">Handling Scrubbing
+Artifacts and Concurrency</h3>
+<p>Rapid scrubbing fires multiple pointer events per second. Playing
+unmanaged slices can lead to browser CPU exhaustion and harsh audio
+popping. To maintain smooth playback:</p>
+<ul>
+<li><strong>Node Management:</strong> Previous
+<code>AudioBufferSourceNode</code> instances must be disconnected and
+stopped immediately before instantiating a new one.</li>
+<li><strong>Micro-Fades:</strong> An active snippet should be routed
+through a <code>GainNode</code> configured with short linear or
+exponential gain ramps (1ms to 5ms) at the start and end of the slice to
+eliminate DC offset clicks.</li>
+<li><strong>Throttling:</strong> Scrub event listeners should be
+throttled or debounced using <code>requestAnimationFrame</code> to match
+the display refresh rate and prevent redundant audio buffer
+instantiations.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-audio-buffer-slicing-for-scrubbing';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How autoCenter Affects Seeking in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="The autoCenter configuration option in Wavesurfer.js determines whether the waveform&#39;s viewport automatically shifts to keep the playhead centered on the screen during playback and user interactions. When working with scrollable, zoomed-in waveforms, conf">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-auto-center-affects-seeking-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How autoCenter Affects Seeking in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-auto-center-affects-seeking-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The autoCenter configuration option in Wavesurfer.js determines whether the waveform&#39;s viewport automatically shifts to keep the playhead centered on the screen during playback and user interactions. When working with scrollable, zoomed-in waveforms, conf" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-autocenter-affects-seeking-in-wavesurferjs">How autoCenter
+Affects Seeking in Wavesurfer.js</h1>
+<p>The <code>autoCenter</code> configuration option in Wavesurfer.js
+determines whether the waveform's viewport automatically shifts to keep
+the playhead centered on the screen during playback and user
+interactions. When working with scrollable, zoomed-in waveforms,
+configuring this property fundamentally alters the visual seeking
+behavior, dictating whether clicking to seek results in an immediate
+viewport repositioning or keeps the current view stationary.</p>
+<p>In Wavesurfer.js, waveforms become scrollable when audio is zoomed in
+using settings like <code>minPxPerSec</code>. Under these conditions,
+the visible container only displays a portion of the entire audio
+timeline. The <code>autoCenter</code> boolean option (which is enabled
+by default in many versions) controls how the library manages the
+horizontal scroll offset whenever the playback position changes.</p>
+<h3 id="seeking-with-autocenter-true">Seeking with
+<code>autoCenter: true</code></h3>
+<p>When <code>autoCenter</code> is set to <code>true</code>, seeking
+anywhere on the waveform causes the container to immediately scroll
+horizontally so that the target seek point is aligned with the exact
+center of the visible area.</p>
+<p>This behavior applies to both user-driven seeking (clicking or
+dragging across the waveform) and programmatic seeking (calling methods
+like <code>seekTo()</code> or <code>setTime()</code>). While this
+guarantees that the user always has an equal view of the audio
+immediately preceding and following the playhead, it can cause an abrupt
+visual jump. Clicking near the edge of the visible waveform will
+instantly re-center that point, moving the surrounding audio context out
+from under the user's cursor.</p>
+<h3 id="seeking-with-autocenter-false">Seeking with
+<code>autoCenter: false</code></h3>
+<p>Setting <code>autoCenter</code> to <code>false</code> disables the
+automatic centering mechanism during seek events. When a user clicks to
+seek within the currently visible viewport, the playhead moves directly
+to the clicked position, but the waveform container does not scroll to
+center it.</p>
+<p>This provides a more stable, non-disruptive editing experience. Users
+can inspect, scrub, and click through a specific section of the audio
+without the waveform continuously jumping beneath their cursor. If
+combined with standard scrolling behavior, the viewport will only scroll
+when the playhead naturally advances past the edge of the screen, rather
+than forcing a center alignment on every click.</p>
+<h3 id="choosing-the-right-behavior">Choosing the Right Behavior</h3>
+<ul>
+<li><strong>Enable <code>autoCenter</code> (<code>true</code>):</strong>
+Best suited for standard audio players, transcription players, or
+continuous playback scenarios where the primary objective is maintaining
+equal context around the current playback position at all times.</li>
+<li><strong>Disable <code>autoCenter</code>
+(<code>false</code>):</strong> Ideal for audio editors, annotation
+tools, and detailed waveform manipulation where sudden viewport shifts
+disrupt precision clicking and region selection.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-auto-center-affects-seeking-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

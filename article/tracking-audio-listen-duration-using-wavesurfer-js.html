@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking Audio Listen Duration Using Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Measuring audio engagement requires capturing accurate playback behavior rather than simple click-to-play metrics. This article explains how to leverage Wavesurfer.js event hooks—such as play, pause, timeupdate, and seeking—to generate precise telemetry l">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/tracking-audio-listen-duration-using-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Tracking Audio Listen Duration Using Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/tracking-audio-listen-duration-using-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Measuring audio engagement requires capturing accurate playback behavior rather than simple click-to-play metrics. This article explains how to leverage Wavesurfer.js event hooks—such as play, pause, timeupdate, and seeking—to generate precise telemetry l" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="tracking-audio-listen-duration-using-wavesurferjs">Tracking
+Audio Listen Duration Using Wavesurfer.js</h1>
+<p>Measuring audio engagement requires capturing accurate playback
+behavior rather than simple click-to-play metrics. This article explains
+how to leverage Wavesurfer.js event hooks—such as <code>play</code>,
+<code>pause</code>, <code>timeupdate</code>, and <code>seeking</code>—to
+generate precise telemetry logs that track cumulative, active user
+listening duration and calculate aggregate metrics across sessions.</p>
+<h3 id="key-wavesurferjs-telemetry-events">Key Wavesurfer.js Telemetry
+Events</h3>
+<p>Wavesurfer.js emits granular lifecycle events on its instance. To
+measure active consumption accurately while filtering out paused or
+skipped segments, your analytics pipeline must monitor the following
+event streams:</p>
+<ul>
+<li><strong><code>play</code></strong>: Fires when playback starts or
+resumes. Use this to start or continue an active listening timer and
+record the starting playhead position
+(<code>wavesurfer.getCurrentTime()</code>).</li>
+<li><strong><code>pause</code></strong>: Fires when playback stops
+manually. Use this to calculate the elapsed active segment, add it to
+the cumulative session duration, and reset the active timer.</li>
+<li><strong><code>seeking</code></strong>: Fires when a user scrubs
+forward or backward across the waveform. Seeking indicates that elapsed
+wall-clock time does not equal listened audio time. Capture the
+<code>currentTime</code> before and after the seek operation to prevent
+unlistened sections from skewing metrics.</li>
+<li><strong><code>finish</code></strong>: Fires when playback naturally
+reaches the end of the audio track. This acts as a terminal event to
+record the final audio segment and log a successful completion
+flag.</li>
+<li><strong><code>destroy</code></strong>: Fires when the player
+instance is unmounted or removed (e.g., closing a tab or navigating to a
+different page). Telemetry must capture this event via standard browser
+visibility changes or before-unload handlers to log incomplete
+sessions.</li>
+</ul>
+<h3 id="constructing-the-telemetry-log-schema">Constructing the
+Telemetry Log Schema</h3>
+<p>To calculate the average listen duration on the backend, emit
+structured events whenever state changes occur. A standard telemetry
+payload should contain the following fields:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;event_id&quot;</span><span class="fu">:</span> <span class="st">&quot;evt_987654321&quot;</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;session_id&quot;</span><span class="fu">:</span> <span class="st">&quot;sess_12345abcde&quot;</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;track_id&quot;</span><span class="fu">:</span> <span class="st">&quot;audio_track_42&quot;</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;event_type&quot;</span><span class="fu">:</span> <span class="st">&quot;pause&quot;</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;client_timestamp&quot;</span><span class="fu">:</span> <span class="dv">1711972800000</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;playhead_position&quot;</span><span class="fu">:</span> <span class="fl">45.2</span><span class="fu">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;active_duration_delta&quot;</span><span class="fu">:</span> <span class="fl">15.2</span><span class="fu">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;total_listened_seconds&quot;</span><span class="fu">:</span> <span class="fl">30.4</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ul>
+<li><strong><code>active_duration_delta</code></strong>: The actual
+seconds spent listening during the immediate segment between the last
+<code>play</code> event and the current event.</li>
+<li><strong><code>playhead_position</code></strong>: The value returned
+by <code>wavesurfer.getCurrentTime()</code>.</li>
+<li><strong><code>total_listened_seconds</code></strong>: The running
+total of listened seconds maintained in client-side state for the
+current session.</li>
+</ul>
+<h3 id="implementation-pattern">Implementation Pattern</h3>
+<p>To capture these metrics, attach listeners directly to the Wavesurfer
+instance:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> listenStartTime <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> totalListenedDuration <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> isPlaying <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;play&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  isPlaying <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  listenStartTime <span class="op">=</span> <span class="bu">performance</span><span class="op">.</span><span class="fu">now</span>()<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sendTelemetry</span>(<span class="st">&#39;audio_play&#39;</span><span class="op">,</span> { <span class="dt">playhead</span><span class="op">:</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>() })<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">recordSegment</span>() {</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>isPlaying) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> elapsed <span class="op">=</span> (<span class="bu">performance</span><span class="op">.</span><span class="fu">now</span>() <span class="op">-</span> listenStartTime) <span class="op">/</span> <span class="dv">1000</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  totalListenedDuration <span class="op">+=</span> elapsed<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  isPlaying <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> elapsed<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;pause&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> delta <span class="op">=</span> <span class="fu">recordSegment</span>()<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sendTelemetry</span>(<span class="st">&#39;audio_pause&#39;</span><span class="op">,</span> {</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">playhead</span><span class="op">:</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>()<span class="op">,</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">active_duration_delta</span><span class="op">:</span> delta<span class="op">,</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">total_listened_seconds</span><span class="op">:</span> totalListenedDuration</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;seeking&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> delta <span class="op">=</span> <span class="fu">recordSegment</span>()<span class="op">;</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sendTelemetry</span>(<span class="st">&#39;audio_seek&#39;</span><span class="op">,</span> {</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">playhead</span><span class="op">:</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>()<span class="op">,</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="dt">active_duration_delta</span><span class="op">:</span> delta<span class="op">,</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="dt">total_listened_seconds</span><span class="op">:</span> totalListenedDuration</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;finish&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> delta <span class="op">=</span> <span class="fu">recordSegment</span>()<span class="op">;</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sendTelemetry</span>(<span class="st">&#39;audio_finish&#39;</span><span class="op">,</span> {</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="dt">playhead</span><span class="op">:</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>()<span class="op">,</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    <span class="dt">active_duration_delta</span><span class="op">:</span> delta<span class="op">,</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    <span class="dt">total_listened_seconds</span><span class="op">:</span> totalListenedDuration</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="calculating-average-listen-duration">Calculating Average Listen
+Duration</h3>
+<p>Once telemetry events are streamed to your data warehouse, compute
+average listen duration (ALD) using one of two methods:</p>
+<ol type="1">
+<li><strong>Delta Aggregation (Server-Side Calculation)</strong>: Sum
+the <code>active_duration_delta</code> values across all events
+associated with a given <code>session_id</code> and
+<code>track_id</code>. Divide the total sum of duration across all
+sessions by the count of distinct sessions. This approach is resilient
+against dropped client exit events.</li>
+<li><strong>Terminal Log Evaluation</strong>: Identify the maximum
+<code>total_listened_seconds</code> reported in the final telemetry log
+of each session, then compute the average across all unique
+sessions:</li>
+</ol>
+<p><span class="math display">\[\text{Average Listen Duration} =
+\frac{\sum_{i=1}^{N} \text{Total Listened Seconds}_i}{N}\]</span></p>
+<p>Where <span class="math inline">\(N\)</span> represents the total
+number of unique user listening sessions.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/tracking-audio-listen-duration-using-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

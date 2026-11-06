@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Track Wavesurfer.js Play Events in Analytics - wavesurfer.js</title>
+    <meta name="description" content="This article provides an overview of how analytics scripts capture playback metrics from embedded third-party Wavesurfer.js audio widgets. Depending on whether the widget is directly integrated into the DOM or sandboxed within an iframe, analytics platfor">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-track-wavesurfer-js-play-events-in-analytics">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Track Wavesurfer.js Play Events in Analytics - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-track-wavesurfer-js-play-events-in-analytics" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides an overview of how analytics scripts capture playback metrics from embedded third-party Wavesurfer.js audio widgets. Depending on whether the widget is directly integrated into the DOM or sandboxed within an iframe, analytics platfor" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-track-wavesurferjs-play-events-in-analytics">How to Track
+Wavesurfer.js Play Events in Analytics</h1>
+<p>This article provides an overview of how analytics scripts capture
+playback metrics from embedded third-party Wavesurfer.js audio widgets.
+Depending on whether the widget is directly integrated into the DOM or
+sandboxed within an iframe, analytics platforms capture play events
+through native Wavesurfer event subscriptions, underlying HTML5 media
+element observation, or cross-document messaging APIs.</p>
+<h3 id="direct-api-event-listeners">Direct API Event Listeners</h3>
+<p>When a Wavesurfer.js player is initialized directly within the same
+JavaScript context as the host page, analytics scripts can hook into
+Wavesurfer’s built-in event bus. Wavesurfer instances expose an
+<code>.on()</code> method that emits lifecycle events:</p>
+<ul>
+<li><strong><code>wavesurfer.on('play', callback)</code></strong>:
+Triggers as soon as audio playback begins.</li>
+<li><strong><code>wavesurfer.on('pause', callback)</code></strong>:
+Emits when playback stops or finishes.</li>
+<li><strong><code>wavesurfer.on('timeupdate', callback)</code></strong>:
+Used to track milestones (e.g., 25%, 50%, 75% completion).</li>
+</ul>
+<p>Within these callback handlers, the analytics script extracts
+metadata such as track URL, audio duration via
+<code>wavesurfer.getDuration()</code>, and current position via
+<code>wavesurfer.getCurrentTime()</code>. The script then dispatches
+this payload to an analytics backend (such as Google Analytics via
+<code>gtag('event', ...)</code> or a custom telemetry endpoint).</p>
+<h3 id="html5-audio-event-delegation">HTML5 Audio Event Delegation</h3>
+<p>Under the hood, Wavesurfer.js frequently relies on a native HTML5
+<code>&lt;audio&gt;</code> element to manage media playback. If the
+analytics tracker does not have direct access to the specific Wavesurfer
+JavaScript variable, it can observe the DOM for media events.</p>
+<p>Standard media elements fire native <code>play</code>,
+<code>playing</code>, <code>pause</code>, and <code>ended</code> events.
+Analytics scripts can attach listeners using event capturing on the
+<code>window</code> or <code>document</code> object:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;play&#39;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="at">target</span><span class="op">.</span><span class="fu">closest</span>(<span class="st">&#39;.wavesurfer-container&#39;</span>)) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Collect metrics for Wavesurfer-managed audio</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}<span class="op">,</span> <span class="kw">true</span>)<span class="op">;</span></span></code></pre></div>
+<p>Because native media events do not bubble by default, enabling the
+capture phase (<code>true</code>) allows a global analytics script to
+intercept play events without requiring configuration from the player
+itself.</p>
+<h3 id="cross-origin-postmessage-communication">Cross-Origin
+<code>postMessage</code> Communication</h3>
+<p>Third-party audio widgets are commonly embedded within an
+<code>&lt;iframe&gt;</code> hosted on an external domain. In this
+architecture, the Same-Origin Policy prevents external analytics scripts
+from directly reading the iframe's DOM or accessing its JavaScript
+objects.</p>
+<p>To collect play events in this scenario, communication occurs across
+boundaries via the <code>Window.postMessage()</code> API:</p>
+<ol type="1">
+<li><p><strong>Widget Side:</strong> The Wavesurfer instance inside the
+iframe listens to the local <code>play</code> event and sends a
+serialized message to the parent window:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;play&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">window</span><span class="op">.</span><span class="at">parent</span><span class="op">.</span><span class="fu">postMessage</span>({</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;WAVESURFER_EVENT&#39;</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">action</span><span class="op">:</span> <span class="st">&#39;play&#39;</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">currentTime</span><span class="op">:</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>()<span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">duration</span><span class="op">:</span> wavesurfer<span class="op">.</span><span class="fu">getDuration</span>()</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span> <span class="st">&#39;*&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div></li>
+<li><p><strong>Host Page Side:</strong> The host analytics script
+registers a global message listener to receive the data:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;message&#39;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="at">data</span><span class="op">?.</span><span class="at">type</span> <span class="op">===</span> <span class="st">&#39;WAVESURFER_EVENT&#39;</span> <span class="op">&amp;&amp;</span> <span class="bu">event</span><span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">action</span> <span class="op">===</span> <span class="st">&#39;play&#39;</span>) {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Forward event data to the analytics platform</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div></li>
+</ol>
+<h3 id="metrics-typically-captured">Metrics Typically Captured</h3>
+<p>Regardless of the ingestion method, the analytics payload generated
+on a play event typically includes:</p>
+<ul>
+<li><strong>Event Action:</strong> Explicitly labeled as
+<code>play</code> or <code>resume</code>.</li>
+<li><strong>Track Identifier:</strong> File name, database ID, or audio
+source URL.</li>
+<li><strong>Playback State:</strong> Starting timestamp, total duration,
+and playback rate.</li>
+<li><strong>Context:</strong> Session IDs, user IDs, and container
+identifiers to track user engagement across multiple audio assets on a
+single page.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-track-wavesurfer-js-play-events-in-analytics';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

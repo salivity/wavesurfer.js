@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Access Web Audio Gain Node in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Accessing the Web Audio GainNode in Wavesurfer.js allows developers to manipulate volume, apply custom dynamic range adjustments, and route audio through custom processing graphs. In Wavesurfer.js, direct access to the native Web Audio GainNode is primari">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-access-web-audio-gain-node-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Access Web Audio Gain Node in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-access-web-audio-gain-node-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Accessing the Web Audio GainNode in Wavesurfer.js allows developers to manipulate volume, apply custom dynamic range adjustments, and route audio through custom processing graphs. In Wavesurfer.js, direct access to the native Web Audio GainNode is primari" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-access-web-audio-gain-node-in-wavesurferjs">How to Access
+Web Audio Gain Node in Wavesurfer.js</h1>
+<p>Accessing the Web Audio <code>GainNode</code> in Wavesurfer.js allows
+developers to manipulate volume, apply custom dynamic range adjustments,
+and route audio through custom processing graphs. In Wavesurfer.js,
+direct access to the native Web Audio <code>GainNode</code> is primarily
+achieved through the <code>wavesurfer.backend.gainNode</code> property
+when using the WebAudio backend, or by integrating a custom
+<code>AudioContext</code> with the media element in modern versions
+(v7+). This guide outlines the specific properties and implementation
+patterns required to access and control the gain node across different
+versions of the library.</p>
+<h2
+id="accessing-the-gain-node-in-wavesurferjs-v6-and-earlier">Accessing
+the Gain Node in Wavesurfer.js (v6 and Earlier)</h2>
+<p>In Wavesurfer.js versions 6 and below, audio processing relies
+heavily on the built-in <code>WebAudio</code> backend. When an instance
+is initialized with this backend, the library creates and manages an
+internal Web Audio graph.</p>
+<p>You access the gain node directly through the <code>backend</code>
+object:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Access the native Web Audio GainNode</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> gainNode <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">gainNode</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Modify audio gain directly</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="fl">0.5</span><span class="op">,</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">ac</span><span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="key-components">Key Components:</h3>
+<ul>
+<li><code>wavesurfer.backend</code>: The internal controller managing
+audio playback and nodes.</li>
+<li><code>wavesurfer.backend.gainNode</code>: The instance of the
+browser's native <code>GainNode</code> used to scale the audio signal
+amplitude.</li>
+<li><code>wavesurfer.backend.ac</code>: The instance of
+<code>AudioContext</code> associated with the player.</li>
+</ul>
+<hr />
+<h2 id="accessing-the-gain-node-in-wavesurferjs-v7">Accessing the Gain
+Node in Wavesurfer.js v7+</h2>
+<p>Starting with Wavesurfer.js version 7, the architecture switched to
+standard HTML5 media elements (<code>HTMLMediaElement</code>) by default
+for performance and streaming efficiency. Because of this, a
+<code>GainNode</code> is not instantiated automatically unless you
+construct a Web Audio graph around the media element.</p>
+<p>To access and control a <code>GainNode</code> in Wavesurfer.js v7+,
+use the <code>getMediaElement()</code> method to bridge the player into
+an <code>AudioContext</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;/audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Obtain the HTMLMediaElement from Wavesurfer</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> mediaElement <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getMediaElement</span>()<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Create an AudioContext and GainNode</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> audioContext <span class="op">=</span> <span class="kw">new</span> (<span class="bu">window</span><span class="op">.</span><span class="at">AudioContext</span> <span class="op">||</span> <span class="bu">window</span><span class="op">.</span><span class="at">webkitAudioContext</span>)()<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> sourceNode <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createMediaElementSource</span>(mediaElement)<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> gainNode <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createGain</span>()<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Connect nodes to the destination output</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  sourceNode<span class="op">.</span><span class="fu">connect</span>(gainNode)<span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  gainNode<span class="op">.</span><span class="fu">connect</span>(audioContext<span class="op">.</span><span class="at">destination</span>)<span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Manipulate the gain node</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="fl">1.5</span><span class="op">;</span> <span class="co">// Boost volume</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<hr />
+<h2 id="standard-volume-control-alternatives">Standard Volume Control
+Alternatives</h2>
+<p>If low-level audio manipulation via <code>AudioParam</code>
+automation curves or custom node routing is not strictly required,
+Wavesurfer.js provides built-in methods to handle gain without
+referencing the underlying Web Audio node directly:</p>
+<ul>
+<li><strong><code>wavesurfer.setVolume(newVolume)</code></strong>:
+Accepts a float between <code>0</code> (silent) and <code>1</code> (full
+volume) to scale output amplitude.</li>
+<li><strong><code>wavesurfer.getVolume()</code></strong>: Returns the
+current volume level of the instance.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-access-web-audio-gain-node-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

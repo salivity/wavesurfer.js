@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Multiple Instances Performance Issues - wavesurfer.js</title>
+    <meta name="description" content="Running multiple Wavesurfer.js instances on a single page often introduces noticeable performance bottlenecks, particularly on mobile devices or lower-powered hardware. While the library is lightweight for single-track audio players, scaling it across pla">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-multiple-instances-performance-issues">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Multiple Instances Performance Issues - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-multiple-instances-performance-issues" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Running multiple Wavesurfer.js instances on a single page often introduces noticeable performance bottlenecks, particularly on mobile devices or lower-powered hardware. While the library is lightweight for single-track audio players, scaling it across pla" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="wavesurferjs-multiple-instances-performance-issues">Wavesurfer.js
+Multiple Instances Performance Issues</h1>
+<p>Running multiple Wavesurfer.js instances on a single page often
+introduces noticeable performance bottlenecks, particularly on mobile
+devices or lower-powered hardware. While the library is lightweight for
+single-track audio players, scaling it across playlists, multitrack
+editors, or audio dashboards strains the browser’s audio engine,
+graphics pipeline, and memory. This article examines the primary
+performance issues that arise when executing concurrent Wavesurfer.js
+instances and explains why these bottlenecks occur.</p>
+<h3 id="audiocontext-exhaustion">AudioContext Exhaustion</h3>
+<p>Modern web browsers enforce strict limits on the number of active
+<code>AudioContext</code> objects allowed per document—typically between
+6 and 32 instances depending on the browser (such as Chrome or Safari).
+If each Wavesurfer instance initializes its own
+<code>AudioContext</code>, reaching this ceiling causes initialization
+failures, silent playback, or browser console errors. Even when under
+the threshold, juggling multiple active audio contexts causes resource
+contention in the underlying hardware audio subsystem.</p>
+<h3 id="cpu-spikes-from-audio-decoding">CPU Spikes from Audio
+Decoding</h3>
+<p>When an audio file is loaded, Wavesurfer.js fetches the file and
+decodes the audio data using the browser’s <code>decodeAudioData</code>
+API to extract peak information for waveform rendering. Initializing
+multiple instances at once forces the browser to decode several files
+concurrently. This operation is computationally expensive and heavily
+taxes the CPU, frequently locking up the main JavaScript thread,
+degrading page responsiveness, and stalling UI interactions.</p>
+<h3 id="canvas-rendering-and-gpu-bottlenecks">Canvas Rendering and GPU
+Bottlenecks</h3>
+<p>Wavesurfer.js renders waveforms using HTML5
+<code>&lt;canvas&gt;</code> elements. Running multiple instances means
+managing multiple canvas drawing surfaces simultaneously:</p>
+<ul>
+<li><strong>Initial Draw Overhead:</strong> Drawing complex waveform
+paths with thousands of sample points across multiple canvases consumes
+significant GPU and CPU resources.</li>
+<li><strong>Playback Redraw Loops:</strong> During audio playback, the
+progress cursor and playback fill must update continuously, triggering
+redraw loops via <code>requestAnimationFrame</code>. When multiple
+players are rendering or playing at the same time, the frame rate drops
+significantly, resulting in stuttering waveforms and laggy
+scrolling.</li>
+</ul>
+<h3 id="excessive-memory-footprint">Excessive Memory Footprint</h3>
+<p>Audio data requires a substantial amount of RAM once decompressed. An
+audio file that is only a few megabytes in compressed MP3 or WAV format
+can expand to tens or hundreds of megabytes in memory as a raw PCM
+<code>Float32Array</code>. Storing multiple decoded audio buffers
+simultaneously in browser memory quickly leads to high memory
+consumption. On memory-constrained devices, this causes frequent garbage
+collection pauses or triggers the browser to terminate the tab
+entirely.</p>
+<h3 id="dom-clutter-and-event-handling">DOM Clutter and Event
+Handling</h3>
+<p>Each Wavesurfer instance injects its own DOM hierarchy, including
+container wrappers, canvas elements, cursor lines, and associated event
+listeners for user interactions (such as seeking, hovering, and
+dragging). A large quantity of instances increases the overall DOM depth
+and size, compounding browser reflow and repaint costs whenever dynamic
+UI changes occur.</p>
+<h3 id="how-to-mitigate-these-issues">How to Mitigate These Issues</h3>
+<p>To avoid these performance drops when working with multiple
+tracks:</p>
+<ul>
+<li><strong>Pre-generate Waveform Peaks:</strong> Generate peak data on
+the server side and supply it via the <code>peaks</code> option to
+bypass the client-side <code>decodeAudioData</code> step entirely.</li>
+<li><strong>Implement Virtualization:</strong> Only initialize and
+render Wavesurfer instances currently visible in the viewport,
+destroying off-screen instances using <code>.destroy()</code> and
+rebuilding them on scroll.</li>
+<li><strong>Share Audio Resources:</strong> Reuse a single shared
+<code>AudioContext</code> across all instances instead of letting each
+player generate its own.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-multiple-instances-performance-issues';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

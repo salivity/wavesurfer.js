@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding the Wavesurfer.js seekTo Method - wavesurfer.js</title>
+    <meta name="description" content="This guide provides a focused breakdown of the seekTo method in Wavesurfer.js, explaining its core purpose, parameter requirements, and internal behavior. You will learn how the method translates relative values into audio playback positions, how it synch">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/understanding-the-wavesurfer-js-seek-to-method">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Understanding the Wavesurfer.js seekTo Method - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/understanding-the-wavesurfer-js-seek-to-method" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide provides a focused breakdown of the seekTo method in Wavesurfer.js, explaining its core purpose, parameter requirements, and internal behavior. You will learn how the method translates relative values into audio playback positions, how it synch" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="understanding-the-wavesurferjs-seekto-method">Understanding the
+Wavesurfer.js seekTo Method</h1>
+<p>This guide provides a focused breakdown of the <code>seekTo</code>
+method in Wavesurfer.js, explaining its core purpose, parameter
+requirements, and internal behavior. You will learn how the method
+translates relative values into audio playback positions, how it
+synchronizes the visual waveform canvas, and how to properly implement
+it in your web audio projects.</p>
+<p>The <code>seekTo</code> method is a built-in function of the
+Wavesurfer.js audio visualization library used to move the playback
+position to a specific point along an audio track. Unlike methods that
+accept direct timestamps in seconds, <code>seekTo</code> strictly
+requires a normalized floating-point number between <code>0</code> and
+<code>1</code>. In this scale, <code>0</code> represents the start of
+the audio file, <code>0.5</code> represents the exact midpoint, and
+<code>1</code> represents the end of the track.</p>
+<p>When <code>seekTo(progress)</code> is executed, Wavesurfer.js
+performs several synchronous operations:</p>
+<ol type="1">
+<li><strong>Calculates Target Time:</strong> The library multiplies the
+passed float by the total audio duration
+(<code>targetTime = progress * duration</code>) to derive the exact
+playback time in seconds.</li>
+<li><strong>Updates the Audio Engine:</strong> The underlying audio
+playback source—whether utilizing the HTML5 MediaElement or Web Audio
+API context—updates its <code>currentTime</code> to match the calculated
+target time.</li>
+<li><strong>Redraws the Waveform:</strong> The visual playhead, progress
+bar overlay, and cursor are redrawn instantly to reflect the new
+position on the canvas. If horizontal scrolling is enabled, the
+container automatically scrolls to bring the current playhead into
+view.</li>
+<li><strong>Dispatches Events:</strong> The method fires relevant event
+listeners, primarily the <code>seek</code> event (passing the normalized
+progress), allowing other UI elements to respond to the manual
+navigation.</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Seek directly to 25% of the total audio duration</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">seekTo</span>(<span class="fl">0.25</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Seek to a specific timestamp in seconds (e.g., 30 seconds)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> targetSeconds <span class="op">=</span> <span class="dv">30</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> totalDuration <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getDuration</span>()<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">seekTo</span>(targetSeconds <span class="op">/</span> totalDuration)<span class="op">;</span></span></code></pre></div>
+<p>The method maintains the existing playback state. If the audio is
+actively playing when <code>seekTo</code> is called, playback continues
+immediately from the new position. If the audio is paused, the playhead
+moves to the target point while remaining paused, displaying the updated
+frame to the user without generating unwanted audio output.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/understanding-the-wavesurfer-js-seek-to-method';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Focus Rings for Accessibility - wavesurfer.js</title>
+    <meta name="description" content="Visual focus rings serve as vital navigation indicators within web audio applications, enabling keyboard-only users and individuals relying on assistive technology to identify which control currently holds active focus. In Wavesurfer.js, audio waveforms a">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-focus-rings-for-accessibility">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Focus Rings for Accessibility - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-focus-rings-for-accessibility" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Visual focus rings serve as vital navigation indicators within web audio applications, enabling keyboard-only users and individuals relying on assistive technology to identify which control currently holds active focus. In Wavesurfer.js, audio waveforms a" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-focus-rings-for-accessibility">Wavesurfer.js Focus
+Rings for Accessibility</h1>
+<p>Visual focus rings serve as vital navigation indicators within web
+audio applications, enabling keyboard-only users and individuals relying
+on assistive technology to identify which control currently holds active
+focus. In Wavesurfer.js, audio waveforms are primarily rendered using
+HTML5 canvas elements, which do not inherently provide keyboard focus
+states. This article explores how to implement, style, and manage visual
+focus rings around interactive Wavesurfer.js components to satisfy Web
+Content Accessibility Guidelines (WCAG) requirements, improve keyboard
+navigation, and ensure an inclusive audio playback experience.</p>
+<h3 id="the-role-of-focus-rings-in-wcag-compliance">The Role of Focus
+Rings in WCAG Compliance</h3>
+<p>Web Content Accessibility Guidelines (WCAG) 2.1 and 2.2 outline
+specific criteria regarding keyboard accessibility:</p>
+<ul>
+<li><strong>Criterion 2.4.7 (Focus Visible):</strong> Any
+keyboard-operable user interface must have a mode of operation where the
+keyboard focus indicator is visible.</li>
+<li><strong>Criterion 2.4.11 (Focus Appearance - Minimum):</strong> The
+focus indicator must have sufficient contrast (at least a 3:1 contrast
+ratio against adjacent colors) and an adequate pixel area to remain
+distinguishable.</li>
+</ul>
+<p>Without visual focus rings, users navigating via the <code>Tab</code>
+key cannot determine whether their focus is on the playhead, a specific
+audio region, or playback controls.</p>
+<h3 id="the-challenge-with-canvas-based-waveforms">The Challenge with
+Canvas-Based Waveforms</h3>
+<p>Wavesurfer.js draws waveforms on an HTML5
+<code>&lt;canvas&gt;</code>. By default, a <code>&lt;canvas&gt;</code>
+element is treated as a static visual object by the DOM and cannot
+receive keyboard focus. To bridge this gap, developers must either
+expose the container element to the accessibility tree or attach
+accessible interactive controls that wrap around the canvas layer.</p>
+<h3 id="implementing-focus-rings-on-the-waveform-container">Implementing
+Focus Rings on the Waveform Container</h3>
+<p>To allow keyboard users to select and interact with the waveform
+directly (such as using arrow keys to scrub through audio), the
+Wavesurfer container must be made keyboard-focusable:</p>
+<ol type="1">
+<li><strong>Add a Tab Index:</strong> Assign <code>tabindex="0"</code>
+to the container holding the Wavesurfer instance so it enters the
+natural tab order of the document.</li>
+<li><strong>Style with <code>:focus-visible</code>:</strong> Use modern
+CSS <code>:focus-visible</code> selectors rather than standard
+<code>:focus</code> so that the indicator appears only during keyboard
+navigation, avoiding unwanted outlines during mouse clicks.</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Accessible focus indicator for the Wavesurfer container */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">.waveform-container</span><span class="in">:focus-visible</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">outline</span><span class="ch">:</span> <span class="dv">3</span><span class="dt">px</span> <span class="dv">solid</span> <span class="cn">#005fcc</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">outline-offset</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">border-radius</span><span class="ch">:</span> <span class="dv">4</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This outline provides an unmistakable, high-contrast visual boundary
+around the entire waveform when the user tabs into it.</p>
+<h3 id="highlighting-interactive-regions-and-markers">Highlighting
+Interactive Regions and Markers</h3>
+<p>When using the Wavesurfer.js Regions Plugin, each region represents
+an interactive segment of audio that users can click, drag, or loop. For
+accessibility compliance, regions must also signal their active
+state:</p>
+<ol type="1">
+<li><strong>DOM Node Accessibility:</strong> The Regions plugin
+generates individual DOM elements for each region. Ensure these elements
+have appropriate ARIA attributes (such as <code>role="button"</code> or
+<code>role="region"</code>) and <code>tabindex="0"</code>.</li>
+<li><strong>Targeted Focus Rings:</strong> Apply contrasting focus rings
+directly to the region wrapper elements when they receive focus.</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Focus ring for active audio regions */</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">.wavesurfer-region</span><span class="in">:focus-visible</span> {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">outline</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">px</span> <span class="dv">dashed</span> <span class="cn">#d9381e</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">outline-offset</span><span class="ch">:</span> <span class="dv">1</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">box-shadow</span><span class="ch">:</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">2</span><span class="dt">px</span> <span class="fu">rgba(</span><span class="dv">255</span><span class="op">,</span> <span class="dv">255</span><span class="op">,</span> <span class="dv">255</span><span class="op">,</span> <span class="dv">0.8</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Combining an outline with an inner or outer <code>box-shadow</code>
+ensures visibility against both dark audio tracks and light backgrounds,
+maintaining the required 3:1 contrast ratio.</p>
+<h3
+id="synchronizing-visual-states-with-custom-audio-controls">Synchronizing
+Visual States with Custom Audio Controls</h3>
+<p>External controls such as play/pause buttons, volume sliders, and
+mute toggles must coordinate with the Wavesurfer instance:</p>
+<ul>
+<li><strong>Keyboard Listeners:</strong> When the waveform container has
+focus, attach <code>keydown</code> listeners to map keys like
+<code>Space</code> (toggle playback) and <code>ArrowLeft</code> /
+<code>ArrowRight</code> (scrub backward/forward).</li>
+<li><strong>Active Ring States:</strong> If a custom control manipulates
+the waveform, ensure the visual focus stays either on the triggering
+control or moves deliberately to the canvas via programmatic focus
+management (<code>element.focus()</code>).</li>
+</ul>
+<p>Visual focus rings transform Wavesurfer.js from a purely visual
+presentation into an interactive, WCAG-compliant media tool that
+provides clear, unambiguous visual feedback for every user.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-focus-rings-for-accessibility';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

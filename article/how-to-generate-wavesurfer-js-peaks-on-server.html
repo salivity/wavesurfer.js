@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Generate Wavesurfer.js Peaks on Server - wavesurfer.js</title>
+    <meta name="description" content="Generating waveform peaks on the server dramatically reduces client-side CPU usage and bandwidth when loading audio in Wavesurfer.js. This article details the primary tools and server scripts used to pre-compute audio data into compatible JSON peak arrays">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-generate-wavesurfer-js-peaks-on-server">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Generate Wavesurfer.js Peaks on Server - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-generate-wavesurfer-js-peaks-on-server" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Generating waveform peaks on the server dramatically reduces client-side CPU usage and bandwidth when loading audio in Wavesurfer.js. This article details the primary tools and server scripts used to pre-compute audio data into compatible JSON peak arrays" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-generate-wavesurferjs-peaks-on-server">How to Generate
+Wavesurfer.js Peaks on Server</h1>
+<p>Generating waveform peaks on the server dramatically reduces
+client-side CPU usage and bandwidth when loading audio in Wavesurfer.js.
+This article details the primary tools and server scripts used to
+pre-compute audio data into compatible JSON peak arrays, covering the
+industry-standard BBC <code>audiowaveform</code> CLI, FFmpeg-based
+scripting pipelines, and native Node.js solutions.</p>
+<h3 id="bbcs-audiowaveform">BBC's <code>audiowaveform</code></h3>
+<p>The fastest and most widely adopted tool for generating
+Wavesurfer.js-compatible peaks is <code>audiowaveform</code>, an
+open-source C++ command-line utility created by the BBC. It reads audio
+formats like MP3, WAV, FLAC, and Ogg, and directly outputs peak data in
+either JSON or binary <code>.dat</code> formats.</p>
+<p>To generate a JSON file compatible with Wavesurfer.js, run:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">audiowaveform</span> <span class="at">-i</span> input.mp3 <span class="at">-o</span> output.json <span class="at">--pixels-per-second</span> 20 <span class="at">--bits</span> 8</span></code></pre></div>
+<p>The resulting JSON output contains metadata along with a
+<code>data</code> array containing alternating minimum and maximum
+amplitude integers. Wavesurfer.js natively reads this format when passed
+to the <code>backend.load()</code> or <code>peaks</code> parameter:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;violet&#39;</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;purple&#39;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(<span class="st">&#39;output.json&#39;</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">then</span>(response <span class="kw">=&gt;</span> response<span class="op">.</span><span class="fu">json</span>())</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">then</span>(peaksData <span class="kw">=&gt;</span> {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;input.mp3&#39;</span><span class="op">,</span> peaksData<span class="op">.</span><span class="at">data</span>)<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span></code></pre></div>
+<h3 id="ffmpeg-with-custom-server-scripts">FFmpeg with Custom Server
+Scripts</h3>
+<p>If installing custom C++ binaries is not feasible, standard server
+setups running FFmpeg can extract raw pulse-code modulation (PCM) audio,
+which a server script in Python, Node.js, or PHP can downsample into a
+JSON array of floating-point values between -1 and 1.</p>
+<p>Using FFmpeg to extract 8-bit mono raw audio:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> input.mp3 <span class="at">-ac</span> 1 <span class="at">-filter:a</span> aresample=8000 <span class="at">-map</span> 0:a <span class="at">-c:a</span> pcm_s8 <span class="at">-f</span> data <span class="at">-</span></span></code></pre></div>
+<p>In a Node.js script, stream the stdout of that FFmpeg command into
+chunks, calculate the maximum peak per chunk block, and write the output
+array to JSON:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> { spawn } <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;child_process&#39;</span>)<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">generatePeaks</span>(audioPath<span class="op">,</span> totalSamples <span class="op">=</span> <span class="dv">1000</span>) {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> ffmpeg <span class="op">=</span> <span class="fu">spawn</span>(<span class="st">&#39;ffmpeg&#39;</span><span class="op">,</span> [</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;-i&#39;</span><span class="op">,</span> audioPath<span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;-ac&#39;</span><span class="op">,</span> <span class="st">&#39;1&#39;</span><span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;-f&#39;</span><span class="op">,</span> <span class="st">&#39;s8&#39;</span><span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;-&#39;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  ])<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> rawBuffer <span class="op">=</span> <span class="bu">Buffer</span><span class="op">.</span><span class="fu">alloc</span>(<span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  ffmpeg<span class="op">.</span><span class="at">stdout</span><span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;data&#39;</span><span class="op">,</span> chunk <span class="kw">=&gt;</span> {</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    rawBuffer <span class="op">=</span> <span class="bu">Buffer</span><span class="op">.</span><span class="fu">concat</span>([rawBuffer<span class="op">,</span> chunk])<span class="op">;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  ffmpeg<span class="op">.</span><span class="at">stdout</span><span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;end&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> blockSize <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">floor</span>(rawBuffer<span class="op">.</span><span class="at">length</span> <span class="op">/</span> totalSamples)<span class="op">;</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> peaks <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> totalSamples<span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>      <span class="kw">let</span> max <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (<span class="kw">let</span> j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> blockSize<span class="op">;</span> j<span class="op">++</span>) {</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> val <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(rawBuffer[i <span class="op">*</span> blockSize <span class="op">+</span> j])<span class="op">;</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (val <span class="op">&gt;</span> max) max <span class="op">=</span> val<span class="op">;</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>      peaks<span class="op">.</span><span class="fu">push</span>(<span class="pp">parseFloat</span>((max <span class="op">/</span> <span class="dv">128</span>)<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>)))<span class="op">;</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">process</span><span class="op">.</span><span class="at">stdout</span><span class="op">.</span><span class="fu">write</span>(<span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(peaks))<span class="op">;</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="nodejs-wrappers-and-libraries">Node.js Wrappers and
+Libraries</h3>
+<p>For Node.js backends that prefer library integrations over direct
+shell commands, several packages streamline this process:</p>
+<ul>
+<li><strong><code>node-audiowaveform</code></strong>: A Node.js wrapper
+around the BBC <code>audiowaveform</code> binary that lets you process
+buffers or file paths within an async Promise workflow.</li>
+<li><strong><code>waveform-data</code></strong>: A companion JavaScript
+library by BBC that parses <code>.dat</code> and <code>.json</code>
+outputs from <code>audiowaveform</code>, allowing dynamic reslicing and
+downsampling of peak data before sending it to the client.</li>
+</ul>
+<h3 id="peak-formatting-requirements">Peak Formatting Requirements</h3>
+<p>Wavesurfer.js accepts pre-rendered peaks in two primary structural
+formats:</p>
+<ol type="1">
+<li><strong>A simple array of floats:</strong> An array of values
+representing normalized maximum amplitudes, such as
+<code>[0.02, 0.45, 0.89, 0.12]</code>.</li>
+<li><strong>An array of alternating min/max values:</strong> Arrays
+containing paired low and high values, such as
+<code>[-5, 5, -12, 14]</code>, typical of <code>audiowaveform</code>
+JSON output.</li>
+</ol>
+<p>Using either approach bypasses client-side audio decoding via the Web
+Audio API, allowing waveforms to render immediately upon page load.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-generate-wavesurfer-js-peaks-on-server';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimizing CDN Cache Headers for Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This article explains how to configure and optimize Content Delivery Network (CDN) caching headers for audio files decoded and rendered by Wavesurfer.js. By fine-tuning HTTP headers—such as Cache-Control, Accept-Ranges, and Cross-Origin Resource Sharing (">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/optimizing-cdn-cache-headers-for-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Optimizing CDN Cache Headers for Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/optimizing-cdn-cache-headers-for-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to configure and optimize Content Delivery Network (CDN) caching headers for audio files decoded and rendered by Wavesurfer.js. By fine-tuning HTTP headers—such as Cache-Control, Accept-Ranges, and Cross-Origin Resource Sharing (" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="optimizing-cdn-cache-headers-for-wavesurferjs">Optimizing CDN
+Cache Headers for Wavesurfer.js</h1>
+<p>This article explains how to configure and optimize Content Delivery
+Network (CDN) caching headers for audio files decoded and rendered by
+Wavesurfer.js. By fine-tuning HTTP headers—such as
+<code>Cache-Control</code>, <code>Accept-Ranges</code>, and Cross-Origin
+Resource Sharing (CORS) rules—engineering teams can eliminate latency,
+reduce bandwidth costs, and ensure reliable audio waveform rendering
+across modern web browsers.</p>
+<h3 id="the-role-of-wavesurferjs-in-audio-fetching">The Role of
+Wavesurfer.js in Audio Fetching</h3>
+<p>Wavesurfer.js generally processes audio through two distinct
+mechanisms: the Web Audio API
+(<code>AudioContext.decodeAudioData</code>) via direct
+<code>fetch</code>/XHR calls, or the HTML5 Media Element
+(<code>&lt;audio&gt;</code> tags).</p>
+<p>When using the Web Audio API, the client must download the entire
+audio array buffer before it can parse peaks and render the canvas
+waveform. When using media elements or loading precomputed peak data,
+partial content requests are used. In both scenarios, misconfigured CDN
+edge nodes lead to high latency, failed cross-origin requests, or
+redundant network transfers.</p>
+<h3 id="enabling-byte-range-requests-accept-ranges">Enabling Byte-Range
+Requests (<code>Accept-Ranges</code>)</h3>
+<p>Wavesurfer.js relies heavily on range requests when streaming audio
+or seeking through unbuffered chunks. CDNs must support and advertise
+partial content delivery:</p>
+<ul>
+<li><strong><code>Accept-Ranges: bytes</code></strong>: Instructs the
+browser that the edge server supports chunked range queries.</li>
+<li><strong><code>206 Partial Content</code></strong>: The expected HTTP
+response status code for byte requests.</li>
+</ul>
+<p>CDNs should be configured to cache the entire audio file at the edge
+while retaining the ability to serve sliced range requests directly to
+the client. This prevents the origin server from processing individual
+byte offsets repeatedly.</p>
+<h3 id="maximizing-edge-and-client-lifespans-cache-control">Maximizing
+Edge and Client Lifespans (<code>Cache-Control</code>)</h3>
+<p>Because production audio files are typically immutable assets
+identified by unique paths or hashes, aggressive caching should be
+enforced:</p>
+<pre class="http"><code>Cache-Control: public, max-age=31536000, immutable</code></pre>
+<ul>
+<li><strong><code>public</code></strong>: Permits both edge nodes and
+browser caches to store the payload.</li>
+<li><strong><code>max-age=31536000</code></strong>: Sets a one-year
+expiration, ensuring that repeated visits to the waveform interface load
+the audio instantaneously from local disk or memory cache.</li>
+<li><strong><code>immutable</code></strong>: Instructs the browser not
+to send conditional validation requests (<code>If-None-Match</code> or
+<code>If-Modified-Since</code>) when the user reloads the page, avoiding
+unnecessary 304 round-trips during rendering.</li>
+</ul>
+<h3 id="managing-cross-origin-resource-sharing-cors">Managing
+Cross-Origin Resource Sharing (CORS)</h3>
+<p>Because the Web Audio API analyzes raw audio buffer data across
+domains, browsers strictly enforce CORS. Without explicit headers,
+Wavesurfer.js throws an <code>AudioContext</code> security exception,
+breaking the waveform visualization.</p>
+<p>CDNs must inject the following headers on all audio responses:</p>
+<pre class="http"><code>Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+Access-Control-Expose-Headers: Content-Length, Content-Range, Accept-Ranges</code></pre>
+<p>Exposing <code>Content-Length</code> and <code>Content-Range</code>
+is mandatory; without them, Wavesurfer.js cannot calculate loading
+progress percentages or total duration prior to full buffer
+decompression.</p>
+<h3 id="handling-edge-compression-and-etags">Handling Edge Compression
+and ETags</h3>
+<p>CDNs commonly apply automatic Gzip or Brotli compression to outbound
+traffic. For audio formats (such as MP3, AAC, or OGG), payload
+compression must be disabled at the edge. Audio files are already
+heavily compressed using specialized codecs; running them through
+general-purpose compression algorithms increases edge compute overhead,
+risks header corruption for range offsets, and provides zero file size
+savings.</p>
+<p>Additionally, ensure the CDN generates strong <code>ETag</code>
+headers based on file contents rather than dynamic edge instance tokens,
+ensuring proper client-side cache persistence across distributed server
+environments.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/optimizing-cdn-cache-headers-for-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

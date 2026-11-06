@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking Client-Side Wavesurfer.js Audio Errors - wavesurfer.js</title>
+    <meta name="description" content="Monitoring client-side audio failures in Wavesurfer.js requires capturing low-level decoding and media playback issues and transmitting those diagnostics to an Application Performance Monitoring (APM) or telemetry platform. This guide outlines how to hook">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/tracking-client-side-wavesurfer-js-audio-errors">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Tracking Client-Side Wavesurfer.js Audio Errors - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/tracking-client-side-wavesurfer-js-audio-errors" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Monitoring client-side audio failures in Wavesurfer.js requires capturing low-level decoding and media playback issues and transmitting those diagnostics to an Application Performance Monitoring (APM) or telemetry platform. This guide outlines how to hook" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="tracking-client-side-wavesurferjs-audio-errors">Tracking
+Client-Side Wavesurfer.js Audio Errors</h1>
+<p>Monitoring client-side audio failures in Wavesurfer.js requires
+capturing low-level decoding and media playback issues and transmitting
+those diagnostics to an Application Performance Monitoring (APM) or
+telemetry platform. This guide outlines how to hook into Wavesurfer.js
+event listeners, monitor underlying HTML5 audio and Web Audio API
+failures, and route these runtime metrics into modern telemetry tools
+like Sentry, Datadog, LogRocket, or custom beacon endpoints.</p>
+<h2 id="listening-to-wavesurferjs-event-hooks">Listening to
+Wavesurfer.js Event Hooks</h2>
+<p>Wavesurfer.js exposes lifecycle events that serve as the primary
+entry point for capturing playback and loading failures.</p>
+<ul>
+<li><strong><code>wavesurfer.on('error', (error) =&gt; { ... })</code></strong>:
+The primary event for general exceptions. It catches failures occurring
+during audio source fetching, decoding, or waveform rendering.</li>
+<li><strong>Promise Rejections</strong>: When using asynchronous methods
+like <code>wavesurfer.load(url)</code> or
+<code>wavesurfer.loadBlob(blob)</code>, always append a
+<code>.catch()</code> block. Unhandled rejections during audio
+initialization can bypass standard event listeners in modern versions
+(v7+).</li>
+</ul>
+<h2 id="monitoring-underlying-audio-components">Monitoring Underlying
+Audio Components</h2>
+<p>Wavesurfer.js relies on either an HTML5 <code>&lt;audio&gt;</code>
+element (<code>MediaElement</code> backend) or the Web Audio API
+(<code>WebAudio</code> backend). Monitoring these underlying engines
+provides granular failure data.</p>
+<h3 id="1-html5-media-element-errors">1. HTML5 Media Element Errors</h3>
+<p>When utilizing the default or media element backend, attach a
+listener directly to the media element:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> media <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getMediaElement</span>()<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>media<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;error&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> mediaError <span class="op">=</span> media<span class="op">.</span><span class="at">error</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// mediaError.code returns:</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 1: MEDIA_ERR_ABORTED</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 2: MEDIA_ERR_NETWORK</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 3: MEDIA_ERR_DECODE</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 4: MEDIA_ERR_SRC_NOT_SUPPORTED</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sendTelemetry</span>(<span class="st">&#39;audio_media_error&#39;</span><span class="op">,</span> {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">code</span><span class="op">:</span> mediaError<span class="op">.</span><span class="at">code</span><span class="op">,</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">message</span><span class="op">:</span> mediaError<span class="op">.</span><span class="at">message</span><span class="op">,</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">currentSrc</span><span class="op">:</span> media<span class="op">.</span><span class="at">currentSrc</span><span class="op">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Track playback stall conditions by monitoring <code>stalled</code>,
+<code>waiting</code>, and <code>suspend</code> events to detect
+buffering problems caused by network throttling or stream
+interruption.</p>
+<h3 id="2-web-audio-api-context-telemetry">2. Web Audio API Context
+Telemetry</h3>
+<p>When using raw Web Audio:</p>
+<ul>
+<li>Monitor <code>AudioContext.state</code> transitions
+(<code>running</code>, <code>suspended</code>, <code>interrupted</code>,
+or <code>closed</code>).</li>
+<li>Capture failures returned by
+<code>AudioContext.decodeAudioData()</code>, which frequently fail on
+malformed audio headers or unsupported sample rates across different
+mobile browsers.</li>
+</ul>
+<h2 id="telemetry-and-error-logging-integrations">Telemetry and Error
+Logging Integrations</h2>
+<h3 id="sentry">Sentry</h3>
+<p>Sentry captures detailed stack traces and allows breadcrumb tracking
+for audio playback sessions.</p>
+<ul>
+<li>Record audio lifecycle events as breadcrumbs
+(<code>wavesurfer.on('ready')</code>,
+<code>wavesurfer.on('play')</code>,
+<code>wavesurfer.on('pause')</code>).</li>
+<li>Use <code>Sentry.captureException(error)</code> inside the
+Wavesurfer error callback.</li>
+<li>Attach custom tags such as <code>audio_format</code>,
+<code>audio_backend</code>, and <code>browser_audio_support</code>.</li>
+</ul>
+<h3 id="datadog-rum-real-user-monitoring">Datadog RUM (Real User
+Monitoring)</h3>
+<p>Datadog RUM allows you to track audio loading as custom user actions
+and log failures as custom errors:</p>
+<ul>
+<li>Track total load duration from <code>load()</code> invocation to the
+<code>ready</code> event using custom performance timings.</li>
+<li>Send
+<code>datadogRum.addError(error, { source: 'wavesurfer', url: audioUrl })</code>
+to correlate playback failures with user session recordings and network
+traces.</li>
+</ul>
+<h3 id="logrocket-or-session-replay-tools">LogRocket or Session Replay
+Tools</h3>
+<p>Visual session replays show whether an audio failure was accompanied
+by user interactions (such as rapid scrubbing or volume changes).
+LogRocket captures console errors and allows custom event dispatching
+(<code>LogRocket.track('Audio Playback Failed')</code>) to flag sessions
+with broken audio states.</p>
+<h3 id="custom-beacon-telemetry">Custom Beacon Telemetry</h3>
+<p>For internal logging pipelines, use the
+<code>navigator.sendBeacon()</code> API to send telemetry data
+asynchronously without blocking the user interface or failing during
+page navigation:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;error&#39;</span><span class="op">,</span> (err) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> payload <span class="op">=</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>({</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">event</span><span class="op">:</span> <span class="st">&#39;wavesurfer_error&#39;</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">message</span><span class="op">:</span> err<span class="op">.</span><span class="at">message</span> <span class="op">||</span> err<span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">userAgent</span><span class="op">:</span> <span class="bu">navigator</span><span class="op">.</span><span class="at">userAgent</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">timestamp</span><span class="op">:</span> <span class="bu">Date</span><span class="op">.</span><span class="fu">now</span>()<span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="bu">navigator</span><span class="op">.</span><span class="fu">sendBeacon</span>(<span class="st">&#39;/api/telemetry/audio-errors&#39;</span><span class="op">,</span> payload)<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="contextual-data-to-include-in-error-payloads">Contextual Data to
+Include in Error Payloads</h2>
+<p>To diagnose audio errors effectively, ensure telemetry payloads
+include:</p>
+<ul>
+<li><strong>Audio URL and MIME Type</strong>: Helps identify missing
+files, broken redirects, or misconfigured content-type headers.</li>
+<li><strong>CORS Configuration</strong>: Missing
+<code>Access-Control-Allow-Origin</code> headers are a leading cause of
+decoding failures in canvas rendering.</li>
+<li><strong>Audio Backend</strong>: Identifies whether the failure
+occurred via <code>MediaElement</code> or <code>WebAudio</code>.</li>
+<li><strong>Hardware and Browser State</strong>: Includes browser
+version, OS, audio output device changes, and whether autoplay policies
+restricted playback.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/tracking-client-side-wavesurfer-js-audio-errors';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

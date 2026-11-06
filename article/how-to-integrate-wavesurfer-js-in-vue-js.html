@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Integrate Wavesurfer.js in Vue.js - wavesurfer.js</title>
+    <meta name="description" content="This guide explains how to integrate Wavesurfer.js into a Vue.js 3 application using the Composition API. You will learn how to install the required package, set up a reactive container element, initialize the waveform instance, handle audio playback, and">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-integrate-wavesurfer-js-in-vue-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Integrate Wavesurfer.js in Vue.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-integrate-wavesurfer-js-in-vue-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide explains how to integrate Wavesurfer.js into a Vue.js 3 application using the Composition API. You will learn how to install the required package, set up a reactive container element, initialize the waveform instance, handle audio playback, and" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-integrate-wavesurferjs-in-vuejs">How to Integrate
+Wavesurfer.js in Vue.js</h1>
+<p>This guide explains how to integrate Wavesurfer.js into a Vue.js 3
+application using the Composition API. You will learn how to install the
+required package, set up a reactive container element, initialize the
+waveform instance, handle audio playback, and properly clean up audio
+resources on component unmount.</p>
+<h2 id="step-1-install-wavesurferjs">Step 1: Install Wavesurfer.js</h2>
+<p>First, install the latest version of Wavesurfer.js via npm or
+yarn:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install wavesurfer.js</span></code></pre></div>
+<h2 id="step-2-build-the-audio-waveform-component">Step 2: Build the
+Audio Waveform Component</h2>
+<p>Create a dedicated Vue component (for example,
+<code>AudioPlayer.vue</code>). This component creates a DOM reference
+for the waveform container, initializes the <code>WaveSurfer</code>
+instance inside the <code>onMounted</code> hook, and destroys it inside
+<code>onBeforeUnmount</code> to prevent memory leaks.</p>
+<pre class="vue"><code>&lt;template&gt;
+  &lt;div class=&quot;audio-player&quot;&gt;
+    &lt;div ref=&quot;waveformRef&quot; class=&quot;waveform-container&quot;&gt;&lt;/div&gt;
+    
+    &lt;div class=&quot;controls&quot;&gt;
+      &lt;button @click=&quot;togglePlay&quot;&gt;
+        {{ isPlaying ? &#39;Pause&#39; : &#39;Play&#39; }}
+      &lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+import { ref, onMounted, onBeforeUnmount } from &#39;vue&#39;
+import WaveSurfer from &#39;wavesurfer.js&#39;
+
+const props = defineProps({
+  audioUrl: {
+    type: String,
+    required: true
+  }
+})
+
+const waveformRef = ref(null)
+let wavesurfer = null
+const isPlaying = ref(false)
+
+onMounted(() =&gt; {
+  if (!waveformRef.value) return
+
+  wavesurfer = WaveSurfer.create({
+    container: waveformRef.value,
+    waveColor: &#39;#cbd5e1&#39;,
+    progressColor: &#39;#3b82f6&#39;,
+    cursorColor: &#39;#1d4ed8&#39;,
+    barWidth: 2,
+    barGap: 1,
+    barRadius: 2,
+    height: 100,
+    url: props.audioUrl
+  })
+
+  wavesurfer.on(&#39;play&#39;, () =&gt; {
+    isPlaying.value = true
+  })
+
+  wavesurfer.on(&#39;pause&#39;, () =&gt; {
+    isPlaying.value = false
+  })
+
+  wavesurfer.on(&#39;finish&#39;, () =&gt; {
+    isPlaying.value = false
+  })
+})
+
+const togglePlay = () =&gt; {
+  if (wavesurfer) {
+    wavesurfer.playPause()
+  }
+}
+
+onBeforeUnmount(() =&gt; {
+  if (wavesurfer) {
+    wavesurfer.destroy()
+  }
+})
+&lt;/script&gt;
+
+&lt;style scoped&gt;
+.audio-player {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.waveform-container {
+  width: 100%;
+  background: #f8fafc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.controls {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+button {
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+&lt;/style&gt;</code></pre>
+<h2 id="step-3-use-the-component-in-your-application">Step 3: Use the
+Component in Your Application</h2>
+<p>Import and use the <code>AudioPlayer</code> component inside any
+parent view, passing the path or URL to your audio file via the
+<code>audioUrl</code> prop:</p>
+<pre class="vue"><code>&lt;template&gt;
+  &lt;main&gt;
+    &lt;h1&gt;Audio Preview&lt;/h1&gt;
+    &lt;AudioPlayer audioUrl=&quot;/path/to/audio.mp3&quot; /&gt;
+  &lt;/main&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+import AudioPlayer from &#39;./components/AudioPlayer.vue&#39;
+&lt;/script&gt;</code></pre>
+<h2 id="key-considerations">Key Considerations</h2>
+<ul>
+<li><strong>Lifecycle Management:</strong> Wavesurfer creates active Web
+Audio API contexts and event listeners. Always call
+<code>wavesurfer.destroy()</code> inside <code>onBeforeUnmount</code>
+(or <code>beforeUnmount</code> in the Options API) to avoid memory
+leaks.</li>
+<li><strong>Dynamic Sources:</strong> To switch tracks dynamically,
+watch the <code>audioUrl</code> prop using Vue's <code>watch</code>
+function and call <code>wavesurfer.load(newUrl)</code> when the source
+changes.</li>
+<li><strong>Plugins:</strong> Wavesurfer.js offers official plugins such
+as Timeline, Regions, and Minimap. These are imported from submodules
+(e.g., <code>wavesurfer.js/dist/plugins/timeline.esm.js</code>) and
+registered within the <code>WaveSurfer.create()</code> configuration
+array under the <code>plugins</code> key.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-integrate-wavesurfer-js-in-vue-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

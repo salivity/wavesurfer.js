@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Wavesurfer.js Waveforms for Mobile - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js generates audio visualizers using HTML5 Canvas elements, which means standard CSS media queries cannot alter internal waveform dimensions like bar widths and heights directly. To create a responsive waveform that adapts to mobile screens, de">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/responsive-wavesurfer-js-waveforms-for-mobile">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Responsive Wavesurfer.js Waveforms for Mobile - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/responsive-wavesurfer-js-waveforms-for-mobile" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js generates audio visualizers using HTML5 Canvas elements, which means standard CSS media queries cannot alter internal waveform dimensions like bar widths and heights directly. To create a responsive waveform that adapts to mobile screens, de" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="responsive-wavesurferjs-waveforms-for-mobile">Responsive
+Wavesurfer.js Waveforms for Mobile</h1>
+<p>Wavesurfer.js generates audio visualizers using HTML5 Canvas
+elements, which means standard CSS media queries cannot alter internal
+waveform dimensions like bar widths and heights directly. To create a
+responsive waveform that adapts to mobile screens, developers must
+bridge CSS viewport detection with JavaScript by using
+<code>window.matchMedia</code> or the <code>ResizeObserver</code> API.
+This guide explains how to listen for mobile breakpoints and dynamically
+update Wavesurfer.js parameters such as <code>height</code>,
+<code>barWidth</code>, and <code>barGap</code> to maintain clarity and
+usability on smaller screens.</p>
+<h3 id="why-standard-css-media-queries-are-insufficient">Why Standard
+CSS Media Queries Are Insufficient</h3>
+<p>Wavesurfer.js draws waveforms onto an HTML5
+<code>&lt;canvas&gt;</code> element using a fixed pixel density.
+Applying CSS rules like <code>height: 50px</code> or scaling the canvas
+via CSS stretches or squishes the rendered audio bars, leading to
+blurry, distorted visuals.</p>
+<p>To properly scale the waveform without distortion, the canvas must be
+redrawn using updated configuration properties. This requires passing
+new numeric values for the height and bar dimensions directly to the
+Wavesurfer instance whenever the screen size crosses a designated
+threshold.</p>
+<h3
+id="implementing-javascript-media-queries-with-windowmatchmedia">Implementing
+JavaScript Media Queries with <code>window.matchMedia</code></h3>
+<p>The most direct way to replicate CSS media queries in JavaScript is
+the <code>window.matchMedia()</code> API. This method allows you to
+evaluate media query strings—such as <code>(max-width: 768px)</code>—and
+attach event listeners that fire whenever the viewport crosses that
+boundary.</p>
+<p>When a mobile breakpoint is matched, you adjust specific Wavesurfer
+configuration options:</p>
+<ul>
+<li><strong><code>height</code></strong>: Reduced for mobile screens to
+conserve limited vertical space.</li>
+<li><strong><code>barWidth</code></strong>: Set to a smaller value (or
+omitted for a continuous line) to ensure fine audio details fit within a
+narrow horizontal viewport.</li>
+<li><strong><code>barGap</code></strong>: Scaled down proportionally to
+avoid excessive whitespace between audio bars.</li>
+</ul>
+<h3 id="dynamic-reconfiguration-using-setoptions">Dynamic
+Reconfiguration Using <code>setOptions</code></h3>
+<p>In modern versions of Wavesurfer.js (v7+), the
+<code>setOptions()</code> method allows you to alter configuration
+properties at runtime and automatically trigger a re-render:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Define the mobile media query</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> mobileQuery <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="fu">matchMedia</span>(<span class="st">&#39;(max-width: 768px)&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Function to determine settings based on viewport size</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getResponsiveOptions</span>(isMobile) {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">height</span><span class="op">:</span> isMobile <span class="op">?</span> <span class="dv">60</span> <span class="op">:</span> <span class="dv">128</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">barWidth</span><span class="op">:</span> isMobile <span class="op">?</span> <span class="dv">2</span> <span class="op">:</span> <span class="dv">4</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">barGap</span><span class="op">:</span> isMobile <span class="op">?</span> <span class="dv">1</span> <span class="op">:</span> <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize Wavesurfer with the initial viewport configuration</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;/audio-sample.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="op">...</span><span class="fu">getResponsiveOptions</span>(mobileQuery<span class="op">.</span><span class="at">matches</span>)<span class="op">,</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Listen for viewport changes (orientation shifts, window resizing)</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>mobileQuery<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;change&#39;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">setOptions</span>(<span class="fu">getResponsiveOptions</span>(e<span class="op">.</span><span class="at">matches</span>))<span class="op">;</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="handling-continuous-container-resizing">Handling Continuous
+Container Resizing</h3>
+<p>While <code>window.matchMedia</code> works well for distinct mobile
+and desktop breakpoints, modern responsive layouts often use fluid grids
+or split views where container widths change incrementally.</p>
+<p>To adapt the waveform dimensions dynamically to the container rather
+than just the window:</p>
+<ol type="1">
+<li><strong>Use <code>ResizeObserver</code></strong>: Monitor the parent
+container of the waveform.</li>
+<li><strong>Debounce Updates</strong>: Re-rendering canvas elements can
+be computationally expensive. Debouncing resize events ensures that
+<code>setOptions()</code> is not called on every single pixel adjustment
+during a window drag.</li>
+<li><strong>Calculate Proportional Bar Widths</strong>: Calculate
+<code>barWidth</code> and <code>barGap</code> programmatically based on
+the measured <code>clientWidth</code> of the container to maintain a
+consistent number of bars regardless of screen size.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/responsive-wavesurfer-js-waveforms-for-mobile';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

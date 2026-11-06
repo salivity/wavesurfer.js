@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streaming HLS Audio with Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This article explains how to integrate HTTP Live Streaming (HLS) audio streams with the Wavesurfer.js visualization library. Because Wavesurfer.js natively relies on the Web Audio API to decode complete audio files, streaming segmented protocols like HLS">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/streaming-hls-audio-with-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Streaming HLS Audio with Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/streaming-hls-audio-with-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to integrate HTTP Live Streaming (HLS) audio streams with the Wavesurfer.js visualization library. Because Wavesurfer.js natively relies on the Web Audio API to decode complete audio files, streaming segmented protocols like HLS" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="streaming-hls-audio-with-wavesurferjs">Streaming HLS Audio with
+Wavesurfer.js</h1>
+<p>This article explains how to integrate HTTP Live Streaming (HLS)
+audio streams with the Wavesurfer.js visualization library. Because
+Wavesurfer.js natively relies on the Web Audio API to decode complete
+audio files, streaming segmented protocols like HLS requires a hybrid
+approach using an external HLS client, an HTML5 media element, and
+precomputed waveform data.</p>
+<h3 id="the-underlying-challenge">The Underlying Challenge</h3>
+<p>Wavesurfer.js typically fetches an entire audio file as an
+<code>ArrayBuffer</code> and decodes it using the browser's
+<code>AudioContext.decodeAudioData()</code>. This approach does not work
+with HLS streams (<code>.m3u8</code> manifests with split
+<code>.ts</code> or <code>.aac</code> segments) because the audio is
+split into small chunks delivered sequentially. Attempting to decode the
+manifest directly through Web Audio fails, and loading every chunk into
+memory simultaneously defeats the purpose of streaming.</p>
+<h3 id="the-integration-architecture">The Integration Architecture</h3>
+<p>To integrate HLS with Wavesurfer.js, you must decouple audio playback
+from waveform rendering:</p>
+<ol type="1">
+<li><strong>Playback via Hls.js and HTML5 Audio:</strong> The browser
+uses <code>Hls.js</code> (or native Safari HLS support) to fetch and
+feed media segments into a standard HTML5 <code>&lt;audio&gt;</code>
+element.</li>
+<li><strong>Wavesurfer Media Element Mode:</strong> Wavesurfer.js
+attaches directly to this <code>&lt;audio&gt;</code> element using its
+<code>media</code> configuration option, synchronizing its playback
+controls and cursor with the audio stream.</li>
+<li><strong>Precomputed Waveform Data:</strong> Because Wavesurfer
+cannot analyze the unbuffered future segments of the stream, you must
+supply pre-generated waveform peak data (JSON) directly during
+initialization.</li>
+</ol>
+<h3 id="step-by-step-implementation">Step-by-Step Implementation</h3>
+<h4 id="1-precompute-waveform-peaks">1. Precompute Waveform Peaks</h4>
+<p>Before streaming, extract peak data on your backend using tools like
+<code>audiowaveform</code> or FFmpeg. Export the peaks as an array of
+floating-point numbers or integers representing min/max amplitudes
+across the track duration.</p>
+<h4 id="2-initialize-hlsjs-with-the-media-element">2. Initialize Hls.js
+with the Media Element</h4>
+<p>Create an HTML5 audio element and bind <code>Hls.js</code> to it:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> Hls <span class="im">from</span> <span class="st">&#39;hls.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioElement <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">createElement</span>(<span class="st">&#39;audio&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> streamUrl <span class="op">=</span> <span class="st">&#39;https://example.com/audio/playlist.m3u8&#39;</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (Hls<span class="op">.</span><span class="fu">isSupported</span>()) {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> hls <span class="op">=</span> <span class="kw">new</span> <span class="fu">Hls</span>()<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  hls<span class="op">.</span><span class="fu">loadSource</span>(streamUrl)<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  hls<span class="op">.</span><span class="fu">attachMedia</span>(audioElement)<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> <span class="cf">if</span> (audioElement<span class="op">.</span><span class="fu">canPlayType</span>(<span class="st">&#39;application/vnd.apple.mpegurl&#39;</span>)) {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Native Safari HLS support</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  audioElement<span class="op">.</span><span class="at">src</span> <span class="op">=</span> streamUrl<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h4 id="3-mount-wavesurferjs-to-the-media-element">3. Mount
+Wavesurfer.js to the Media Element</h4>
+<p>Initialize Wavesurfer, pass the existing <code>audioElement</code>,
+and provide the precomputed <code>peaks</code> along with the track
+duration:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(<span class="st">&#39;https://example.com/audio/peaks.json&#39;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">then</span>((response) <span class="kw">=&gt;</span> response<span class="op">.</span><span class="fu">json</span>())</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">then</span>((peaksData) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F4A85&#39;</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#383351&#39;</span><span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">media</span><span class="op">:</span> audioElement<span class="op">,</span>      <span class="co">// Link directly to the HLS audio element</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">peaks</span><span class="op">:</span> [peaksData<span class="op">.</span><span class="at">data</span>]<span class="op">,</span>  <span class="co">// Pass precomputed waveform peaks</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">duration</span><span class="op">:</span> peaksData<span class="op">.</span><span class="at">duration</span> <span class="co">// Total length in seconds</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>      <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Waveform ready for HLS playback&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span></code></pre></div>
+<h3 id="seeking-and-playback-behavior">Seeking and Playback
+Behavior</h3>
+<p>When a user clicks on the waveform to seek, Wavesurfer updates
+<code>audioElement.currentTime</code>. In turn, <code>Hls.js</code>
+identifies the corresponding segment from the manifest, buffers that
+specific chunk, and begins playback immediately without needing to load
+earlier segments. This combination ensures instant visual
+representation, low memory usage, and efficient bandwidth consumption
+for long-form audio.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/streaming-hls-audio-with-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

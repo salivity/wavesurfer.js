@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimize AnalyserNode Frequency Bin Count in Wavesurfer - wavesurfer.js</title>
+    <meta name="description" content="Optimizing the AnalyserNode frequency bin count alongside Wavesurfer.js is critical for maintaining smooth 60 frames-per-second visualizations without dropping audio frames or stalling the main JavaScript thread. Because frequencyBinCount is always strict">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/optimize-analyser-node-frequency-bin-count-in-wavesurfer">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Optimize AnalyserNode Frequency Bin Count in Wavesurfer - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/optimize-analyser-node-frequency-bin-count-in-wavesurfer" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Optimizing the AnalyserNode frequency bin count alongside Wavesurfer.js is critical for maintaining smooth 60 frames-per-second visualizations without dropping audio frames or stalling the main JavaScript thread. Because frequencyBinCount is always strict" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="optimize-analysernode-frequency-bin-count-in-wavesurfer">Optimize
+AnalyserNode Frequency Bin Count in Wavesurfer</h1>
+<p>Optimizing the <code>AnalyserNode</code> frequency bin count
+alongside Wavesurfer.js is critical for maintaining smooth 60
+frames-per-second visualizations without dropping audio frames or
+stalling the main JavaScript thread. Because
+<code>frequencyBinCount</code> is always strictly half of the
+<code>fftSize</code> property, tuning this value balances frequency
+resolution against CPU processing and render execution times during
+real-time audio playback.</p>
+<h3 id="the-optimal-settings-64-to-256-bins">The Optimal Settings: 64 to
+256 Bins</h3>
+<p>For most web-based visualizations used alongside Wavesurfer.js, the
+optimal <code>fftSize</code> is <strong>128, 256, or 512</strong>, which
+yields a <code>frequencyBinCount</code> of <strong>64, 128, or
+256</strong> respectively.</p>
+<ul>
+<li><strong><code>fftSize: 256</code>
+(<code>frequencyBinCount: 128</code>):</strong> The recommended balance
+for real-time spectrum analyzers, visualizers, and EQ meters. It
+provides enough detail for human perception without introducing
+micro-stutters during simultaneous waveform redraws.</li>
+<li><strong><code>fftSize: 128</code>
+(<code>frequencyBinCount: 64</code>):</strong> Best suited for mobile
+browsers, low-power devices, or multi-track visualizers where canvas
+drawing budgets are constrained.</li>
+<li><strong><code>fftSize: 512</code>
+(<code>frequencyBinCount: 256</code>):</strong> Ideal when rendering
+wide canvases (above 800px) that require high visual fidelity across
+individual frequency bands.</li>
+</ul>
+<h3 id="why-default-settings-cause-performance-bottlenecks">Why Default
+Settings Cause Performance Bottlenecks</h3>
+<p>The default Web Audio API configuration sets <code>fftSize</code> to
+<code>2048</code>, generating a <code>frequencyBinCount</code> of
+<code>1024</code>. Retaining this default creates three major
+performance drawbacks:</p>
+<ol type="1">
+<li><strong>Unnecessary Array Iteration:</strong> Extracting values via
+<code>getByteFrequencyData()</code> or
+<code>getFloatFrequencyData()</code> requires populating and iterating
+through a 1024-element <code>Uint8Array</code> or
+<code>Float32Array</code> on every single
+<code>requestAnimationFrame</code> loop (typically 60 to 120 times per
+second).</li>
+<li><strong>Sub-pixel Drawing Waste:</strong> UI spectrums embedded
+alongside Wavesurfer.js usually occupy small horizontal regions (e.g.,
+200px to 400px wide). Rendering 1,024 discrete frequency bars forces
+hundreds of draw calls that fall within the same sub-pixel ranges,
+wasting GPU/canvas fill rate.</li>
+<li><strong>Wavesurfer.js Main Thread Contention:</strong> Wavesurfer.js
+continuously updates its progress cursor and re-renders internal canvas
+elements during playback. Running an oversized Fast Fourier Transform
+(FFT) analysis on the same thread creates frame drops and audio
+glitching under heavy loads.</li>
+</ol>
+<h3 id="implementation-best-practices">Implementation Best
+Practices</h3>
+<p>To configure the <code>AnalyserNode</code> properly with
+Wavesurfer.js:</p>
+<ul>
+<li><p><strong>Explicitly assign <code>fftSize</code>:</strong> Set the
+size on your <code>AnalyserNode</code> instance before connecting it to
+the audio graph:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> analyser <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">ac</span><span class="op">.</span><span class="fu">createAnalyser</span>()<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>analyser<span class="op">.</span><span class="at">fftSize</span> <span class="op">=</span> <span class="dv">256</span><span class="op">;</span> <span class="co">// Sets frequencyBinCount to 128</span></span></code></pre></div></li>
+<li><p><strong>Reuse Typed Arrays:</strong> Instantiate your
+<code>Uint8Array(analyser.frequencyBinCount)</code> once during
+initialization rather than creating a new array inside your
+<code>requestAnimationFrame</code> callback.</p></li>
+<li><p><strong>Adjust <code>smoothingTimeConstant</code>:</strong> Set
+<code>analyser.smoothingTimeConstant</code> between <code>0.7</code> and
+<code>0.85</code>. This softens transitions between frames
+mathematically inside the audio thread, reducing the need for
+computationally expensive client-side interpolation routines.</p></li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/optimize-analyser-node-frequency-bin-count-in-wavesurfer';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

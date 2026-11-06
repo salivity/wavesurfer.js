@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARIA Live Regions for Wavesurfer.js Time Updates - wavesurfer.js</title>
+    <meta name="description" content="Integrating ARIA live regions with Wavesurfer.js allows screen readers to dynamically announce audio playback progress, current timestamps, and seeking actions to visually impaired users. Because Wavesurfer.js renders waveforms using HTML5 Canvas without">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/aria-live-regions-for-wavesurfer-js-time-updates">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ARIA Live Regions for Wavesurfer.js Time Updates - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/aria-live-regions-for-wavesurfer-js-time-updates" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Integrating ARIA live regions with Wavesurfer.js allows screen readers to dynamically announce audio playback progress, current timestamps, and seeking actions to visually impaired users. Because Wavesurfer.js renders waveforms using HTML5 Canvas without" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="aria-live-regions-for-wavesurferjs-time-updates">ARIA Live
+Regions for Wavesurfer.js Time Updates</h1>
+<p>Integrating ARIA live regions with Wavesurfer.js allows screen
+readers to dynamically announce audio playback progress, current
+timestamps, and seeking actions to visually impaired users. Because
+Wavesurfer.js renders waveforms using HTML5 Canvas without built-in
+screen reader speech output, developers must create custom live regions
+(<code>role="status"</code> or <code>aria-live="polite"</code>) and bind
+them to Wavesurfer playback events to communicate time changes clearly
+and non-intrusively.</p>
+<h3 id="the-appropriate-live-region-types">The Appropriate Live Region
+Types</h3>
+<p>Screen readers use two primary mechanisms to track audio time
+dynamically from Wavesurfer.js:</p>
+<ol type="1">
+<li><p><strong><code>role="status"</code> (or
+<code>aria-live="polite"</code>):</strong> This is the standard live
+region used for dynamic time updates. A polite region ensures that time
+announcements do not cut off active screen reader speech. Setting
+<code>aria-atomic="true"</code> ensures the entire formatted timestamp
+(e.g., "1 minute, 15 seconds") is read aloud as a coherent phrase rather
+than reading out isolated numerical changes.</p></li>
+<li><p><strong><code>role="slider"</code> with
+<code>aria-valuenow</code> and <code>aria-valuetext</code>:</strong> For
+continuous playback tracking, standard live regions can overwhelm the
+user with speech chatter. The accessible pattern for timeline controls
+pairs a quiet <code>role="slider"</code> representation with a polite
+live region reserved for discrete user-initiated changes (such as
+seeking, pausing, or interval checkpoints).</p></li>
+</ol>
+<h3
+id="implementing-dynamic-announcements-with-wavesurferjs">Implementing
+Dynamic Announcements with Wavesurfer.js</h3>
+<p>To announce updates dynamically, attach an event listener to the
+Wavesurfer instance that updates the text content of your polite live
+region.</p>
+<h4 id="1-the-html-container">1. The HTML Container</h4>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> </span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  id</span><span class="op">=</span><span class="st">&quot;playback-announcer&quot;</span><span class="ot"> </span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ot">  role</span><span class="op">=</span><span class="st">&quot;status&quot;</span><span class="ot"> </span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  aria-live</span><span class="op">=</span><span class="st">&quot;polite&quot;</span><span class="ot"> </span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ot">  aria-atomic</span><span class="op">=</span><span class="st">&quot;true&quot;</span><span class="ot"> </span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  class</span><span class="op">=</span><span class="st">&quot;sr-only&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>The <code>.sr-only</code> class visually hides the element from view
+while keeping it fully detectable by screen readers like NVDA, JAWS, and
+VoiceOver.</p>
+<h4 id="2-synchronizing-with-wavesurfer-events">2. Synchronizing with
+Wavesurfer Events</h4>
+<p>Wavesurfer.js provides events such as <code>timeupdate</code>,
+<code>seeking</code>, and <code>pause</code>. Avoid updating an
+<code>aria-live</code> element on every millisecond of playback, as
+screen readers will attempt to read the queue continuously, creating a
+poor user experience. Instead, announce time on user interactions or
+designated intervals:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> announcer <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;playback-announcer&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">formatTime</span>(seconds) {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> mins <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">floor</span>(seconds <span class="op">/</span> <span class="dv">60</span>)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> secs <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">floor</span>(seconds <span class="op">%</span> <span class="dv">60</span>)<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="vs">`</span><span class="sc">${</span>mins<span class="sc">}</span><span class="vs"> minutes, </span><span class="sc">${</span>secs<span class="sc">}</span><span class="vs"> seconds`</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Announce location when the user explicitly seeks</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;seeking&#39;</span><span class="op">,</span> (currentTime) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  announcer<span class="op">.</span><span class="at">textContent</span> <span class="op">=</span> <span class="vs">`Current time: </span><span class="sc">${</span><span class="fu">formatTime</span>(currentTime)<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Announce state and time on pause</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;pause&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  announcer<span class="op">.</span><span class="at">textContent</span> <span class="op">=</span> <span class="vs">`Paused at </span><span class="sc">${</span><span class="fu">formatTime</span>(wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>())<span class="sc">}</span><span class="vs">`</span><span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Optional: Announce periodically (e.g., every 15 or 30 seconds)</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> lastAnnouncedSecond <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;timeupdate&#39;</span><span class="op">,</span> (currentTime) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rounded <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">floor</span>(currentTime)<span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (rounded <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> rounded <span class="op">%</span> <span class="dv">15</span> <span class="op">===</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> rounded <span class="op">!==</span> lastAnnouncedSecond) {</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    lastAnnouncedSecond <span class="op">=</span> rounded<span class="op">;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    announcer<span class="op">.</span><span class="at">textContent</span> <span class="op">=</span> <span class="vs">`</span><span class="sc">${</span><span class="fu">formatTime</span>(rounded)<span class="sc">}</span><span class="vs"> elapsed`</span><span class="op">;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="best-practices-for-time-announcements">Best Practices for Time
+Announcements</h3>
+<ul>
+<li><strong>Never use <code>aria-live="assertive"</code> for periodic
+time:</strong> Assertive announcements interrupt any speech currently
+being generated by the screen reader, making it impossible for users to
+navigate the rest of the application while audio plays.</li>
+<li><strong>Format for natural speech:</strong> Convert raw numerical
+output (such as <code>125.4214</code>) into human-readable sentences ("2
+minutes, 5 seconds") before populating the live region.</li>
+<li><strong>Clear region text when idle:</strong> Emptying or resetting
+the live region string between major changes ensures subsequent,
+identical timestamps are properly detected as DOM mutations and
+vocalized by assistive software.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/aria-live-regions-for-wavesurfer-js-time-updates';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>
