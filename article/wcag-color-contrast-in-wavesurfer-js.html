@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCAG Color Contrast in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Applying Web Content Accessibility Guidelines (WCAG) to Wavesurfer.js requires meeting non-text color contrast ratios for user interface components and graphical states. When configuring the waveColor (the unplayed waveform) and progressColor (the played">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wcag-color-contrast-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="WCAG Color Contrast in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wcag-color-contrast-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Applying Web Content Accessibility Guidelines (WCAG) to Wavesurfer.js requires meeting non-text color contrast ratios for user interface components and graphical states. When configuring the waveColor (the unplayed waveform) and progressColor (the played" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wcag-color-contrast-in-wavesurferjs">WCAG Color Contrast in
+Wavesurfer.js</h1>
+<p>Applying Web Content Accessibility Guidelines (WCAG) to Wavesurfer.js
+requires meeting non-text color contrast ratios for user interface
+components and graphical states. When configuring the
+<code>waveColor</code> (the unplayed waveform) and
+<code>progressColor</code> (the played portion), developers must ensure
+sufficient contrast against the container background as well as between
+the two waveform states. Adhering to these standards ensures that users
+with low vision or color vision deficiencies can discern the audio
+player's structure, identify the current playback progress, and navigate
+media effectively.</p>
+<h2 id="relevant-wcag-criteria">Relevant WCAG Criteria</h2>
+<p>Two primary criteria from WCAG 2.1 apply to waveform
+visualizations:</p>
+<ul>
+<li><strong>WCAG 2.1 SC 1.4.11 Non-text Contrast (Level AA):</strong>
+The visual presentation of user interface components and graphical
+objects must have a contrast ratio of at least 3:1 against adjacent
+colors.</li>
+<li><strong>WCAG 2.1 SC 1.4.1 Use of Color (Level A):</strong> Color
+should not be the only visual means of conveying information, indicating
+an action, prompting a response, or distinguishing a visual
+element.</li>
+</ul>
+<p>In Wavesurfer.js, the waveform acts as an interactive progress bar
+and audio visualization component. Therefore, the 3:1 minimum contrast
+threshold applies to all adjacent visual boundaries that convey
+meaning.</p>
+<h2 id="applying-contrast-ratios-in-wavesurferjs">Applying Contrast
+Ratios in Wavesurfer.js</h2>
+<p>When configuring <code>waveColor</code> and
+<code>progressColor</code>, three distinct contrast relationships must
+be evaluated.</p>
+<h3 id="1-wavecolor-against-the-background">1. <code>waveColor</code>
+Against the Background</h3>
+<p>The unplayed waveform visually defines the shape, amplitude, and
+overall duration of the audio track. To satisfy SC 1.4.11, the
+<code>waveColor</code> must maintain at least a <strong>3:1 contrast
+ratio</strong> against the player's background element. If the contrast
+is too low, users with visual impairments will not be able to identify
+the component or understand audio peaks and troughs.</p>
+<h3 id="2-progresscolor-against-the-background">2.
+<code>progressColor</code> Against the Background</h3>
+<p>The <code>progressColor</code> represents the active, played state of
+the track against the player canvas. Like <code>waveColor</code>, it
+must have a minimum <strong>3:1 contrast ratio</strong> against the
+background color so the played portion remains visible as an independent
+graphical entity.</p>
+<h3 id="3-progresscolor-against-wavecolor">3. <code>progressColor</code>
+Against <code>waveColor</code></h3>
+<p>The boundary between the played and unplayed audio marks the current
+playback position. If the player does not use a physical cursor or
+scrubber handle, the visual distinction relies entirely on the boundary
+where <code>progressColor</code> meets <code>waveColor</code>.</p>
+<p>To ensure users can perceive the playback position:</p>
+<ul>
+<li>Maintain a <strong>3:1 contrast ratio</strong> directly between
+<code>progressColor</code> and <code>waveColor</code>.</li>
+<li>If a 3:1 ratio between the two colors cannot be achieved due to
+brand constraints, you must enable a distinct visual indicator—such as a
+contrasting <code>cursorColor</code> or a separate scrubber handle—to
+satisfy SC 1.4.1 (Use of Color).</li>
+</ul>
+<h2 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h2>
+<ul>
+<li><strong>Using Opacity and Alpha Channels:</strong> Using
+<code>rgba()</code> values with low alpha values reduces the actual
+rendered contrast against the background. Measure the final rendered RGB
+color against the background rather than evaluating the raw hex values
+in isolation.</li>
+<li><strong>Complex Multi-stop Gradients:</strong> Supplying linear or
+canvas gradients to <code>waveColor</code> or <code>progressColor</code>
+can cause sections of the waveform to fall below the 3:1 threshold. If
+using gradients, verify that the lowest-contrast stop still meets the
+requirement.</li>
+<li><strong>Low-Contrast Playheads:</strong> If <code>cursorWidth</code>
+is set, ensure <code>cursorColor</code> achieves a 3:1 contrast ratio
+against both <code>waveColor</code> and <code>progressColor</code> so
+the indicator is consistently visible regardless of its position on the
+track.</li>
+</ul>
+<h2 id="implementation-example">Implementation Example</h2>
+<p>Below is an accessible Wavesurfer.js configuration for a light theme
+where the background is white (<code>#FFFFFF</code>).</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Background: #FFFFFF</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// #767676 on #FFFFFF produces a 4.54:1 contrast ratio</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#767676&#39;</span><span class="op">,</span> </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// #005A9C on #FFFFFF produces a 7.04:1 contrast ratio</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// #005A9C against #767676 provides clear state differentiation</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#005A9C&#39;</span><span class="op">,</span> </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// #000000 ensures maximum visibility against both colors</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">cursorColor</span><span class="op">:</span> <span class="st">&#39;#000000&#39;</span><span class="op">,</span> </span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">cursorWidth</span><span class="op">:</span> <span class="dv">2</span><span class="op">,</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div>
+<p>By verifying these color combinations with an accessibility contrast
+checker before implementation, you ensure that your audio interface
+complies with WCAG standards and remains usable for everyone.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wcag-color-contrast-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

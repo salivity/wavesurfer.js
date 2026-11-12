@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-Contrast Wavesurfer.js Themes for Visibility - wavesurfer.js</title>
+    <meta name="description" content="Making audio players accessible is essential for users with low vision or visual impairments, requiring visual elements that stand out clearly against their backgrounds. Wavesurfer.js provides customizable properties that allow developers to build high-co">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/high-contrast-wavesurfer-js-themes-for-visibility">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="High-Contrast Wavesurfer.js Themes for Visibility - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/high-contrast-wavesurfer-js-themes-for-visibility" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Making audio players accessible is essential for users with low vision or visual impairments, requiring visual elements that stand out clearly against their backgrounds. Wavesurfer.js provides customizable properties that allow developers to build high-co" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="high-contrast-wavesurferjs-themes-for-visibility">High-Contrast
+Wavesurfer.js Themes for Visibility</h1>
+<p>Making audio players accessible is essential for users with low
+vision or visual impairments, requiring visual elements that stand out
+clearly against their backgrounds. Wavesurfer.js provides customizable
+properties that allow developers to build high-contrast waveforms
+meeting Web Content Accessibility Guidelines (WCAG) 2.1 standards. By
+implementing dedicated high-contrast palettes, increasing cursor
+dimensions, and normalizing audio spikes, developers can dramatically
+improve waveform tracking, scrub positioning, and overall
+readability.</p>
+<h3 id="essential-wavesurferjs-accessibility-parameters">Essential
+Wavesurfer.js Accessibility Parameters</h3>
+<p>Wavesurfer.js relies on several configuration parameters that
+directly dictate visual clarity:</p>
+<ul>
+<li><strong><code>waveColor</code></strong>: The color of the unplayed
+portion of the audio canvas.</li>
+<li><strong><code>progressColor</code></strong>: The color showing the
+played portion.</li>
+<li><strong><code>cursorColor</code></strong>: The playback head
+marker.</li>
+<li><strong><code>cursorWidth</code></strong>: The thickness of the
+playhead line (default is 1px, which is often too thin for low-vision
+users).</li>
+<li><strong><code>normalize</code></strong>: Setting this to
+<code>true</code> scales the audio peaks to fill the canvas height,
+ensuring faint audio signals remain visible.</li>
+</ul>
+<h3 id="theme-1-true-dark-high-contrast-oled-black">Theme 1: True Dark
+High-Contrast (OLED Black)</h3>
+<p>Dark themes reduce eye strain and allow neon and primary colors to
+project with maximum contrast ratios, well above the WCAG 3:1 graphical
+requirement.</p>
+<ul>
+<li><strong>Container Background</strong>: <code>#000000</code> (Pure
+Black)</li>
+<li><strong><code>waveColor</code></strong>: <code>#00FFFF</code> (Vivid
+Cyan)</li>
+<li><strong><code>progressColor</code></strong>: <code>#FFFF00</code>
+(Electric Yellow)</li>
+<li><strong><code>cursorColor</code></strong>: <code>#FFFFFF</code>
+(Pure White)</li>
+<li><strong><code>cursorWidth</code></strong>: <code>3</code></li>
+</ul>
+<p>Cyan and yellow provide clear separation against pitch black and also
+maintain a distinguishable boundary between the played and unplayed
+states. The white cursor stands out against both colors.</p>
+<h3 id="theme-2-high-contrast-light-mode">Theme 2: High-Contrast Light
+Mode</h3>
+<p>For environments requiring a bright background, deep saturated hues
+prevent the waveform from washing out into the canvas.</p>
+<ul>
+<li><strong>Container Background</strong>: <code>#FFFFFF</code> (Pure
+White)</li>
+<li><strong><code>waveColor</code></strong>: <code>#002B49</code> (Deep
+Navy)</li>
+<li><strong><code>progressColor</code></strong>: <code>#D9381E</code>
+(Vivid Vermilion)</li>
+<li><strong><code>cursorColor</code></strong>: <code>#000000</code>
+(Solid Black)</li>
+<li><strong><code>cursorWidth</code></strong>: <code>3</code></li>
+</ul>
+<p>This palette provides a contrast ratio greater than 7:1 against the
+white background. The vermilion and navy tones offer a stark distinction
+between played and unplayed audio.</p>
+<h3 id="theme-3-color-vision-deficiency-safe-colorblind-optimized">Theme
+3: Color-Vision-Deficiency Safe (Colorblind Optimized)</h3>
+<p>Standard red-and-green pairings fail for individuals with protanopia
+or deuteranopia. This palette utilizes an accessible blue-and-amber
+pairing.</p>
+<ul>
+<li><strong>Container Background</strong>: <code>#1A1A1A</code>
+(Charcoal)</li>
+<li><strong><code>waveColor</code></strong>: <code>#4393C3</code>
+(Accessible Soft Blue)</li>
+<li><strong><code>progressColor</code></strong>: <code>#F4A582</code>
+(Light Peach/Amber)</li>
+<li><strong><code>cursorColor</code></strong>: <code>#FEE090</code>
+(Bright Pale Yellow)</li>
+<li><strong><code>cursorWidth</code></strong>: <code>4</code></li>
+</ul>
+<p>This palette preserves brightness contrast while ensuring users
+across all spectrums of color perception can identify audio
+progress.</p>
+<h3 id="structural-adjustments-for-readability">Structural Adjustments
+for Readability</h3>
+<p>Color alone does not resolve all visibility issues. Incorporating the
+following structural options ensures the waveform geometry remains
+readable:</p>
+<ol type="1">
+<li><strong>Bar Formatting</strong>: Instead of a continuous waveform,
+use defined bars. Set <code>barWidth: 3</code> and
+<code>barGap: 2</code>. Distinct bars create visual separation, making
+peaks and troughs easier to discern.</li>
+<li><strong>Playhead Enclosure</strong>: Pair the increased
+<code>cursorWidth</code> with CSS focus indicators around the container
+so users navigating via keyboard can confirm active focus.</li>
+<li><strong>Dynamic Theme Toggling</strong>: Store theme parameters in
+JavaScript objects, allowing users to switch between standard rendering
+and a high-contrast mode via user preferences or system-level
+<code>prefers-contrast</code> media queries.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/high-contrast-wavesurfer-js-themes-for-visibility';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

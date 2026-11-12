@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Keyboard Focus Outlines on Regions - wavesurfer.js</title>
+    <meta name="description" content="Interactive regions in Wavesurfer.js rely on DOM elements layered on top of the audio waveform canvas, allowing developers to implement standard web accessibility practices for keyboard users. Because regions are HTML elements rather than flat pixel rende">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-keyboard-focus-outlines-on-regions">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Keyboard Focus Outlines on Regions - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-keyboard-focus-outlines-on-regions" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Interactive regions in Wavesurfer.js rely on DOM elements layered on top of the audio waveform canvas, allowing developers to implement standard web accessibility practices for keyboard users. Because regions are HTML elements rather than flat pixel rende" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-keyboard-focus-outlines-on-regions">Wavesurfer.js
+Keyboard Focus Outlines on Regions</h1>
+<p>Interactive regions in Wavesurfer.js rely on DOM elements layered on
+top of the audio waveform canvas, allowing developers to implement
+standard web accessibility practices for keyboard users. Because regions
+are HTML elements rather than flat pixel renderings, they can receive
+visual focus outlines through native browser styling or custom CSS. This
+guide explains how focus outlines function on interactive Wavesurfer.js
+regions, how keyboard navigation reaches them, and how to style these
+indicators to avoid common display issues like container clipping.</p>
+<h2 id="dom-representation-and-focusability">DOM Representation and
+Focusability</h2>
+<p>Wavesurfer.js renders the overall waveform using HTML5 Canvas, but
+its Regions plugin renders individual audio selections as standard
+<code>&lt;div&gt;</code> elements positioned over the track.</p>
+<p>By default, an HTML <code>&lt;div&gt;</code> cannot receive keyboard
+focus. For a focus outline to appear when a user tabs through the
+interface, the region element must possess a <code>tabindex</code>
+attribute. When creating or configuring regions:</p>
+<ul>
+<li>Setting <code>tabindex="0"</code> ensures the region is inserted
+into the natural tab sequence of the page.</li>
+<li>Setting <code>tabindex="-1"</code> allows the region to receive
+programmatic focus (via JavaScript <code>.focus()</code>), displaying
+the outline only when targeted by code.</li>
+</ul>
+<p>Once an interactive region element is focusable, keyboard users
+navigating with the <code>Tab</code> key will cycle directly to the
+region, triggering the browser's focus behavior.</p>
+<h2 id="native-browser-focus-indicators">Native Browser Focus
+Indicators</h2>
+<p>When an interactive region receives keyboard focus, modern browsers
+trigger the <code>:focus-visible</code> pseudo-class.</p>
+<ul>
+<li><strong>Default Appearance:</strong> Browsers render their standard
+focus ring around the bounding box of the region's
+<code>&lt;div&gt;</code>. In Chromium-based browsers, this is typically
+a high-contrast double outline (black and white or solid blue). In
+Safari and Firefox, it manifests as a distinct accent-colored ring.</li>
+<li><strong>Scope of the Outline:</strong> The outline wraps the full
+perimeter of the region's start and end boundaries on the time axis. If
+the region includes resize handles on the edges, those handles may
+either share the primary region's focus boundary or maintain their own
+focus rings if implemented as separate focusable elements.</li>
+</ul>
+<h2 id="styling-focus-outlines-with-css">Styling Focus Outlines with
+CSS</h2>
+<p>Default browser outlines can conflict with audio interface aesthetics
+or fail contrast requirements against complex waveform visuals. You can
+customize the focus outline using the region's class selector (commonly
+<code>.wavesurfer-region</code>):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Custom focus outline for keyboard navigation */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">.wavesurfer-region</span><span class="in">:focus-visible</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">outline</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">px</span> <span class="dv">solid</span> <span class="cn">#005fcc</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">outline-offset</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">border-radius</span><span class="ch">:</span> <span class="dv">4</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Using <code>:focus-visible</code> instead of <code>:focus</code>
+ensures that mouse users clicking to seek or drag a region do not
+trigger an unwanted focus ring, preserving the visual cue exclusively
+for keyboard and assistive technology users.</p>
+<h2 id="handling-visual-clipping">Handling Visual Clipping</h2>
+<p>A common issue in Wavesurfer.js implementations is focus outline
+clipping. Audio waveform wrappers frequently utilize
+<code>overflow: hidden</code> to keep playheads and peak data strictly
+contained within the player bounds.</p>
+<p>When a standard CSS <code>outline</code> extends outward, it can be
+cut off at the top, bottom, or player edges. To resolve this:</p>
+<ol type="1">
+<li><strong>Negative Outline Offset:</strong> Use
+<code>outline-offset: -2px</code> to draw the ring just inside the
+region's boundaries rather than outside.</li>
+<li><strong>Inset Box Shadow:</strong> Use
+<code>box-shadow: inset 0 0 0 2px #005fcc</code> as an alternative to
+<code>outline</code>. Inset shadows render fully within the element,
+ensuring the visual indicator remains visible even in tight,
+overflow-restricted player containers.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-keyboard-focus-outlines-on-regions';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

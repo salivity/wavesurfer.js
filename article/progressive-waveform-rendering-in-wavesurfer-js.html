@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progressive Waveform Rendering in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Modern versions of Wavesurfer.js (version 7 and above) provide lightweight, high-performance mechanisms for progressive waveform rendering, allowing large audio files to be visualized progressively rather than forcing the browser to wait for full download">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/progressive-waveform-rendering-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Progressive Waveform Rendering in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/progressive-waveform-rendering-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Modern versions of Wavesurfer.js (version 7 and above) provide lightweight, high-performance mechanisms for progressive waveform rendering, allowing large audio files to be visualized progressively rather than forcing the browser to wait for full download" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="progressive-waveform-rendering-in-wavesurferjs">Progressive
+Waveform Rendering in Wavesurfer.js</h1>
+<p>Modern versions of Wavesurfer.js (version 7 and above) provide
+lightweight, high-performance mechanisms for progressive waveform
+rendering, allowing large audio files to be visualized progressively
+rather than forcing the browser to wait for full downloads and decodes.
+This article breaks down the primary progressive rendering features in
+modern Wavesurfer.js, including pre-computed peak streaming, chunked Web
+Audio decoding, virtual rendering pipelines, and partial buffer
+visualization.</p>
+<h2 id="pre-computed-peak-streaming">Pre-Computed Peak Streaming</h2>
+<p>The most efficient progressive rendering feature is the ability to
+render waveforms instantly using external pre-computed peak data. By
+decoupling audio playback from waveform generation, Wavesurfer.js allows
+you to pass an array of peak data directly into the <code>load</code>
+method or initial configuration:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F4A85&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#383351&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">peaks</span><span class="op">:</span> [<span class="co">/* Array of pre-computed min/max peak values */</span>]<span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Because the peak array is typically only a few kilobytes compared to
+a multi-megabyte audio file, the waveform displays immediately. As the
+actual audio media streams in via an HTML5 <code>AudioElement</code> or
+Web Audio API in the background, playback becomes available without
+blocking the UI or requiring client-side audio decoding.</p>
+<h2 id="chunked-audio-decoding-via-fetch-streams">Chunked Audio Decoding
+via Fetch Streams</h2>
+<p>Modern Wavesurfer.js operates natively with the browser's Streams
+API. Instead of waiting for a complete <code>ArrayBuffer</code> to be
+retrieved via standard AJAX requests, developers can pipe incoming
+chunks from a <code>ReadableStream</code> into Wavesurfer’s peak
+extraction pipeline.</p>
+<p>By combining the native <code>fetch()</code> API with progressive
+decoding, audio data can be read in sequential byte ranges. As each
+audio chunk resolves, peaks are incrementally calculated and drawn onto
+the canvas, extending the waveform toward the right edge of the
+container in near real-time as the file downloads.</p>
+<h2 id="viewport-only-virtual-rendering">Viewport-Only Virtual
+Rendering</h2>
+<p>Rendering an entire high-resolution waveform for long audio files can
+cause frame drops and memory spikes. Modern Wavesurfer.js optimizes
+progressive rendering by utilizing a virtualized rendering engine that
+calculates which segment of the waveform falls inside the current
+viewport.</p>
+<p>When combined with the <code>minPxPerSec</code> parameter to enable
+zooming and horizontal scrolling, Wavesurfer.js renders only the visible
+canvas nodes. Off-screen peaks are kept in memory as numeric arrays and
+drawn only when scrolled into view. This ensures that progressive
+rendering of hours-long files remains smooth and memory-efficient.</p>
+<h2 id="dual-color-buffered-region-indicators">Dual-Color Buffered
+Region Indicators</h2>
+<p>When progressively streaming media via an
+<code>HTMLMediaElement</code>, modern Wavesurfer.js tracks the native
+media element's <code>buffered</code> TimeRanges. It can visually
+distinguish between:</p>
+<ul>
+<li>The fully rendered waveform timeline.</li>
+<li>The currently buffered (downloaded) range of audio.</li>
+<li>The current playback position.</li>
+</ul>
+<p>This provides visual feedback identical to modern streaming
+platforms, indicating to the user how much of the waveform is
+immediately seekable without additional network buffering.</p>
+<h2 id="dynamic-waveform-updating-via-loadaudio">Dynamic Waveform
+Updating via <code>loadAudio</code></h2>
+<p>If you are generating or processing audio dynamically (such as during
+a live recording or an ongoing server-side render), you can
+progressively update the waveform without completely re-instantiating
+the Wavesurfer instance.</p>
+<p>Using the modernized API methods, you can supply updated peak sets or
+reload audio buffers on the fly:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Dynamically pass updated peaks to an existing instance</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;stream-url.mp3&#39;</span><span class="op">,</span> updatedPeaksArray)<span class="op">;</span></span></code></pre></div>
+<p>This updates the internal visual state and redraws the canvas
+efficiently without resetting playback states, enabling smooth
+transitions as dynamic audio streams grow in length.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/progressive-waveform-rendering-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

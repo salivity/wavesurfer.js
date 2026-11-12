@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prevent Wavesurfer.js Memory Leaks in React useEffect - wavesurfer.js</title>
+    <meta name="description" content="Integrating Wavesurfer.js into a React application frequently leads to memory leaks due to orphaned Web Audio API contexts, lingering DOM nodes, and detached event listeners. This article explains the underlying causes of these leaks when using the useEff">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/prevent-wavesurfer-js-memory-leaks-in-react-use-effect">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Prevent Wavesurfer.js Memory Leaks in React useEffect - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/prevent-wavesurfer-js-memory-leaks-in-react-use-effect" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Integrating Wavesurfer.js into a React application frequently leads to memory leaks due to orphaned Web Audio API contexts, lingering DOM nodes, and detached event listeners. This article explains the underlying causes of these leaks when using the useEff" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="prevent-wavesurferjs-memory-leaks-in-react-useeffect">Prevent
+Wavesurfer.js Memory Leaks in React useEffect</h1>
+<p>Integrating Wavesurfer.js into a React application frequently leads
+to memory leaks due to orphaned Web Audio API contexts, lingering DOM
+nodes, and detached event listeners. This article explains the
+underlying causes of these leaks when using the <code>useEffect</code>
+hook and demonstrates how to properly destroy instances, handle React
+18's strict mode remounting, and manage references cleanly.</p>
+<h3 id="why-memory-leaks-occur-with-wavesurferjs">Why Memory Leaks Occur
+with Wavesurfer.js</h3>
+<p>Wavesurfer.js relies on the browser's Web Audio API
+(<code>AudioContext</code>) and registers multiple event listeners on
+window and DOM objects to render interactive waveforms. When a component
+re-renders or unmounts, React discards the component's DOM nodes.
+However, unless Wavesurfer.js is explicitly instructed to clean up, its
+underlying <code>AudioContext</code> remains active in browser memory,
+and event listeners continue to hold references to discarded
+elements.</p>
+<p>In React 18, components mount, unmount, and remount immediately in
+development mode (Strict Mode). If initialization code does not include
+an explicit teardown mechanism, multiple duplicate instances of
+Wavesurfer and audio contexts will be created simultaneously, rapidly
+consuming system RAM.</p>
+<h3 id="the-core-solution-the-destroy-method">The Core Solution: The
+<code>destroy()</code> Method</h3>
+<p>The definitive method to prevent leaks is invoking the native
+<code>destroy()</code> method provided by Wavesurfer.js within the
+cleanup function returned by <code>useEffect</code>. The
+<code>destroy()</code> method tears down canvas nodes, cancels ongoing
+audio decode operations, removes DOM event listeners, and closes the
+associated <code>AudioContext</code>.</p>
+<h3 id="implementation-example">Implementation Example</h3>
+<p>The following pattern ensures that the Wavesurfer instance is created
+only once per target configuration and is completely scrubbed from
+memory when the component unmounts:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode jsx"><code class="sourceCode javascriptreact"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> React<span class="op">,</span> { useEffect<span class="op">,</span> useRef } <span class="im">from</span> <span class="st">&#39;react&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> AudioPlayer <span class="op">=</span> ({ audioUrl }) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> containerRef <span class="op">=</span> <span class="fu">useRef</span>(<span class="kw">null</span>)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> waveSurferRef <span class="op">=</span> <span class="fu">useRef</span>(<span class="kw">null</span>)<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">useEffect</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ensure the container element is rendered</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span>containerRef<span class="op">.</span><span class="at">current</span>) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Initialize the Wavesurfer instance</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> ws <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">container</span><span class="op">:</span> containerRef<span class="op">.</span><span class="at">current</span><span class="op">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">url</span><span class="op">:</span> audioUrl<span class="op">,</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    waveSurferRef<span class="op">.</span><span class="at">current</span> <span class="op">=</span> ws<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cleanup function executed on unmount or before dependency changes</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>      ws<span class="op">.</span><span class="fu">destroy</span>()<span class="op">;</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>      waveSurferRef<span class="op">.</span><span class="at">current</span> <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span> [audioUrl])<span class="op">;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return </span><span class="kw">&lt;div</span> <span class="ot">ref</span><span class="op">=</span><span class="va">{</span>containerRef<span class="va">}</span> <span class="kw">/&gt;</span><span class="op">;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="im">default</span> AudioPlayer<span class="op">;</span></span></code></pre></div>
+<h3 id="critical-practices-for-leak-prevention">Critical Practices for
+Leak Prevention</h3>
+<ol type="1">
+<li><p><strong>Avoid Storing Instances in State:</strong> Do not save
+the Wavesurfer instance into React state via <code>useState</code>.
+Setting state triggers an additional render pass. Instead, store the
+active instance in a <code>useRef</code> to maintain a mutable reference
+that persists across renders without triggering layout updates.</p></li>
+<li><p><strong>Clean Up Custom Event Listeners:</strong> If custom
+listeners are added manually via <code>ws.on('event', callback)</code>,
+verify whether they need explicit removal. While
+<code>ws.destroy()</code> unbinds default internal listeners,
+unregistering custom subscriptions prevents closure-related memory
+retention.</p></li>
+<li><p><strong>Handle Fast Prop Changes and Race Conditions:</strong> If
+the <code>audioUrl</code> changes before Wavesurfer finishes loading or
+decoding an existing file, calling <code>ws.destroy()</code> inside the
+cleanup phase will abort ongoing asynchronous decoding operations
+cleanly, preventing background promises from resolving on detached
+components.</p></li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/prevent-wavesurfer-js-memory-leaks-in-react-use-effect';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

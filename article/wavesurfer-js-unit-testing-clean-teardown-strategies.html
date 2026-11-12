@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Unit Testing: Clean Teardown Strategies - wavesurfer.js</title>
+    <meta name="description" content="Testing audio components powered by Wavesurfer.js presents unique challenges in unit testing environments like Jest or Vitest. Because Wavesurfer interacts directly with the HTML5 Canvas, DOM nodes, asynchronous media decoders, and the Web Audio API, impr">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-unit-testing-clean-teardown-strategies">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Unit Testing: Clean Teardown Strategies - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-unit-testing-clean-teardown-strategies" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Testing audio components powered by Wavesurfer.js presents unique challenges in unit testing environments like Jest or Vitest. Because Wavesurfer interacts directly with the HTML5 Canvas, DOM nodes, asynchronous media decoders, and the Web Audio API, impr" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="wavesurferjs-unit-testing-clean-teardown-strategies">Wavesurfer.js
+Unit Testing: Clean Teardown Strategies</h1>
+<p>Testing audio components powered by Wavesurfer.js presents unique
+challenges in unit testing environments like Jest or Vitest. Because
+Wavesurfer interacts directly with the HTML5 Canvas, DOM nodes,
+asynchronous media decoders, and the Web Audio API, improperly disposed
+instances can lead to memory leaks, lingering event listeners, and
+cross-test pollution. This guide outlines the essential unit testing
+strategies needed to ensure that every Wavesurfer.js instance is cleanly
+torn down and isolated between test runs.</p>
+<h3
+id="explicitly-invoke-wavesurferdestroy-in-teardown-hooks">Explicitly
+Invoke <code>wavesurfer.destroy()</code> in Teardown Hooks</h3>
+<p>The primary mechanism for cleaning up a Wavesurfer instance is its
+built-in <code>destroy()</code> method. This method removes canvas
+elements, detaches DOM event listeners, disconnects internal audio
+nodes, and unregisters internal event emitters.</p>
+<p>Always invoke this method inside your test framework's standard
+post-test lifecycle hook (<code>afterEach</code>):</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">describe</span>(<span class="st">&#39;AudioPlayer Component&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> wavesurfer<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">beforeEach</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">container</span><span class="op">:</span> <span class="bu">document</span><span class="op">.</span><span class="fu">createElement</span>(<span class="st">&#39;div&#39;</span>)<span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;/test-audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">afterEach</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (wavesurfer) {</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>      wavesurfer<span class="op">.</span><span class="fu">destroy</span>()<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      wavesurfer <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Tests go here</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Explicitly assigning the reference to <code>null</code> guarantees
+that the garbage collector can reclaim the instance memory.</p>
+<h3 id="clear-host-dom-containers">Clear Host DOM Containers</h3>
+<p>When mounting Wavesurfer to elements attached to the global DOM (such
+as <code>document.body</code>), calling <code>destroy()</code> cleans up
+the internal canvas elements but may leave the parent container intact.
+To maintain a sterile environment:</p>
+<ul>
+<li>Create dynamic container elements per test rather than relying on
+static HTML fixtures.</li>
+<li>Remove the container from the DOM in the <code>afterEach</code> hook
+using <code>container.remove()</code> or reset the document body with
+<code>document.body.innerHTML = ''</code>.</li>
+</ul>
+<h3 id="manage-and-close-web-audio-contexts">Manage and Close Web Audio
+Contexts</h3>
+<p>Wavesurfer relies on an <code>AudioContext</code> to process sound.
+In standard unit testing environments like JSDOM, the Web Audio API is
+not natively implemented and must be mocked (e.g., using
+<code>standardized-audio-context-mock</code> or custom Jest stubs).</p>
+<p>If you pass a custom <code>AudioContext</code> into Wavesurfer via
+the configuration options, <code>wavesurfer.destroy()</code> may not
+automatically close the context. To prevent dangling timers or
+background audio processing:</p>
+<ol type="1">
+<li>Inject an explicit <code>AudioContext</code> during
+initialization.</li>
+<li>Close the context manually in your <code>afterEach</code>
+block:</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">afterEach</span>(<span class="kw">async</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (wavesurfer) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">destroy</span>()<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    wavesurfer <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (audioContext <span class="op">&amp;&amp;</span> audioContext<span class="op">.</span><span class="at">state</span> <span class="op">!==</span> <span class="st">&#39;closed&#39;</span>) {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> audioContext<span class="op">.</span><span class="fu">close</span>()<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    audioContext <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="abort-pending-asynchronous-operations">Abort Pending
+Asynchronous Operations</h3>
+<p>Audio decoding, file fetching, and peaks processing are asynchronous.
+If a test completes while an audio buffer is still decoding, the
+completion callback may trigger in the middle of a subsequent test,
+leading to unpredictable failures.</p>
+<ul>
+<li><strong>Cancel In-Flight Requests:</strong> If fetching media over
+the network, ensure mock fetchers or <code>AbortController</code>
+instances associated with the load call are aborted.</li>
+<li><strong>Wait for Stable States:</strong> Avoid terminating a test in
+the middle of an asynchronous lifecycle hook. Wait for events like
+<code>ready</code> or catch and handle decoding errors explicitly before
+moving to test teardown.</li>
+</ul>
+<h3 id="reset-web-api-and-animation-mocks">Reset Web API and Animation
+Mocks</h3>
+<p>Wavesurfer uses <code>requestAnimationFrame</code> for timeline
+rendering and playhead tracking. When mocking
+<code>requestAnimationFrame</code>, <code>cancelAnimationFrame</code>,
+HTMLMediaElement prototypes, or Canvas 2D contexts:</p>
+<ul>
+<li>Cancel any active animation frame requests inside the
+<code>afterEach</code> block.</li>
+<li>Call <code>jest.clearAllMocks()</code> or
+<code>vi.restoreAllMocks()</code> to ensure call counts and spy
+implementations do not bleed across test boundaries.</li>
+</ul>
+<h3 id="verify-clean-isolation-with-leak-detection">Verify Clean
+Isolation with Leak Detection</h3>
+<p>To confirm that teardown strategies are working effectively across
+your suite, execute your test runner with leak-detection flags (such as
+<code>jest --detectLeaks</code>). If a test fails this check, inspect
+unclosed event subscriptions, global window listeners (such as resize
+observers created by responsive plugins), or uncollected canvas
+buffers.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-unit-testing-clean-teardown-strategies';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

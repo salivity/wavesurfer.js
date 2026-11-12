@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js NotAllowedError Autoplay Exception - wavesurfer.js</title>
+    <meta name="description" content="When attempting to play audio programmatically using Wavesurfer.js before a user has interacted with the webpage, modern web browsers will block the request and raise a NotAllowedError DOMException. This overview breaks down why this exception occurs, wha">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-not-allowed-error-autoplay-exception">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js NotAllowedError Autoplay Exception - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-not-allowed-error-autoplay-exception" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When attempting to play audio programmatically using Wavesurfer.js before a user has interacted with the webpage, modern web browsers will block the request and raise a NotAllowedError DOMException. This overview breaks down why this exception occurs, wha" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-notallowederror-autoplay-exception">Wavesurfer.js
+NotAllowedError Autoplay Exception</h1>
+<p>When attempting to play audio programmatically using Wavesurfer.js
+before a user has interacted with the webpage, modern web browsers will
+block the request and raise a <code>NotAllowedError</code> DOMException.
+This overview breaks down why this exception occurs, what the console
+error looks like, and the direct methods developers can implement to
+resolve or prevent it in production applications.</p>
+<h3 id="the-specific-exception-thrown">The Specific Exception
+Thrown</h3>
+<p>Calling <code>wavesurfer.play()</code> without a preceding user
+gesture causes the browser to reject the underlying playback promise
+with the following exception:</p>
+<pre><code>DOMException: play() failed because the user didn&#39;t interact with the document first.</code></pre>
+<p>Depending on whether Wavesurfer.js is configured with the standard
+HTML5 Media backend or the Web Audio API backend, the browser console
+will typically display one of two messages:</p>
+<ol type="1">
+<li><strong>Media Element Backend:</strong>
+<code>Uncaught (in promise) DOMException: play() failed because the user didn't interact with the document first.</code></li>
+<li><strong>Web Audio Backend:</strong>
+<code>The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page.</code></li>
+</ol>
+<p>In both cases, the DOMException name property is set strictly to
+<code>"NotAllowedError"</code>.</p>
+<h3 id="why-this-happens">Why This Happens</h3>
+<p>All modern browsers—including Google Chrome, Apple Safari, Mozilla
+Firefox, and Microsoft Edge—enforce strict Autoplay Policies. These
+policies prevent websites from automatically playing unmuted audio
+without an explicit user gesture, such as a click, tap, or key press.
+Because Wavesurfer.js relies directly on the browser's native audio
+engines (<code>HTMLAudioElement</code> or <code>AudioContext</code>), it
+inherits these security and user experience restrictions directly from
+the browser runtime.</p>
+<h3 id="how-to-fix-and-prevent-the-error">How to Fix and Prevent the
+Error</h3>
+<p>To prevent and handle this exception in Wavesurfer.js, apply one of
+the following approaches:</p>
+<h4 id="1-require-an-explicit-user-interaction">1. Require an Explicit
+User Interaction</h4>
+<p>The most reliable solution is to trigger
+<code>wavesurfer.play()</code> exclusively from an interactive event
+listener, such as a user clicking a play button.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> playButton <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;#play-btn&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>playButton<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;click&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">play</span>()<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="2-catch-the-promise-rejection">2. Catch the Promise
+Rejection</h4>
+<p>Because <code>wavesurfer.play()</code> returns a Promise, catch the
+rejection gracefully to prevent an uncaught runtime error in the console
+and prompt the user to interact.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">play</span>()<span class="op">.</span><span class="fu">catch</span>((error) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (error<span class="op">.</span><span class="at">name</span> <span class="op">===</span> <span class="st">&#39;NotAllowedError&#39;</span>) {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">console</span><span class="op">.</span><span class="fu">warn</span>(<span class="st">&#39;Autoplay prevented. Waiting for user interaction.&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Display a UI prompt for the user to click play manually</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="3-autoplay-with-audio-muted">3. Autoplay with Audio Muted</h4>
+<p>If visual playback of the waveform must begin immediately upon page
+load without sound, mute the audio before initiating playback. Browsers
+allow muted autoplay without requiring prior user gestures.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">setMuted</span>(<span class="kw">true</span>)<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">play</span>()<span class="op">;</span></span></code></pre></div>
+<h4 id="4-resume-the-audiocontext">4. Resume the AudioContext</h4>
+<p>If you are using the Web Audio backend, ensure the underlying
+<code>AudioContext</code> is properly resumed on the first user
+interaction:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;click&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> audioContext <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="fu">getAudioContext</span>()<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (audioContext <span class="op">&amp;&amp;</span> audioContext<span class="op">.</span><span class="at">state</span> <span class="op">===</span> <span class="st">&#39;suspended&#39;</span>) {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        audioContext<span class="op">.</span><span class="fu">resume</span>()<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>}<span class="op">,</span> { <span class="dt">once</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-not-allowed-error-autoplay-exception';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

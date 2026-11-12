@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply CSS Filter Blur and Glow to Wavesurfer.js Canvas - wavesurfer.js</title>
+    <meta name="description" content="This guide explains how to enhance audio visualizers created with Wavesurfer.js by applying CSS filters such as blur and neon glow effects directly to the rendered canvas elements. You will learn the specific CSS selectors needed to target Wavesurfer&#39;s in">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/apply-css-filter-blur-and-glow-to-wavesurfer-js-canvas">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Apply CSS Filter Blur and Glow to Wavesurfer.js Canvas - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/apply-css-filter-blur-and-glow-to-wavesurfer-js-canvas" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide explains how to enhance audio visualizers created with Wavesurfer.js by applying CSS filters such as blur and neon glow effects directly to the rendered canvas elements. You will learn the specific CSS selectors needed to target Wavesurfer&#39;s in" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="apply-css-filter-blur-and-glow-to-wavesurferjs-canvas">Apply CSS
+Filter Blur and Glow to Wavesurfer.js Canvas</h1>
+<p>This guide explains how to enhance audio visualizers created with
+Wavesurfer.js by applying CSS filters such as blur and neon glow effects
+directly to the rendered canvas elements. You will learn the specific
+CSS selectors needed to target Wavesurfer's internal canvas
+architecture, how to achieve glow effects using the
+<code>drop-shadow</code> and <code>blur</code> filters, and how to apply
+these styles programmatically using JavaScript.</p>
+<h2 id="targeting-the-wavesurferjs-canvas">Targeting the Wavesurfer.js
+Canvas</h2>
+<p>Wavesurfer.js generates <code>&lt;canvas&gt;</code> elements inside
+its mount container. In version 7 and later, Wavesurfer uses a Shadow
+DOM or direct child wrappers depending on the configuration. To apply
+styles, you must target the generated <code>&lt;canvas&gt;</code>
+elements inside your designated waveform container.</p>
+<h3 id="method-1-using-pure-css">Method 1: Using Pure CSS</h3>
+<p>If your Wavesurfer instance renders directly into standard DOM nodes,
+you can target the canvas using a descendant selector:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Container where Wavesurfer is initialized */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span> canvas {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">filter</span><span class="ch">:</span> <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">10</span><span class="dt">px</span> <span class="fu">rgba(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">255</span><span class="op">,</span> <span class="dv">204</span><span class="op">,</span> <span class="dv">0.8</span><span class="fu">))</span> <span class="fu">blur(</span><span class="dv">1</span><span class="dt">px</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">transition</span><span class="ch">:</span> <span class="dv">filter 0.3</span><span class="dt">s</span> <span class="dv">ease</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If you are using Wavesurfer.js v7 with Shadow DOM encapsulation
+enabled, expose the canvas using the CSS <code>::part()</code>
+pseudo-element if configured, or target the container wrapper
+directly:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span> <span class="in">::part(</span><span class="st">canvas</span><span class="in">)</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">filter</span><span class="ch">:</span> <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">12</span><span class="dt">px</span> <span class="cn">#00ffcc</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="method-2-applying-styles-via-javascript">Method 2: Applying
+Styles via JavaScript</h3>
+<p>To ensure filters apply dynamically after the waveform has finished
+rendering, use the <code>ready</code> or <code>redraw</code> events to
+attach CSS inline:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#00ffcc&#39;</span><span class="op">,</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#0088ff&#39;</span><span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;/path-to-audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> container <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;#waveform&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> canvases <span class="op">=</span> container<span class="op">.</span><span class="fu">querySelectorAll</span>(<span class="st">&#39;canvas&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  canvases<span class="op">.</span><span class="fu">forEach</span>((canvas) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply blur and glow</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    canvas<span class="op">.</span><span class="at">style</span><span class="op">.</span><span class="at">filter</span> <span class="op">=</span> <span class="st">&#39;drop-shadow(0 0 8px rgba(0, 255, 204, 0.9)) blur(0.5px)&#39;</span><span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Enable GPU acceleration for smooth rendering</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    canvas<span class="op">.</span><span class="at">style</span><span class="op">.</span><span class="at">willChange</span> <span class="op">=</span> <span class="st">&#39;filter&#39;</span><span class="op">;</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="creating-advanced-visual-effects">Creating Advanced Visual
+Effects</h2>
+<h3 id="subtle-ambient-glow">Subtle Ambient Glow</h3>
+<p>To create a natural illumination effect without distorting waveform
+detail, use a pure <code>drop-shadow</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span> canvas {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">filter</span><span class="ch">:</span> <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">6</span><span class="dt">px</span> <span class="fu">rgba(</span><span class="dv">66</span><span class="op">,</span> <span class="dv">153</span><span class="op">,</span> <span class="dv">225</span><span class="op">,</span> <span class="dv">0.7</span><span class="fu">))</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Unlike <code>box-shadow</code>, <code>drop-shadow</code> traces the
+alpha channel of the waveform pixels drawn on the canvas, casting a glow
+only around the audio peaks.</p>
+<h3 id="intense-neon-glow-multi-layer-shadow">Intense Neon Glow
+(Multi-Layer Shadow)</h3>
+<p>To create an intense neon light aesthetic, chain multiple
+<code>drop-shadow</code> filters together:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span> canvas {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">filter</span><span class="ch">:</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">2</span><span class="dt">px</span> <span class="cn">#fff</span><span class="fu">)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">10</span><span class="dt">px</span> <span class="cn">#ff007f</span><span class="fu">)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">20</span><span class="dt">px</span> <span class="cn">#ff007f</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="motion-blur-effect">Motion Blur Effect</h3>
+<p>To give the impression of high speed or analog warmth, combine a
+minor horizontal blur with an active drop-shadow:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span> canvas {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">filter</span><span class="ch">:</span> <span class="fu">blur(</span><span class="dv">1.5</span><span class="dt">px</span><span class="fu">)</span> <span class="fu">drop-shadow(</span><span class="dv">0</span> <span class="dv">0</span> <span class="dv">4</span><span class="dt">px</span> <span class="fu">rgba(</span><span class="dv">255</span><span class="op">,</span> <span class="dv">255</span><span class="op">,</span> <span class="dv">255</span><span class="op">,</span> <span class="dv">0.5</span><span class="fu">))</span><span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="performance-considerations">Performance Considerations</h2>
+<ul>
+<li><strong>Hardware Acceleration:</strong> Applying <code>blur()</code>
+or <code>drop-shadow()</code> continuously during playback requires
+significant GPU processing. Add <code>will-change: filter;</code> to the
+canvas to hint rendering engines to optimize composite layers.</li>
+<li><strong>Filter Values:</strong> Excessive blur radiuses (e.g.,
+greater than <code>20px</code>) can lead to frame drops during real-time
+audio playback or scrolling. Keep blur values under <code>2px</code> and
+use chained <code>drop-shadow</code> properties to control spread and
+intensity.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/apply-css-filter-blur-and-glow-to-wavesurfer-js-canvas';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

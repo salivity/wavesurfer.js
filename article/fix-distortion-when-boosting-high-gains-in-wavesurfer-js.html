@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Distortion When Boosting High Gains in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Boosting high-gain frequencies using Web Audio API nodes in Wavesurfer.js frequently causes harsh digital clipping and distortion. When an equalizer node pushes audio amplitudes beyond the standard 0 dBFS (decibels relative to full scale) threshold, the b">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/fix-distortion-when-boosting-high-gains-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fix Distortion When Boosting High Gains in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/fix-distortion-when-boosting-high-gains-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Boosting high-gain frequencies using Web Audio API nodes in Wavesurfer.js frequently causes harsh digital clipping and distortion. When an equalizer node pushes audio amplitudes beyond the standard 0 dBFS (decibels relative to full scale) threshold, the b" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="fix-distortion-when-boosting-high-gains-in-wavesurferjs">Fix
+Distortion When Boosting High Gains in Wavesurfer.js</h1>
+<p>Boosting high-gain frequencies using Web Audio API nodes in
+Wavesurfer.js frequently causes harsh digital clipping and distortion.
+When an equalizer node pushes audio amplitudes beyond the standard 0
+dBFS (decibels relative to full scale) threshold, the browser clips the
+output waveform. To prevent this, developers must implement proper gain
+staging, employ dynamic range compression, and practice subtractive
+equalization within the Web Audio processing chain.</p>
+<h3 id="understand-the-cause-web-audio-headroom-and-clipping">Understand
+the Cause: Web Audio Headroom and Clipping</h3>
+<p>The Web Audio API processes internal audio buffers using 32-bit
+floating-point numbers, allowing virtually unlimited headroom between
+nodes. However, when the signal reaches the final output
+(<code>AudioDestinationNode</code>), the browser hardware converts the
+signal back to fixed-point audio, hard-clamping any sample values
+exceeding the range of <code>-1.0</code> to <code>+1.0</code>. Applying
+significant positive gain via a <code>BiquadFilterNode</code> pushes
+peaks past this boundary, resulting in digital distortion.</p>
+<h3 id="implement-negative-pre-gain">Implement Negative Pre-Gain</h3>
+<p>The most effective way to prevent clipping when boosting frequencies
+is negative pre-gain attenuation. If you need to boost a high-shelf or
+peaking filter by +6 dB, you should attenuate the overall signal before
+or after the filter chain by a corresponding margin.</p>
+<p>Create a <code>GainNode</code> and place it immediately prior to your
+filter bank:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioContext <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="fu">getAudioContext</span>()<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> preGainNode <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createGain</span>()<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Reduce gain by 6 dB to accommodate the upcoming high-frequency boost</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>preGainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">pow</span>(<span class="dv">10</span><span class="op">,</span> <span class="op">-</span><span class="dv">6</span> <span class="op">/</span> <span class="dv">20</span>)<span class="op">;</span> <span class="co">// approximately 0.501</span></span></code></pre></div>
+<p>By reducing the overall input level, the filter's high-gain peak has
+the required headroom to expand without crossing the <code>1.0</code>
+threshold at the destination.</p>
+<h3 id="insert-a-dynamicscompressornode-as-a-limiter">Insert a
+DynamicsCompressorNode as a Limiter</h3>
+<p>To catch unpredictable transient spikes caused by high-gain
+resonance, insert a <code>DynamicsCompressorNode</code> at the end of
+the custom node graph, right before
+<code>audioContext.destination</code>. Configuring this node with a high
+ratio and fast attack turns it into a transparent brickwall limiter.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> limiter <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createDynamicsCompressor</span>()<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>limiter<span class="op">.</span><span class="at">threshold</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="op">-</span><span class="fl">0.5</span><span class="op">,</span> audioContext<span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span> <span class="co">// Engage just below 0 dBFS</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>limiter<span class="op">.</span><span class="at">knee</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="dv">0</span><span class="op">,</span> audioContext<span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span>          <span class="co">// Hard knee</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>limiter<span class="op">.</span><span class="at">ratio</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="dv">20</span><span class="op">,</span> audioContext<span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span>        <span class="co">// High compression ratio</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>limiter<span class="op">.</span><span class="at">attack</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="fl">0.001</span><span class="op">,</span> audioContext<span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span>    <span class="co">// 1ms fast attack</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>limiter<span class="op">.</span><span class="at">release</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="fl">0.1</span><span class="op">,</span> audioContext<span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span>     <span class="co">// 100ms release</span></span></code></pre></div>
+<h3 id="establish-the-correct-node-pipeline-in-wavesurferjs">Establish
+the Correct Node Pipeline in Wavesurfer.js</h3>
+<p>To ensure audio flows correctly through the safety stages, chain your
+nodes sequentially. Instead of relying solely on default routing,
+connect Wavesurfer’s media source through your pre-gain, your
+equalization filters, your limiter, and finally to the destination:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Disconnect default routing</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="fu">disconnectFilters</span>()<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Create nodes</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> filter <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createBiquadFilter</span>()<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>filter<span class="op">.</span><span class="at">type</span> <span class="op">=</span> <span class="st">&#39;peaking&#39;</span><span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>filter<span class="op">.</span><span class="at">frequency</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="dv">8000</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>filter<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="dv">8</span><span class="op">;</span> <span class="co">// High gain boost</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>filter<span class="op">.</span><span class="at">Q</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="fl">1.0</span><span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Chain: Source -&gt; PreGain -&gt; Filter -&gt; Limiter -&gt; Destination</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> mediaElementSource <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">media</span><span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>mediaElementSource<span class="op">.</span><span class="fu">disconnect</span>()<span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>mediaElementSource<span class="op">.</span><span class="fu">connect</span>(preGainNode)<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>preGainNode<span class="op">.</span><span class="fu">connect</span>(filter)<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>filter<span class="op">.</span><span class="fu">connect</span>(limiter)<span class="op">;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>limiter<span class="op">.</span><span class="fu">connect</span>(audioContext<span class="op">.</span><span class="at">destination</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="use-subtractive-equalization">Use Subtractive Equalization</h3>
+<p>Instead of applying large positive gain to high frequencies, achieve
+the desired tonal balance through subtractive equalization. Lowering the
+bass and midrange frequencies using negative gain creates the same
+relative acoustic presence for the high frequencies without consuming
+dynamic headroom or risking distortion.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/fix-distortion-when-boosting-high-gains-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

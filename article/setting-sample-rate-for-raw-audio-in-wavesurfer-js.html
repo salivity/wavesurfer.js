@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setting Sample Rate for Raw Audio in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This article explains how to define the sample rate when loading raw array audio data into Wavesurfer.js. When working with pre-decoded PCM arrays, Float32Arrays, or custom audio buffers, setting the sample rate correctly is required to ensure accurate wa">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/setting-sample-rate-for-raw-audio-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Setting Sample Rate for Raw Audio in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/setting-sample-rate-for-raw-audio-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how to define the sample rate when loading raw array audio data into Wavesurfer.js. When working with pre-decoded PCM arrays, Float32Arrays, or custom audio buffers, setting the sample rate correctly is required to ensure accurate wa" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="setting-sample-rate-for-raw-audio-in-wavesurferjs">Setting
+Sample Rate for Raw Audio in Wavesurfer.js</h1>
+<p>This article explains how to define the sample rate when loading raw
+array audio data into Wavesurfer.js. When working with pre-decoded PCM
+arrays, Float32Arrays, or custom audio buffers, setting the sample rate
+correctly is required to ensure accurate waveform rendering, proper
+playback speed, and precise duration calculation. The following sections
+outline the specific configuration option, how it interacts with the Web
+Audio API, and practical code implementation.</p>
+<h2 id="the-samplerate-option">The <code>sampleRate</code> Option</h2>
+<p>In Wavesurfer.js, the option that explicitly defines the sample rate
+is <code>sampleRate</code>.</p>
+<p>When configuring a Wavesurfer instance or processing raw audio data,
+<code>sampleRate</code> dictates how many audio samples represent one
+second of sound (commonly <code>44100</code> or <code>48000</code>
+Hz).</p>
+<p>You can define this option directly during Wavesurfer
+initialization:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sampleRate</span><span class="op">:</span> <span class="dv">44100</span><span class="op">,</span> <span class="co">// Defines the sample rate</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="loading-raw-array-data">Loading Raw Array Data</h2>
+<p>When you have raw PCM audio data (such as a
+<code>Float32Array</code>), Wavesurfer.js needs to know both the channel
+data and how that data maps to time. The sample rate is essential for
+calculating the correct duration:</p>
+<p><span class="math display">\[\text{Duration (seconds)} =
+\frac{\text{Array Length}}{\text{Sample Rate}}\]</span></p>
+<h3 id="method-1-using-an-audiobuffer">Method 1: Using an
+<code>AudioBuffer</code></h3>
+<p>The most reliable way to pass raw array data into Wavesurfer.js is to
+wrap your array inside a standard Web Audio API
+<code>AudioBuffer</code>. The <code>sampleRate</code> is defined during
+buffer creation:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> sampleRate <span class="op">=</span> <span class="dv">44100</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> numberOfChannels <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> rawData <span class="op">=</span> <span class="kw">new</span> <span class="bu">Float32Array</span>([<span class="op">...</span>])<span class="op">;</span> <span class="co">// Your raw PCM sample values</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Create an AudioContext with the target sample rate</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioContext <span class="op">=</span> <span class="kw">new</span> (<span class="bu">window</span><span class="op">.</span><span class="at">AudioContext</span> <span class="op">||</span> <span class="bu">window</span><span class="op">.</span><span class="at">webkitAudioContext</span>)({</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sampleRate</span><span class="op">:</span> sampleRate<span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Create the AudioBuffer using the sampleRate</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioBuffer <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createBuffer</span>(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  numberOfChannels<span class="op">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  rawData<span class="op">.</span><span class="at">length</span><span class="op">,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  sampleRate</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Copy your raw array into the AudioBuffer channel</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>audioBuffer<span class="op">.</span><span class="fu">copyToChannel</span>(rawData<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">// 4. Initialize Wavesurfer with the matching sampleRate</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sampleRate</span><span class="op">:</span> sampleRate<span class="op">,</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">// 5. Load the buffer directly</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">loadAudio</span>(<span class="st">&#39;&#39;</span><span class="op">,</span> audioBuffer)<span class="op">;</span></span></code></pre></div>
+<h3 id="method-2-passing-precomputed-peaks-and-duration">Method 2:
+Passing Precomputed Peaks and Duration</h3>
+<p>If you are loading raw array data purely to visualize the waveform
+without decoding on the fly, you can provide the raw array as channel
+data alongside the calculated duration derived from your sample
+rate:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> sampleRate <span class="op">=</span> <span class="dv">48000</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> channelData <span class="op">=</span> <span class="kw">new</span> <span class="bu">Float32Array</span>([<span class="op">...</span>])<span class="op">;</span> <span class="co">// Raw audio samples</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> duration <span class="op">=</span> channelData<span class="op">.</span><span class="at">length</span> <span class="op">/</span> sampleRate<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">sampleRate</span><span class="op">:</span> sampleRate<span class="op">,</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Load using empty URL, channel arrays, and calculated duration</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;&#39;</span><span class="op">,</span> [channelData]<span class="op">,</span> duration)<span class="op">;</span></span></code></pre></div>
+<h2 id="why-defining-samplerate-matters">Why Defining
+<code>sampleRate</code> Matters</h2>
+<ul>
+<li><strong>Playback Pitch and Speed:</strong> If the sample rate set in
+the <code>AudioContext</code> or buffer does not match the original
+sample rate of the raw data, audio will play back either too fast
+(high-pitched) or too slow (low-pitched).</li>
+<li><strong>Accurate Timelines:</strong> Plugins such as the Timeline
+plugin rely on the calculated duration. A mismatch in sample rate
+stretches or compresses the timeline markers relative to the visual
+peaks.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/setting-sample-rate-for-raw-audio-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

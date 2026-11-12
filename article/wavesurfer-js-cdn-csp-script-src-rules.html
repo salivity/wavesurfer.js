@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js CDN CSP script-src Rules - wavesurfer.js</title>
+    <meta name="description" content="Configuring Content Security Policy (CSP) headers for Content Delivery Network (CDN) builds of Wavesurfer.js requires permitting external script sources while handling audio decoding and web worker operations. This guide details the exact script-src direc">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-cdn-csp-script-src-rules">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js CDN CSP script-src Rules - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-cdn-csp-script-src-rules" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Configuring Content Security Policy (CSP) headers for Content Delivery Network (CDN) builds of Wavesurfer.js requires permitting external script sources while handling audio decoding and web worker operations. This guide details the exact script-src direc" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-cdn-csp-script-src-rules">Wavesurfer.js CDN CSP
+script-src Rules</h1>
+<p>Configuring Content Security Policy (CSP) headers for Content
+Delivery Network (CDN) builds of Wavesurfer.js requires permitting
+external script sources while handling audio decoding and web worker
+operations. This guide details the exact <code>script-src</code>
+directives, hash or nonce alternatives, and related policy requirements
+necessary to run CDN-hosted Wavesurfer.js securely without triggering
+console violations.</p>
+<h3 id="direct-domain-allowlisting">Direct Domain Allowlisting</h3>
+<p>If you load Wavesurfer.js directly from a public CDN via a
+<code>&lt;script&gt;</code> tag, the primary CDN host must be explicitly
+allowed in the <code>script-src</code> directive.</p>
+<p>Depending on your CDN of choice, use one of the following domain
+patterns:</p>
+<ul>
+<li><strong>cdnjs:</strong>
+<code>script-src 'self' https://cdnjs.cloudflare.com;</code></li>
+<li><strong>unpkg:</strong>
+<code>script-src 'self' https://unpkg.com;</code></li>
+<li><strong>jsDelivr:</strong>
+<code>script-src 'self' https://cdn.jsdelivr.net;</code></li>
+</ul>
+<p>To support versioned subpaths or multiple CDNs, you can combine
+origins:</p>
+<pre class="http"><code>Content-Security-Policy: script-src &#39;self&#39; https://unpkg.com https://cdnjs.cloudflare.com;</code></pre>
+<h3 id="using-nonces-or-hashes-for-stricter-security">Using Nonces or
+Hashes for Stricter Security</h3>
+<p>For environments implementing strict CSP without broad domain
+wildcards, employ a cryptographic nonce or an integrity hash.</p>
+<h4 id="nonce-based-policy">Nonce-Based Policy</h4>
+<p>Generate a random, base64-encoded nonce per request on your server,
+apply it to the header, and add it to the CDN script tag.</p>
+<ul>
+<li><p><strong>Header:</strong></p>
+<pre class="http"><code>Content-Security-Policy: script-src &#39;self&#39; &#39;nonce-rAnd0m12345&#39;;</code></pre></li>
+<li><p><strong>HTML:</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js&quot;</span><span class="ot"> nonce</span><span class="op">=</span><span class="st">&quot;rAnd0m12345&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code></pre></div></li>
+</ul>
+<h4 id="hash-based-policy">Hash-Based Policy</h4>
+<p>Calculate the SHA-256, SHA-384, or SHA-512 hash of the exact CDN file
+contents:</p>
+<pre class="http"><code>Content-Security-Policy: script-src &#39;self&#39; &#39;sha256-abcdef...&#39;;</code></pre>
+<h3 id="handling-web-workers-and-blob-urls">Handling Web Workers and
+Blob URLs</h3>
+<p>Wavesurfer.js utilizes Web Workers for decoding audio files and
+rendering waveforms off the main thread. In many CDN bundles, workers
+are instantiated using inline <code>Blob</code> URLs
+(<code>URL.createObjectURL(blob)</code>).</p>
+<p>When using Blob-based workers, modern browsers check the
+<code>worker-src</code> directive, falling back to
+<code>script-src</code> if <code>worker-src</code> is omitted. To avoid
+execution errors, ensure <code>blob:</code> is included:</p>
+<pre class="http"><code>Content-Security-Policy: script-src &#39;self&#39; https://unpkg.com blob:; worker-src &#39;self&#39; blob:;</code></pre>
+<p>If your configuration does not define <code>worker-src</code>,
+<code>blob:</code> must be present in <code>script-src</code>:</p>
+<pre class="http"><code>Content-Security-Policy: script-src &#39;self&#39; https://unpkg.com blob:;</code></pre>
+<h3 id="supporting-directives-for-wavesurferjs">Supporting Directives
+for Wavesurfer.js</h3>
+<p>While not part of <code>script-src</code>, Wavesurfer.js requires the
+following directives to function when fetching audio and running across
+domains:</p>
+<ul>
+<li><p><strong><code>connect-src</code></strong>: Wavesurfer fetches
+remote audio files via <code>fetch</code> or
+<code>XMLHttpRequest</code>. Add your audio host and CDN (if fetching
+source maps):</p>
+<pre class="http"><code>connect-src &#39;self&#39; https://your-audio-bucket.example.com;</code></pre></li>
+<li><p><strong><code>media-src</code></strong>: Required if using the
+MediaElement backend
+(<code>wavesurfer.create({ backend: 'MediaElement' })</code>):</p>
+<pre class="http"><code>media-src &#39;self&#39; https://your-audio-bucket.example.com blob:;</code></pre></li>
+</ul>
+<h3 id="recommended-production-configuration">Recommended Production
+Configuration</h3>
+<p>A comprehensive CSP configuration accommodating modern Wavesurfer.js
+(v7+) loaded via unpkg looks like:</p>
+<pre class="http"><code>Content-Security-Policy: default-src &#39;self&#39;; script-src &#39;self&#39; https://unpkg.com blob:; worker-src &#39;self&#39; blob:; connect-src &#39;self&#39; https://your-audio-bucket.example.com; media-src &#39;self&#39; https://your-audio-bucket.example.com blob:; style-src &#39;self&#39; &#39;unsafe-inline&#39;;</code></pre></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-cdn-csp-script-src-rules';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

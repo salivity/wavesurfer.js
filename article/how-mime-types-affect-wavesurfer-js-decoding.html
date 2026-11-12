@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How MIME Types Affect Wavesurfer.js Decoding - wavesurfer.js</title>
+    <meta name="description" content="Browser MIME-type definitions dictate how network resources are fetched, parsed, and handed over to audio decoders. While the Web Audio API primarily identifies audio formats through binary headers rather than HTTP metadata, incorrect MIME types still tri">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-mime-types-affect-wavesurfer-js-decoding">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How MIME Types Affect Wavesurfer.js Decoding - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-mime-types-affect-wavesurfer-js-decoding" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Browser MIME-type definitions dictate how network resources are fetched, parsed, and handed over to audio decoders. While the Web Audio API primarily identifies audio formats through binary headers rather than HTTP metadata, incorrect MIME types still tri" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-mime-types-affect-wavesurferjs-decoding">How MIME Types
+Affect Wavesurfer.js Decoding</h1>
+<p>Browser MIME-type definitions dictate how network resources are
+fetched, parsed, and handed over to audio decoders. While the Web Audio
+API primarily identifies audio formats through binary headers rather
+than HTTP metadata, incorrect MIME types still trigger security
+restrictions like Cross-Origin Read Blocking (CORB), break
+HTMLMediaElement fallbacks, and cause decoding pipelines inside
+Wavesurfer.js to fail silently.</p>
+<h3 id="fetch-pipeline-and-browser-security-policies">Fetch Pipeline and
+Browser Security Policies</h3>
+<p>Wavesurfer.js retrieves audio data using the Fetch API to acquire an
+<code>ArrayBuffer</code> or <code>Blob</code>. During this network
+phase, the browser evaluates the response's <code>Content-Type</code>
+header against strict security policies.</p>
+<p>If a cross-origin request lacks explicit CORS permissions or serves
+audio under a blocked MIME type (such as <code>text/html</code> or
+<code>application/json</code>), the browser's Cross-Origin Read Blocking
+(CORB) or Opaque Response Blocking (ORB) mechanisms will intercept the
+response. When this happens, the response body is stripped or replaced
+with empty bytes, leaving Wavesurfer.js with an empty buffer that cannot
+be decoded.</p>
+<h3 id="web-audio-backend-decodeaudiodata">Web Audio Backend
+(<code>decodeAudioData</code>)</h3>
+<p>When configured with the standard Web Audio backend, Wavesurfer.js
+passes the downloaded <code>ArrayBuffer</code> directly to
+<code>AudioContext.decodeAudioData()</code>.</p>
+<ol type="1">
+<li><strong>Content Sniffing:</strong> Most modern browser
+implementations of <code>decodeAudioData()</code> rely on "magic bytes"
+(the binary signature at the start of the audio file) rather than the
+HTTP <code>Content-Type</code> to determine the codec (e.g., MP3, WAV,
+OGG).</li>
+<li><strong>Failure Cases:</strong> If a server mislabels an audio file
+as <code>application/octet-stream</code>, <code>decodeAudioData()</code>
+will usually succeed if the container signature is valid. However, if
+the server serves an error page (e.g., a 404 or 500 error formatted as
+<code>text/html</code>) with a <code>200 OK</code> status, Wavesurfer.js
+will attempt to decode the HTML string as audio, resulting in an
+immediate <code>DOMException: Unable to decode audio data</code>
+error.</li>
+</ol>
+<h3 id="mediaelement-and-mediaelementwebaudio-backends">MediaElement and
+MediaElementWebAudio Backends</h3>
+<p>The impact of MIME types becomes significantly more pronounced when
+Wavesurfer.js uses the <code>MediaElement</code> or
+<code>MediaElementWebAudio</code> backend. In these modes, audio is
+processed through an underlying HTML5 <code>&lt;audio&gt;</code> element
+rather than raw memory buffers.</p>
+<ul>
+<li><strong>Strict Codec Negotiation:</strong> The HTMLMediaElement
+relies on the browser's native multimedia framework, which strictly
+references the <code>Content-Type</code> header (such as
+<code>audio/mpeg</code> or <code>audio/webm; codecs="opus"</code>).</li>
+<li><strong>Blob URL Handling:</strong> If Wavesurfer.js creates an
+Object URL via <code>URL.createObjectURL(blob)</code>, the Blob's
+inherited MIME type is used by the media engine. If the fetch response
+lacked a valid audio MIME type, browsers like Safari and Firefox will
+refuse to attach the stream to the media pipeline, preventing waveform
+generation and playback.</li>
+</ul>
+<h3 id="requirements-for-stable-wavesurferjs-integration">Requirements
+for Stable Wavesurfer.js Integration</h3>
+<p>To ensure uninterrupted decoding in Wavesurfer.js across all
+browsers:</p>
+<ul>
+<li><strong>Explicit Headers:</strong> Configure the host server to
+return exact MIME types (e.g., <code>audio/mpeg</code> for MP3,
+<code>audio/wav</code> for WAV, <code>audio/aac</code> for AAC).</li>
+<li><strong>Avoid Generic Types:</strong> Avoid serving media as generic
+<code>application/octet-stream</code> or <code>text/plain</code>, as
+this disables hardware-accelerated playback paths in mobile
+browsers.</li>
+<li><strong>Byte-Range Support:</strong> Ensure the server returns
+<code>Accept-Ranges: bytes</code> alongside the proper MIME definition,
+which allows Wavesurfer.js and media elements to seek and stream chunks
+without decoding failures.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-mime-types-affect-wavesurfer-js-decoding';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

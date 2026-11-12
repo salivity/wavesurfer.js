@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Apps and Extensions for Audio Playback - wavesurfer.js</title>
+    <meta name="description" content="This article covers browser extensions, desktop utilities, and development tools that leverage the open-source Wavesurfer.js library to decode and visualize local audio files. By rendering interactive, navigable waveforms, these tools transform standard a">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-apps-and-extensions-for-audio-playback">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Apps and Extensions for Audio Playback - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-apps-and-extensions-for-audio-playback" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article covers browser extensions, desktop utilities, and development tools that leverage the open-source Wavesurfer.js library to decode and visualize local audio files. By rendering interactive, navigable waveforms, these tools transform standard a" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="wavesurferjs-apps-and-extensions-for-audio-playback">Wavesurfer.js
+Apps and Extensions for Audio Playback</h1>
+<p>This article covers browser extensions, desktop utilities, and
+development tools that leverage the open-source Wavesurfer.js library to
+decode and visualize local audio files. By rendering interactive,
+navigable waveforms, these tools transform standard audio playback into
+visual, precise scrubbers directly on your local system without
+requiring external server processing.</p>
+<h3 id="vs-code-audio-preview-extension">VS Code: Audio Preview
+Extension</h3>
+<p>One of the most widely used implementations of Wavesurfer.js for
+local files is the <strong>Audio Preview</strong> extension by lencerf
+for Visual Studio Code. When you click on any local audio format
+supported by the editor (such as <code>.wav</code>, <code>.mp3</code>,
+or <code>.ogg</code>), the extension opens a custom webview tab directly
+inside VS Code. This view embeds Wavesurfer.js to generate the audio
+waveform, providing visual timeline scrubbing, zoom features, and
+looping capabilities without leaving the workspace.</p>
+<h3 id="browser-extensions-for-local-playback">Browser Extensions for
+Local Playback</h3>
+<p>Browser extensions that override default HTML5 audio players often
+embed Wavesurfer.js to handle local media loaded through
+<code>file://</code> protocols:</p>
+<ul>
+<li><strong>Local Audio Player Extensions:</strong> Several Chrome and
+Firefox add-ons (such as custom waveform player extensions available in
+developer repositories) replace the standard browser media bar. By
+leveraging the HTML5 File API and <code>URL.createObjectURL</code>,
+these extensions feed local audio data straight into an embedded
+Wavesurfer instance, rendering a real-time visual canvas.</li>
+<li><strong>Podcast and Transcribe Helpers:</strong> Extensions built
+for transcribing local recordings frequently adopt Wavesurfer.js. These
+tools allow users to load local voice memos or interviews into the
+browser, generating a visual timeline with customizable playback speed,
+backward/forward skips, and region-marking tools provided by the
+Wavesurfer region plugin.</li>
+</ul>
+<h3 id="electron-based-local-audio-players">Electron-Based Local Audio
+Players</h3>
+<p>Because Electron integrates standard Chromium web technologies with
+local Node.js system access, it is a primary environment for
+Wavesurfer.js desktop deployments:</p>
+<ul>
+<li><strong>Open-Source Sample Managers:</strong> Many lightweight audio
+sample organizers and preset visualizers built on GitHub use Electron
+combined with Wavesurfer.js. These players monitor local directories,
+read samples, and display instant waveforms to make browsing drum kits,
+sound effects, and musical stems faster than native OS media
+players.</li>
+<li><strong>Audio Annotators and Labeling Tools:</strong> Annotation
+software used in machine learning workflows often relies on
+Wavesurfer.js wrapped inside Electron or Tauri. These apps allow
+researchers to open local audio files, view the spectrum/waveform, slice
+segments using Wavesurfer's interactive timeline, and export timecodes
+locally.</li>
+</ul>
+<h3 id="progressive-web-apps-pwas-and-offline-web-tools">Progressive Web
+Apps (PWAs) and Offline Web Tools</h3>
+<p>In addition to extensions, several browser-based standalone audio
+players function entirely offline using Wavesurfer.js:</p>
+<ul>
+<li>Sites utilizing the HTML5 Drag-and-Drop API paired with
+Wavesurfer.js allow users to drag local tracks straight into the browser
+window.</li>
+<li>Because Wavesurfer.js decodes the audio locally using the Web Audio
+API, no files are transmitted to a remote server. When saved as a
+Progressive Web App (PWA), these utilities act as dedicated local media
+visualizers with native-like performance.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-apps-and-extensions-for-audio-playback';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

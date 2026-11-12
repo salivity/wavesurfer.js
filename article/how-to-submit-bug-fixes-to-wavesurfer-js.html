@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Submit Bug Fixes to Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This guide outlines the step-by-step process for contributing bug fixes to the official Wavesurfer.js open-source repository on GitHub. It covers everything from locating existing issues and configuring your local development environment to writing tests,">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-submit-bug-fixes-to-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Submit Bug Fixes to Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-submit-bug-fixes-to-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide outlines the step-by-step process for contributing bug fixes to the official Wavesurfer.js open-source repository on GitHub. It covers everything from locating existing issues and configuring your local development environment to writing tests," />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-submit-bug-fixes-to-wavesurferjs">How to Submit Bug Fixes
+to Wavesurfer.js</h1>
+<p>This guide outlines the step-by-step process for contributing bug
+fixes to the official Wavesurfer.js open-source repository on GitHub. It
+covers everything from locating existing issues and configuring your
+local development environment to writing tests, conforming to project
+standards, and submitting a pull request that maintainers can easily
+review and merge.</p>
+<h2 id="1-verify-or-report-the-bug">1. Verify or Report the Bug</h2>
+<p>Before writing code, verify that the bug has not already been
+addressed:</p>
+<ul>
+<li>Search the open and closed issues in the official
+<code>katspaugh/wavesurfer.js</code> GitHub repository.</li>
+<li>If an issue does not already exist for the bug, open a new issue
+describing the bug, including reproducible steps, the browser
+environment, and the specific version of Wavesurfer.js you are
+using.</li>
+<li>Comment on the issue to let maintainers know you are working on a
+fix to prevent duplicate efforts.</li>
+</ul>
+<h2 id="2-fork-and-clone-the-repository">2. Fork and Clone the
+Repository</h2>
+<ol type="1">
+<li><p>Navigate to the Wavesurfer.js repository on GitHub and click the
+<strong>Fork</strong> button to create a copy under your personal GitHub
+account.</p></li>
+<li><p>Clone your fork locally using Git:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/<span class="op">&lt;</span>your-username<span class="op">&gt;</span>/wavesurfer.js.git</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> wavesurfer.js</span></code></pre></div></li>
+<li><p>Add the original repository as an <code>upstream</code> remote to
+keep your fork updated:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> remote add upstream https://github.com/katspaugh/wavesurfer.js.git</span></code></pre></div></li>
+</ol>
+<h2 id="3-set-up-the-development-environment">3. Set Up the Development
+Environment</h2>
+<p>Wavesurfer.js is written in TypeScript and uses standard Node.js
+tooling.</p>
+<ol type="1">
+<li><p>Ensure you have a recent LTS version of Node.js
+installed.</p></li>
+<li><p>Install the project dependencies:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install</span></code></pre></div></li>
+<li><p>Start the local development server to test examples and verify
+functionality:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> run start</span></code></pre></div></li>
+</ol>
+<h2 id="4-create-a-dedicated-branch">4. Create a Dedicated Branch</h2>
+<p>Never commit bug fixes directly to the <code>main</code> branch.
+Create a new branch with a descriptive name representing the fix:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-b</span> fix/issue-description</span></code></pre></div>
+<p><em>(e.g.,
+<code>git checkout -b fix/safari-audio-context-unlock</code>)</em></p>
+<h2 id="5-implement-the-bug-fix">5. Implement the Bug Fix</h2>
+<ul>
+<li>Locate the relevant source files in the <code>src/</code> directory
+or corresponding plugin directory.</li>
+<li>Apply the minimal code changes necessary to fix the reported
+issue.</li>
+<li>Maintain consistent coding standards matching the existing codebase
+(formatting, naming conventions, and TypeScript type annotations).</li>
+</ul>
+<h2 id="6-test-and-lint-your-code">6. Test and Lint Your Code</h2>
+<p>To ensure the bug fix does not cause regressions or violate style
+rules:</p>
+<ol type="1">
+<li><p><strong>Add or Update Tests:</strong> If applicable, write
+automated unit tests reproducing the issue to ensure future releases do
+not reintroduce the bug.</p></li>
+<li><p><strong>Run Linting:</strong> Verify that code style and
+TypeScript rules pass without errors:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> run lint</span></code></pre></div></li>
+<li><p><strong>Run Tests:</strong> Execute the test suite:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> test</span></code></pre></div></li>
+<li><p><strong>Build the Project:</strong> Verify that the project
+compiles cleanly:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> run build</span></code></pre></div></li>
+</ol>
+<h2 id="7-commit-your-changes">7. Commit Your Changes</h2>
+<p>Commit your changes with a clear, conventional commit message:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add .</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;fix: resolve audio decoding failure in Safari (fixes #1234)&quot;</span></span></code></pre></div>
+<p>Reference the original issue number in the commit message or
+description to automatically link the fix.</p>
+<h2 id="8-push-and-open-a-pull-request">8. Push and Open a Pull
+Request</h2>
+<ol type="1">
+<li><p>Push your branch to your forked repository:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> push origin fix/issue-description</span></code></pre></div></li>
+<li><p>Navigate to the original <code>katspaugh/wavesurfer.js</code>
+GitHub repository. You will see a prompt to open a pull request from
+your recently pushed branch.</p></li>
+<li><p>Fill out the pull request template:</p>
+<ul>
+<li>Provide a clear summary of the bug and how your changes resolve
+it.</li>
+<li>Reference the issue being fixed (e.g.,
+<code>Closes #1234</code>).</li>
+<li>Confirm that all tests and lint checks pass.</li>
+</ul></li>
+</ol>
+<h2 id="9-address-review-feedback">9. Address Review Feedback</h2>
+<p>Once the pull request is submitted, maintainers and continuous
+integration (CI) bots will run automated tests. Monitor the pull request
+for comments, requested changes, or questions from the maintainers, and
+push any necessary updates directly to your branch to update the pull
+request automatically.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-submit-bug-fixes-to-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

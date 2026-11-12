@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Community Plugin Naming Conventions - wavesurfer.js</title>
+    <meta name="description" content="This article explores the standard naming conventions used to identify community-developed plugins for the Wavesurfer.js audio visualization library. By understanding the standard prefixes, repository naming practices, and JavaScript class conventions, de">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-community-plugin-naming-conventions">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Community Plugin Naming Conventions - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-community-plugin-naming-conventions" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explores the standard naming conventions used to identify community-developed plugins for the Wavesurfer.js audio visualization library. By understanding the standard prefixes, repository naming practices, and JavaScript class conventions, de" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-community-plugin-naming-conventions">Wavesurfer.js
+Community Plugin Naming Conventions</h1>
+<p>This article explores the standard naming conventions used to
+identify community-developed plugins for the Wavesurfer.js audio
+visualization library. By understanding the standard prefixes,
+repository naming practices, and JavaScript class conventions,
+developers can easily discover, identify, and publish third-party
+extensions within the broader Wavesurfer.js ecosystem.</p>
+<h3 id="npm-package-conventions">NPM Package Conventions</h3>
+<p>The primary indicator of a community-created plugin is its package
+name on package managers such as npm. While official plugins are bundled
+directly inside the core <code>wavesurfer.js</code> package (imported
+via paths like <code>wavesurfer.js/dist/plugins/...</code>), community
+plugins are distributed as standalone packages.</p>
+<p>Community plugins generally adopt one of the following patterns:</p>
+<ul>
+<li><strong>Prefix-based naming:</strong>
+<code>wavesurfer-plugin-[feature]</code> or
+<code>wavesurfer.js-plugin-[feature]</code> (for example,
+<code>wavesurfer-plugin-record</code> or
+<code>wavesurfer.js-plugin-cursor</code>).</li>
+<li><strong>Scoped packages:</strong>
+<code>@username/wavesurfer-plugin-[feature]</code> or
+<code>@organization/wavesurfer-[feature]</code>, which clearly
+identifies the third-party maintainer while keeping the library
+relationship explicit.</li>
+</ul>
+<h3 id="repository-and-topic-tagging">Repository and Topic Tagging</h3>
+<p>On code hosting platforms like GitHub, open-source community plugins
+follow identical repository naming structures as their npm counterparts
+to maintain consistency:</p>
+<ul>
+<li><strong>Repository Names:</strong> Typically named using the pattern
+<code>wavesurfer.js-[plugin-name]</code> or
+<code>wavesurfer-plugin-[plugin-name]</code>.</li>
+<li><strong>Topics and Keywords:</strong> Maintainers use search tags
+such as <code>wavesurfer</code>, <code>wavesurferjs</code>,
+<code>wavesurfer-plugin</code>, and <code>audio-visualization</code> in
+repository topics and npm <code>package.json</code> keywords to improve
+discoverability.</li>
+</ul>
+<h3 id="javascript-class-and-object-naming">JavaScript Class and Object
+Naming</h3>
+<p>Within application code, community plugins adhere to Wavesurfer's
+internal architecture conventions to ensure compatibility with plugin
+loader mechanisms:</p>
+<ul>
+<li><strong>PascalCase with "Plugin" Suffix:</strong> The main export or
+factory class is consistently named in PascalCase and ends with the word
+<code>Plugin</code> (for example, <code>SpectrogramPlugin</code>,
+<code>RegionsPlugin</code>, or <code>CustomMarkerPlugin</code>).</li>
+<li><strong>Factory Function Syntax:</strong> In modern Wavesurfer.js
+(v7 and newer), plugins often export a static <code>create()</code>
+method on the plugin class or a camelCase factory function, following
+the pattern <code>create[PluginName]</code> or simply
+<code>PluginClass.create(options)</code>.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-community-plugin-naming-conventions';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

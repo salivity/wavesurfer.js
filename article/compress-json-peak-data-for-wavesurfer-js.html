@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compress JSON Peak Data for Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Serving waveform peak data as raw JSON creates bloated payloads that degrade network performance and delay rendering in web audio applications. This guide demonstrates how to replace verbose JSON peak arrays with compact binary packing, dramatically reduc">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/compress-json-peak-data-for-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Compress JSON Peak Data for Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/compress-json-peak-data-for-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Serving waveform peak data as raw JSON creates bloated payloads that degrade network performance and delay rendering in web audio applications. This guide demonstrates how to replace verbose JSON peak arrays with compact binary packing, dramatically reduc" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="compress-json-peak-data-for-wavesurferjs">Compress JSON Peak
+Data for Wavesurfer.js</h1>
+<p>Serving waveform peak data as raw JSON creates bloated payloads that
+degrade network performance and delay rendering in web audio
+applications. This guide demonstrates how to replace verbose JSON peak
+arrays with compact binary packing, dramatically reducing payload sizes
+by up to 80–90% and parsing binary buffers directly in the browser for
+rapid Wavesurfer.js rendering.</p>
+<hr />
+<h3 id="the-overhead-of-json-peaks">The Overhead of JSON Peaks</h3>
+<p>Waveform visualizers like Wavesurfer.js require an array of peak
+numbers (typically min/max pairs normalized between <code>-1.0</code>
+and <code>1.0</code>) to render audio contours without downloading the
+full audio file.</p>
+<p>When serialized to JSON, floating-point numbers are represented as
+plain ASCII strings:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">[</span><span class="fl">-0.231456</span><span class="ot">,</span> <span class="fl">0.451239</span><span class="ot">,</span> <span class="fl">-0.671234</span><span class="ot">,</span> <span class="fl">0.891245</span><span class="ot">]</span></span></code></pre></div>
+<p>Each peak value consumes 8 to 12 bytes due to digits, decimal points,
+separators, and brackets. For a standard audio file containing 2,000 to
+10,000 peak points, the resulting JSON payload can easily reach several
+hundred kilobytes.</p>
+<h3 id="the-binary-packing-solution">The Binary Packing Solution</h3>
+<p>Because waveform rendering is purely visual, the extreme precision of
+64-bit or 32-bit floating-point numbers is unnecessary. Audio peaks
+bounded between <code>-1.0</code> and <code>1.0</code> can be mapped
+into a fixed-width integer format:</p>
+<ul>
+<li><strong>Int8 (<code>Int8Array</code>)</strong>: Maps
+<code>-1.0</code> to <code>1.0</code> across <code>-128</code> to
+<code>127</code>. Uses <strong>1 byte</strong> per peak point.</li>
+<li><strong>Int16 (<code>Int16Array</code>)</strong>: Maps
+<code>-1.0</code> to <code>1.0</code> across <code>-32768</code> to
+<code>32767</code>. Uses <strong>2 bytes</strong> per peak point.</li>
+</ul>
+<p>For virtually all UI waveform displays, <strong>Int8</strong>
+provides sufficient resolution while yielding the smallest payload.</p>
+<hr />
+<h3 id="step-1-pack-the-peaks-on-the-server">Step 1: Pack the Peaks on
+the Server</h3>
+<p>To prepare the binary payload, scale the normalized float peaks to
+the target integer range and write them into a raw binary buffer.</p>
+<h4 id="example-using-nodejs">Example using Node.js:</h4>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">/**</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"> * Packs an array of normalized floats (-1.0 to 1.0) into an Int8 Buffer.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@param</span><span class="co"> </span><span class="cv">{number</span><span class="co">[]} floatPeaks</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"> * </span><span class="an">@returns</span><span class="co"> {Buffer}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"> */</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">packPeaksToInt8</span>(floatPeaks) {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> buffer <span class="op">=</span> <span class="bu">Buffer</span><span class="op">.</span><span class="fu">alloc</span>(floatPeaks<span class="op">.</span><span class="at">length</span>)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> floatPeaks<span class="op">.</span><span class="at">length</span><span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clamp values between -1.0 and 1.0</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> clamped <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="op">-</span><span class="dv">1</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">min</span>(<span class="dv">1</span><span class="op">,</span> floatPeaks[i]))<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Scale to signed 8-bit integer range (-128 to 127)</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> scaled <span class="op">=</span> clamped <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">?</span> clamped <span class="op">*</span> <span class="dv">128</span> <span class="op">:</span> clamped <span class="op">*</span> <span class="dv">127</span><span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    buffer<span class="op">.</span><span class="fu">writeInt8</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">round</span>(scaled)<span class="op">,</span> i)<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> buffer<span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Serve this buffer directly with Content-Type: application/octet-stream</span></span></code></pre></div>
+<hr />
+<h3 id="step-2-fetch-and-unpack-in-the-browser">Step 2: Fetch and Unpack
+in the Browser</h3>
+<p>Wavesurfer.js accepts precomputed peaks via its <code>peaks</code>
+option or via the <code>load()</code> method. Instead of parsing a large
+JSON string with <code>JSON.parse()</code>, fetch the binary response as
+an <code>ArrayBuffer</code> and map it back into normalized float
+arrays.</p>
+<h4 id="client-side-implementation">Client-Side Implementation:</h4>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">function</span> <span class="fu">loadPackedWaveform</span>(audioUrl<span class="op">,</span> peaksUrl<span class="op">,</span> containerElement) {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 1. Fetch the binary peak payload</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> response <span class="op">=</span> <span class="cf">await</span> <span class="fu">fetch</span>(peaksUrl)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> arrayBuffer <span class="op">=</span> <span class="cf">await</span> response<span class="op">.</span><span class="fu">arrayBuffer</span>()<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 2. Read the binary buffer directly without string parsing</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> int8View <span class="op">=</span> <span class="kw">new</span> <span class="bu">Int8Array</span>(arrayBuffer)<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> floatPeaks <span class="op">=</span> <span class="kw">new</span> <span class="bu">Float32Array</span>(int8View<span class="op">.</span><span class="at">length</span>)<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 3. Normalize values back to the range [-1.0, 1.0]</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> int8View<span class="op">.</span><span class="at">length</span><span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> val <span class="op">=</span> int8View[i]<span class="op">;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    floatPeaks[i] <span class="op">=</span> val <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">?</span> val <span class="op">/</span> <span class="dv">128</span> <span class="op">:</span> val <span class="op">/</span> <span class="dv">127</span><span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 4. Initialize Wavesurfer with the unpacked peaks</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">container</span><span class="op">:</span> containerElement<span class="op">,</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">peaks</span><span class="op">:</span> [floatPeaks]<span class="op">,</span> <span class="co">// Wavesurfer supports single or dual-channel peak arrays</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Load the audio resource (or render immediately with peak data)</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">load</span>(audioUrl<span class="op">,</span> [floatPeaks])<span class="op">;</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> wavesurfer<span class="op">;</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h3 id="key-advantages">Key Advantages</h3>
+<ol type="1">
+<li><strong>Payload Reduction</strong>: A 5,000-point JSON array
+typically measures ~50 KB to ~80 KB uncompressed. Packed as
+<code>Int8</code>, the exact same visual data is strictly <strong>5
+KB</strong>.</li>
+<li><strong>Eliminated JSON Parsing</strong>: Parsing multi-megabyte
+JSON strings blocks the browser main thread. Reading typed arrays
+(<code>Int8Array</code> / <code>Float32Array</code>) operates directly
+on memory buffers with virtually zero CPU overhead.</li>
+<li><strong>HTTP Compression Synergy</strong>: When served with Gzip or
+Brotli, repetitive binary sequences achieve high compression ratios,
+lowering network overhead even further.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/compress-json-peak-data-for-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

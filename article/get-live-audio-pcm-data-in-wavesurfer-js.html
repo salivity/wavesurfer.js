@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Live Audio PCM Data in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This guide explains how to access live pulse-code modulation (PCM) audio data in Wavesurfer.js. While developers often expect a built-in Wavesurfer.js event to emit raw audio buffers during live capture, Wavesurfer.js relies on the Web Audio API under the">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/get-live-audio-pcm-data-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Get Live Audio PCM Data in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/get-live-audio-pcm-data-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide explains how to access live pulse-code modulation (PCM) audio data in Wavesurfer.js. While developers often expect a built-in Wavesurfer.js event to emit raw audio buffers during live capture, Wavesurfer.js relies on the Web Audio API under the" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="get-live-audio-pcm-data-in-wavesurferjs">Get Live Audio PCM Data
+in Wavesurfer.js</h1>
+<p>This guide explains how to access live pulse-code modulation (PCM)
+audio data in Wavesurfer.js. While developers often expect a built-in
+Wavesurfer.js event to emit raw audio buffers during live capture,
+Wavesurfer.js relies on the Web Audio API under the hood. You will learn
+the difference between Wavesurfer's internal events, how the Web Audio
+<code>audioprocess</code> event provides live PCM data, and how to
+extract channel buffers when using the Wavesurfer.js Record plugin.</p>
+<h3 id="the-role-of-the-audioprocess-event">The Role of the
+<code>audioprocess</code> Event</h3>
+<p>In the Web Audio API, the <code>audioprocess</code> event—dispatched
+by a <code>ScriptProcessorNode</code>—is the primary event that provides
+access to live, raw PCM audio data. The event object
+(<code>AudioProcessingEvent</code>) exposes an <code>inputBuffer</code>
+property. Calling <code>inputBuffer.getChannelData(channelIndex)</code>
+yields a <code>Float32Array</code> containing the raw PCM samples for
+that frame. Modern implementations may also use an
+<code>AudioWorkletNode</code>, which posts PCM data to the main thread
+using standard <code>message</code> events.</p>
+<h3 id="wavesurferjs-core-vs-live-audio-capture">Wavesurfer.js Core vs.
+Live Audio Capture</h3>
+<p>It is crucial to distinguish between Wavesurfer’s built-in event and
+the Web Audio event:</p>
+<ul>
+<li><strong>Wavesurfer Core <code>audioprocess</code>:</strong>
+Wavesurfer.js has its own event named <code>audioprocess</code>.
+However, this event fires continuously during playback to emit the
+current playback time in seconds (a number), not the raw audio PCM
+buffer.</li>
+<li><strong>Decoded PCM (Pre-recorded Audio):</strong> For static audio
+files, PCM data is not streamed live through an event. Instead, you
+listen to the <code>ready</code> or <code>decode</code> event and call
+<code>wavesurfer.getDecodedData().getChannelData(channelNumber)</code>
+to obtain the complete PCM <code>Float32Array</code>.</li>
+</ul>
+<h3 id="capturing-live-pcm-with-the-record-plugin">Capturing Live PCM
+with the Record Plugin</h3>
+<p>To capture live microphone input in modern Wavesurfer.js (v7+), you
+use the official <code>RecordPlugin</code>. The plugin captures the
+audio stream via the browser's MediaStreams API.</p>
+<p>While the plugin exposes events like <code>record-progress</code>
+(reporting elapsed recording time) and <code>record-end</code>
+(delivering the final audio <code>Blob</code>), raw live PCM streaming
+requires intercepting the stream using a custom Web Audio node.</p>
+<p>Here is how you can hook into live PCM data alongside
+Wavesurfer.js:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> RecordPlugin <span class="im">from</span> <span class="st">&#39;wavesurfer.js/dist/plugins/record.esm.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F4A85&#39;</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize the Record plugin</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> record <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">registerPlugin</span>(RecordPlugin<span class="op">.</span><span class="fu">create</span>())<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Get available audio input devices and start recording</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>record<span class="op">.</span><span class="fu">startMic</span>()<span class="op">.</span><span class="fu">then</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Access the live MediaStream from the plugin</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> stream <span class="op">=</span> record<span class="op">.</span><span class="at">stream</span><span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> audioContext <span class="op">=</span> <span class="kw">new</span> (<span class="bu">window</span><span class="op">.</span><span class="at">AudioContext</span> <span class="op">||</span> <span class="bu">window</span><span class="op">.</span><span class="at">webkitAudioContext</span>)()<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> source <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createMediaStreamSource</span>(stream)<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Use a ScriptProcessorNode to capture live PCM buffers</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> processor <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createScriptProcessor</span>(<span class="dv">4096</span><span class="op">,</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  processor<span class="op">.</span><span class="at">onaudioprocess</span> <span class="op">=</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This provides the live PCM Float32Array</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> pcmData <span class="op">=</span> <span class="bu">event</span><span class="op">.</span><span class="at">inputBuffer</span><span class="op">.</span><span class="fu">getChannelData</span>(<span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(<span class="st">&#39;Live PCM samples:&#39;</span><span class="op">,</span> pcmData)<span class="op">;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  source<span class="op">.</span><span class="fu">connect</span>(processor)<span class="op">;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  processor<span class="op">.</span><span class="fu">connect</span>(audioContext<span class="op">.</span><span class="at">destination</span>)<span class="op">;</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="summary">Summary</h3>
+<p>Wavesurfer.js does not have a native custom event that emits raw live
+PCM chunks directly. To access live PCM data, tap into the Web Audio
+API's <code>audioprocess</code> event via a
+<code>ScriptProcessorNode</code> (or an <code>AudioWorkletNode</code>)
+connected to the active microphone stream provided by the Wavesurfer
+Record plugin. For pre-recorded tracks, access the full PCM array using
+<code>wavesurfer.getDecodedData()</code> after the <code>ready</code> or
+<code>decode</code> event fires.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/get-live-audio-pcm-data-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

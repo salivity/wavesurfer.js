@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Wavesurfer.js Slices Canvases for Long Audio - wavesurfer.js</title>
+    <meta name="description" content="This article explains how the Wavesurfer.js library circumvents browser-imposed HTML5 canvas dimension limits when rendering long or highly zoomed audio waveforms. By breaking down the total visual width into a series of smaller, sequential canvas element">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-wavesurfer-js-slices-canvases-for-long-audio">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How Wavesurfer.js Slices Canvases for Long Audio - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-wavesurfer-js-slices-canvases-for-long-audio" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how the Wavesurfer.js library circumvents browser-imposed HTML5 canvas dimension limits when rendering long or highly zoomed audio waveforms. By breaking down the total visual width into a series of smaller, sequential canvas element" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-wavesurferjs-slices-canvases-for-long-audio">How
+Wavesurfer.js Slices Canvases for Long Audio</h1>
+<p>This article explains how the Wavesurfer.js library circumvents
+browser-imposed HTML5 canvas dimension limits when rendering long or
+highly zoomed audio waveforms. By breaking down the total visual width
+into a series of smaller, sequential canvas elements, Wavesurfer.js
+prevents rendering crashes, optimizes memory consumption, and maintains
+high-resolution visualization across all devices.</p>
+<h3 id="the-browser-canvas-limitation">The Browser Canvas
+Limitation</h3>
+<p>Web browsers enforce strict limits on the maximum width, height, and
+overall surface area of an HTML5 <code>&lt;canvas&gt;</code> element.
+For example, mobile Safari historically caps individual canvas
+dimensions at 4,096 pixels, while modern desktop browsers typically fail
+or stop rendering if a canvas exceeds 16,384 to 32,767 pixels in width
+or surpasses memory limits.</p>
+<p>When visualizing long audio tracks or utilizing high zoom factors
+(defined by the <code>minPxPerSec</code> parameter), the waveform's
+total pixel width can easily exceed tens or hundreds of thousands of
+pixels. Attempting to draw this across a single canvas causes the
+browser to silently fail, truncate rendering, or crash the tab.</p>
+<h3 id="the-chunking-mechanism-maxcanvaswidth">The Chunking Mechanism
+(<code>maxCanvasWidth</code>)</h3>
+<p>Wavesurfer.js resolves this issue by dividing the waveform
+horizontally into manageable segments. This behavior is governed
+internally by a threshold parameter, often exposed or configured via
+<code>maxCanvasWidth</code> (typically defaulting to 4,000 pixels to
+stay safely beneath common hardware and browser caps).</p>
+<p>When rendering, Wavesurfer.js performs the following
+calculations:</p>
+<ol type="1">
+<li><strong>Calculate Total Width:</strong> It calculates the required
+total visual width based on the audio duration and the pixels-per-second
+ratio:<br />
+<code>totalWidth = duration * minPxPerSec</code></li>
+<li><strong>Determine Slice Count:</strong> It computes how many
+individual canvas elements are required:<br />
+<code>entryCount = Math.ceil(totalWidth / maxCanvasWidth)</code></li>
+<li><strong>Generate Canvas Elements:</strong> It dynamically creates an
+array of smaller <code>&lt;canvas&gt;</code> elements, where each slice
+has a width equal to <code>maxCanvasWidth</code>, except the final
+slice, which absorbs the remaining remainder width
+(<code>totalWidth % maxCanvasWidth</code>).</li>
+</ol>
+<h3 id="peak-data-slicing-and-mapping">Peak Data Slicing and
+Mapping</h3>
+<p>Once the canvas elements are instantiated, Wavesurfer.js maps the
+pre-calculated audio peaks (the amplitude data) directly to their
+corresponding canvas slices:</p>
+<ul>
+<li><strong>Index Calculation:</strong> Each canvas slice is assigned a
+distinct index. The starting pixel offset for canvas <code>i</code> is
+<code>i * maxCanvasWidth</code>.</li>
+<li><strong>Sample Subsetting:</strong> Wavesurfer.js calculates the
+exact slice of peak data that corresponds to that pixel range. Rather
+than iterating through the entire audio buffer on every draw call, each
+canvas context only receives the sub-array of amplitude peaks relevant
+to its designated horizontal boundary.</li>
+<li><strong>Independent Drawing:</strong> Each canvas context calls its
+internal drawing routines independently. Waveform channels, progress
+bars, and cursor overlays are drawn locally from coordinate
+<code>x = 0</code> up to that canvas element's specific width,
+accurately representing that fragment of time.</li>
+</ul>
+<h3 id="dom-structure-and-layout">DOM Structure and Layout</h3>
+<p>To present the segmented canvases as a unified waveform,
+Wavesurfer.js places all generated <code>&lt;canvas&gt;</code> elements
+inside a single, scrollable wrapper container.</p>
+<p>The styling sets the canvases to display inline-block or as flex
+children with zero margins and paddings. Because each canvas slice
+matches the exact pixel boundaries of the underlying audio slice, they
+align seamlessly side by side. To the end user, the interface appears as
+an uninterrupted, continuous waveform graphic that scrolls smoothly
+regardless of the audio file's total length.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-wavesurfer-js-slices-canvases-for-long-audio';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

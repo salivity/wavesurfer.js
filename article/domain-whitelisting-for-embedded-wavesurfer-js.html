@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Whitelisting for Embedded Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Securing embedded Wavesurfer.js audio players requires verifying that media files and playback interfaces run exclusively on approved domains. Because Wavesurfer.js is a client-side JavaScript library relying on the Web Audio API or HTML5 Media Elements,">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/domain-whitelisting-for-embedded-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Domain Whitelisting for Embedded Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/domain-whitelisting-for-embedded-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Securing embedded Wavesurfer.js audio players requires verifying that media files and playback interfaces run exclusively on approved domains. Because Wavesurfer.js is a client-side JavaScript library relying on the Web Audio API or HTML5 Media Elements," />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="domain-whitelisting-for-embedded-wavesurferjs">Domain
+Whitelisting for Embedded Wavesurfer.js</h1>
+<p>Securing embedded Wavesurfer.js audio players requires verifying that
+media files and playback interfaces run exclusively on approved domains.
+Because Wavesurfer.js is a client-side JavaScript library relying on the
+Web Audio API or HTML5 Media Elements, securing an embedded instance
+requires combining client-side host environment inspections, strict
+Cross-Origin Resource Sharing (CORS) configurations, and server-side
+HTTP header validations to effectively restrict playback to whitelisted
+sites.</p>
+<h3 id="client-side-hostname-inspection">Client-Side Hostname
+Inspection</h3>
+<p>When serving Wavesurfer.js via a standalone script, the player can
+inspect the execution context directly before initializing the audio
+visualizer.</p>
+<ul>
+<li><strong>Direct Hostname Matching:</strong> The script evaluates
+<code>window.location.hostname</code> against an array of approved
+domains. If the current hostname is absent from the whitelist, player
+initialization (such as <code>WaveSurfer.create()</code>) is
+aborted.</li>
+<li><strong>Iframe Ancestor Verification:</strong> If the player is
+delivered via an <code>&lt;iframe&gt;</code>, relying on
+<code>window.location.hostname</code> only reflects the player's host,
+not the embedding site. To verify the parent domain, the script checks
+<code>document.referrer</code> or queries
+<code>window.location.ancestorOrigins</code> (where supported). If the
+parent domain does not match the whitelist, the player interface remains
+inactive or displays an unauthorized notice.</li>
+</ul>
+<h3 id="web-audio-cors-enforcement">Web Audio CORS Enforcement</h3>
+<p>Wavesurfer.js typically renders waveform visual data by fetching the
+audio file via an <code>XMLHttpRequest</code> or <code>fetch</code>
+request and decoding it into an <code>AudioBuffer</code> through the Web
+Audio API. This architectural requirement makes CORS an effective
+gatekeeper.</p>
+<ul>
+<li><strong>Strict <code>Access-Control-Allow-Origin</code>
+Headers:</strong> The media server or CDN hosting the audio tracks must
+not use a wildcard (<code>*</code>). Instead, it dynamically validates
+the incoming <code>Origin</code> header against an internal whitelist
+and returns the exact matching domain in the
+<code>Access-Control-Allow-Origin</code> header.</li>
+<li><strong>Denial of Web Audio Decoding:</strong> If an unauthorized
+website attempts to embed the player and point it to the media file, the
+browser's CORS policy blocks the binary audio transfer. Without the
+decoded audio data, Wavesurfer.js cannot render the waveform or process
+playback.</li>
+</ul>
+<h3 id="server-side-origin-and-referer-filtering">Server-Side Origin and
+Referer Filtering</h3>
+<p>Because client-side checks can be bypassed or manipulated by
+technically sophisticated users, the server delivering the audio assets
+and the embed scripts must perform validation checks on incoming HTTP
+requests.</p>
+<ul>
+<li><strong>HTTP Referer Verification:</strong> Media servers should
+inspect the <code>Referer</code> request header. If the referer’s base
+domain does not match the approved whitelist, the server returns an
+<code>HTTP 403 Forbidden</code> response.</li>
+<li><strong>HTTP Origin Header Matching:</strong> For cross-origin fetch
+operations initiated by Wavesurfer.js, the <code>Origin</code> header is
+automatically appended by the browser and cannot be altered by
+client-side JavaScript. Verifying the <code>Origin</code> on
+asset-serving endpoints ensures that the requesting context belongs to
+an authorized partner.</li>
+</ul>
+<h3 id="time-limited-signed-tokens">Time-Limited Signed Tokens</h3>
+<p>To counter referer spoofing and prevent direct link scraping, domain
+whitelisting is often paired with signed tokens. The parent domain
+requests a short-lived authorization token (such as a JSON Web Token)
+tied to both the user's session and the permitted host. When
+Wavesurfer.js requests the audio track or audio peaks data, it passes
+this token via URL query parameters or request headers. The server
+verifies that the token's embedded domain claim matches the current
+request environment before streaming the audio stream to the player.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/domain-whitelisting-for-embedded-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

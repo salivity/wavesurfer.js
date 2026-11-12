@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Wavesurfer.js iOS Mute Switch Issues - wavesurfer.js</title>
+    <meta name="description" content="When using Wavesurfer.js on iOS devices, audio is frequently muted if the hardware Ring/Silent switch is set to silent. This article explains why this restriction occurs and provides the primary workarounds to ensure audio playback functions regardless of">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/fix-wavesurfer-js-i-os-mute-switch-issues">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fix Wavesurfer.js iOS Mute Switch Issues - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/fix-wavesurfer-js-i-os-mute-switch-issues" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When using Wavesurfer.js on iOS devices, audio is frequently muted if the hardware Ring/Silent switch is set to silent. This article explains why this restriction occurs and provides the primary workarounds to ensure audio playback functions regardless of" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="fix-wavesurferjs-ios-mute-switch-issues">Fix Wavesurfer.js iOS
+Mute Switch Issues</h1>
+<p>When using Wavesurfer.js on iOS devices, audio is frequently muted if
+the hardware Ring/Silent switch is set to silent. This article explains
+why this restriction occurs and provides the primary workarounds to
+ensure audio playback functions regardless of the hardware mute switch
+position, focusing on backend configuration and audio session category
+overrides.</p>
+<h3 id="the-cause-of-the-issue">The Cause of the Issue</h3>
+<p>By default, Wavesurfer.js often relies on the Web Audio API
+(<code>backend: 'WebAudio'</code>). Apple treats Web Audio contexts on
+iOS as "ambient" sound. Under iOS audio session guidelines, ambient
+sounds are immediately silenced whenever the user engages the physical
+Ring/Silent switch on the side of the device, even if the device's media
+volume is turned all the way up.</p>
+<h3 id="solution-1-switch-to-the-mediaelement-backend">Solution 1:
+Switch to the MediaElement Backend</h3>
+<p>The simplest and most reliable way to bypass the hardware silent
+switch in Wavesurfer.js is to use the HTML5 audio element backend
+instead of pure Web Audio. HTML5 <code>&lt;audio&gt;</code> elements are
+categorized by iOS as media playback, which ignores the silent
+switch.</p>
+<p>When initializing Wavesurfer, define the backend as
+<code>MediaElement</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F4A85&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#383351&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">backend</span><span class="op">:</span> <span class="st">&#39;MediaElement&#39;</span><span class="op">,</span> <span class="co">// Bypasses the iOS silent switch</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;/path/to/audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Using <code>MediaElement</code> allows the audio to play aloud like a
+standard video or music player on iOS, regardless of whether the
+physical switch is toggled to mute. Note that in Wavesurfer.js version 7
+and later, <code>MediaElement</code> is largely integrated into the core
+engine by passing an existing HTML media element via the
+<code>media</code> property.</p>
+<h3 id="solution-2-the-html5-audio-context-hack">Solution 2: The HTML5
+Audio Context Hack</h3>
+<p>If your application strictly requires the <code>WebAudio</code>
+backend for visualization accuracy, Web Audio nodes, or precise
+manipulation, you must force the iOS audio session category to switch
+from "ambient" to "playback."</p>
+<p>You can accomplish this by playing a brief, silent audio file through
+an HTML5 <code>&lt;audio&gt;</code> element on the first user
+interaction (such as a "Play" button touch event) before triggering
+Wavesurfer.js:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">unlockIOSAudio</span>() {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> silentAudio <span class="op">=</span> <span class="kw">new</span> <span class="fu">Audio</span>(<span class="st">&#39;data:audio/mp3;base64,//uQxAAAAANIAAAAAExBTUUzLjk4LjIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  silentAudio<span class="op">.</span><span class="fu">play</span>()<span class="op">.</span><span class="fu">then</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    silentAudio<span class="op">.</span><span class="fu">pause</span>()<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    silentAudio<span class="op">.</span><span class="at">currentTime</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  })<span class="op">.</span><span class="fu">catch</span>((err) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(<span class="st">&#39;Audio unlock failed:&#39;</span><span class="op">,</span> err)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Bind this to your initial play or start event</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;playButton&#39;</span>)<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;touchstart&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlockIOSAudio</span>()<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">play</span>()<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>}<span class="op">,</span> { <span class="dt">once</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div>
+<p>Playing an HTML5 audio element alters the global audio category of
+the WebKit process, allowing subsequent sounds produced via the Web
+Audio API inside Wavesurfer.js to continue playing even when the mute
+switch is enabled.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/fix-wavesurfer-js-i-os-mute-switch-issues';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

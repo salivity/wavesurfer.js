@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Securing Wavesurfer.js Embeds with Iframe Sandbox - wavesurfer.js</title>
+    <meta name="description" content="Embedding interactive media players like Wavesurfer.js can expose parent applications to vulnerabilities if third-party content or user-provided audio files are rendered without proper isolation. Using the HTML iframe sandbox attribute restricts the embed">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/securing-wavesurfer-js-embeds-with-iframe-sandbox">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Securing Wavesurfer.js Embeds with Iframe Sandbox - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/securing-wavesurfer-js-embeds-with-iframe-sandbox" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Embedding interactive media players like Wavesurfer.js can expose parent applications to vulnerabilities if third-party content or user-provided audio files are rendered without proper isolation. Using the HTML iframe sandbox attribute restricts the embed" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="securing-wavesurferjs-embeds-with-iframe-sandbox">Securing
+Wavesurfer.js Embeds with Iframe Sandbox</h1>
+<p>Embedding interactive media players like Wavesurfer.js can expose
+parent applications to vulnerabilities if third-party content or
+user-provided audio files are rendered without proper isolation. Using
+the HTML <code>iframe</code> <code>sandbox</code> attribute restricts
+the embedded player's environment according to the principle of least
+privilege, preventing malicious code execution, unauthorized data
+access, and UI hijacking while retaining the visual rendering and audio
+playback capabilities of Wavesurfer.js.</p>
+<h3 id="how-the-sandbox-attribute-works">How the <code>sandbox</code>
+Attribute Works</h3>
+<p>The <code>sandbox</code> attribute acts as an all-or-nothing security
+barrier by default. Adding <code>sandbox</code> to an
+<code>&lt;iframe&gt;</code> without any tokens strips away almost all
+browser privileges from the embedded document:</p>
+<ul>
+<li>Scripts are completely disabled.</li>
+<li>The content is treated as being from a unique, arbitrary
+origin.</li>
+<li>Forms, popups, and top-level navigation are blocked.</li>
+<li>Access to cookies, local storage, and device APIs is severed.</li>
+</ul>
+<p>To run Wavesurfer.js inside a sandboxed frame, specific capabilities
+must be selectively re-enabled using granular tokens.</p>
+<h3 id="necessary-permissions-for-wavesurferjs">Necessary Permissions
+for Wavesurfer.js</h3>
+<p>Wavesurfer.js relies heavily on JavaScript, the HTML5 Canvas API, and
+the Web Audio API to decode audio buffers and render waveforms.
+Consequently, a fully locked-down sandbox will prevent it from
+loading.</p>
+<p>To function properly, the embed requires:</p>
+<ul>
+<li><strong><code>allow-scripts</code></strong>: Permits the execution
+of JavaScript, which is necessary for Wavesurfer.js to decode audio
+files, instantiate Web Audio API nodes, and draw the waveform onto the
+<code>&lt;canvas&gt;</code> element.</li>
+</ul>
+<p>If the audio source resides on a remote server, the audio file must
+be served with standard Cross-Origin Resource Sharing (CORS) headers
+(<code>Access-Control-Allow-Origin</code>) so the sandboxed iframe can
+fetch the audio buffer via <code>fetch</code> or
+<code>XMLHttpRequest</code>.</p>
+<h3 id="restricting-unneeded-permissions">Restricting Unneeded
+Permissions</h3>
+<p>By only providing <code>allow-scripts</code>, the sandbox
+automatically neutralizes a wide range of attack vectors that an audio
+player has no legitimate reason to access:</p>
+<ul>
+<li><strong>Blocking Phishing and Redirection
+(<code>allow-top-navigation</code> omitted):</strong> Audio embeds
+should never dictate the parent window's location. By omitting
+<code>allow-top-navigation</code> and
+<code>allow-top-navigation-by-user-activation</code>, a compromised
+player or malicious audio metadata cannot redirect the user to a
+malicious website.</li>
+<li><strong>Preventing Credential Harvesting (<code>allow-forms</code>
+omitted):</strong> Wavesurfer.js only needs playback controls and
+timeline interaction. Omission of <code>allow-forms</code> ensures no
+hidden input forms can be injected and submitted from within the
+frame.</li>
+<li><strong>Stopping Unsolicited Windows (<code>allow-popups</code>
+omitted):</strong> Omitting this attribute stops the iframe from
+spawning new tabs, windows, or background pop-unders when a user clicks
+the waveform.</li>
+<li><strong>Protecting Parent Storage and Cookies
+(<code>allow-same-origin</code> omitted):</strong> Leaving out
+<code>allow-same-origin</code> forces the iframe into an isolated unique
+origin (<code>null</code>). This isolates the parent application's
+<code>document.cookie</code>, <code>localStorage</code>, and
+<code>sessionStorage</code> from being read or modified by scripts
+running inside the player.</li>
+</ul>
+<h3 id="mitigating-risks-with-combined-tokens">Mitigating Risks with
+Combined Tokens</h3>
+<p>A critical security practice is avoiding the combination of
+<code>allow-scripts</code> and <code>allow-same-origin</code> whenever
+possible. If both attributes are assigned to an iframe hosted on the
+same origin as the parent document, the embedded script can
+programmatically remove the sandbox attribute entirely and bypass all
+security restrictions. Keeping <code>allow-same-origin</code> disabled
+ensures the player cannot escalate its own privileges.</p>
+<h3 id="complementing-with-permissions-policy">Complementing with
+Permissions Policy</h3>
+<p>While the <code>sandbox</code> attribute restricts core DOM and
+window capabilities, the <code>allow</code> attribute (Permissions
+Policy) should be used alongside it to restrict device-level hardware
+APIs. Wavesurfer.js visualizations only require output, not input. You
+should explicitly block access to sensors and media capture devices:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">iframe</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  src</span><span class="op">=</span><span class="st">&quot;https://example.com/wavesurfer-player.html&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ot">  sandbox</span><span class="op">=</span><span class="st">&quot;allow-scripts&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  allow</span><span class="op">=</span><span class="st">&quot;autoplay&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ot">  loading</span><span class="op">=</span><span class="st">&quot;lazy&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  title</span><span class="op">=</span><span class="st">&quot;Audio Player&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">iframe</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>By strictly defining <code>sandbox="allow-scripts"</code> and
+restricting hardware features via Permissions Policy, host sites can
+safely embed Wavesurfer.js while eliminating attack surfaces related to
+cross-site scripting (XSS), credential theft, and unauthorized
+navigation.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/securing-wavesurfer-js-embeds-with-iframe-sandbox';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

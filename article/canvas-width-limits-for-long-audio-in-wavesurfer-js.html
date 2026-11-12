@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Width Limits for Long Audio in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Rendering extended audio tracks in Wavesurfer.js often causes waveforms to distort, disappear, or crash the browser due to hardware- and browser-enforced HTML5 canvas limits. When a long audio track is drawn at high resolution or zoomed in, the required p">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/canvas-width-limits-for-long-audio-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Canvas Width Limits for Long Audio in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/canvas-width-limits-for-long-audio-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Rendering extended audio tracks in Wavesurfer.js often causes waveforms to distort, disappear, or crash the browser due to hardware- and browser-enforced HTML5 canvas limits. When a long audio track is drawn at high resolution or zoomed in, the required p" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="canvas-width-limits-for-long-audio-in-wavesurferjs">Canvas Width
+Limits for Long Audio in Wavesurfer.js</h1>
+<p>Rendering extended audio tracks in Wavesurfer.js often causes
+waveforms to distort, disappear, or crash the browser due to hardware-
+and browser-enforced HTML5 canvas limits. When a long audio track is
+drawn at high resolution or zoomed in, the required pixel width
+frequently exceeds the maximum dimensions permitted for a single canvas
+element. Understanding these browser thresholds, how high-DPI scaling
+compounds the problem, and how Wavesurfer.js addresses multi-canvas
+rendering is essential for building stable audio applications.</p>
+<h3 id="the-underlying-browser-limits">The Underlying Browser
+Limits</h3>
+<p>The HTML5 <code>&lt;canvas&gt;</code> element relies on underlying
+GPU and browser rendering engines, which impose hard maximum limits on
+dimensions and total surface area:</p>
+<ul>
+<li><strong>Maximum Width/Height:</strong> Most modern desktop browsers
+(Chrome, Firefox, Edge) restrict a single canvas dimension to 32,767
+pixels. Some configurations support up to 65,535 pixels, while Safari on
+iOS and macOS historically restricts dimensions to 4,096 pixels
+depending on available memory.</li>
+<li><strong>Maximum Area:</strong> Even if the width remains under the
+absolute dimension limit, browsers enforce a total area ceiling
+(commonly 16.7 megapixels in Safari and mobile browsers, or roughly 268
+megapixels in desktop Chrome). Exceeding this boundary causes the canvas
+to clear completely or fail allocation.</li>
+</ul>
+<h3 id="how-wavesurferjs-triggers-the-boundary">How Wavesurfer.js
+Triggers the Boundary</h3>
+<p>In Wavesurfer.js, the total horizontal space required for a waveform
+is determined by multiplying the duration of the audio (in seconds) by
+the <code>minPxPerSec</code> (minimum pixels per second) configuration
+parameter:</p>
+<p><span class="math display">\[\text{Total Width} = \text{Duration}
+\times \text{minPxPerSec}\]</span></p>
+<p>A standard 60-minute podcast (3,600 seconds) configured with a
+moderate zoom level of 50 pixels per second requires a canvas width of
+180,000 pixels. This far exceeds the 32,767-pixel maximum on desktop
+engines and immediately breaks mobile browsers.</p>
+<p>When this threshold is crossed, the browser fails to allocate the
+graphics buffer. As a result, the waveform fails to render, renders only
+partially, displays blank space, or causes memory leaks that crash the
+tab.</p>
+<h3 id="the-impact-of-device-pixel-ratio-dpi-scaling">The Impact of
+Device Pixel Ratio (DPI Scaling)</h3>
+<p>Modern displays typically have a device pixel ratio
+(<code>window.devicePixelRatio</code>) of 2x (Retina) or 3x
+(smartphones). Wavesurfer.js scales the internal canvas resolution to
+match the display density so the waveform remains sharp:</p>
+<p><span class="math display">\[\text{Internal Canvas Width} = \text{CSS
+Width} \times \text{devicePixelRatio}\]</span></p>
+<p>On a 2x Retina screen, a CSS width of 20,000 pixels requires an
+internal canvas width of 40,000 pixels. This pushes the canvas past
+browser maximum limits twice as fast as on standard-definition
+displays.</p>
+<h3 id="mitigation-strategies-in-wavesurferjs">Mitigation Strategies in
+Wavesurfer.js</h3>
+<p>To prevent these rendering failures when handling long audio files,
+several strategies are employed:</p>
+<h4 id="1-multi-canvas-chunking">1. Multi-Canvas Chunking</h4>
+<p>Older versions of Wavesurfer.js (v6 and earlier) mitigated width
+limits by default through multi-canvas rendering. Instead of generating
+a single canvas, the library dynamically split the waveform into a
+sequence of smaller canvas elements (typically 4,000 pixels wide each)
+positioned side by side inside a scrollable container.</p>
+<h4 id="2-virtualization-and-viewport-only-rendering">2. Virtualization
+and Viewport-Only Rendering</h4>
+<p>Wavesurfer.js v7 redesigned the rendering pipeline to draw only the
+visible portion of the waveform rather than pre-rendering the entire
+audio track into the DOM. By rendering only what is inside the current
+viewport and updating dynamically on scroll, memory usage remains fixed
+regardless of audio length.</p>
+<h4 id="3-tuning-pixelratio-and-zoom-levels">3. Tuning
+<code>pixelRatio</code> and Zoom Levels</h4>
+<p>Developers can explicitly manage rendering strain by configuring the
+<code>pixelRatio</code> option. Setting <code>pixelRatio: 1</code>
+prevents Retina upscaling, halving or tripling the canvas memory
+footprint on high-density screens. Additionally, limiting excessive
+<code>minPxPerSec</code> values ensures the total pixel requirement
+stays within safe rendering margins for non-virtualized setups.</p>
+<h4 id="4-pre-computed-peaks">4. Pre-computed Peaks</h4>
+<p>Using pre-computed waveform peak data significantly reduces the
+memory overhead associated with decoding large audio buffers in the Web
+Audio API, leaving more browser memory available for graphics
+allocation.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/canvas-width-limits-for-long-audio-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

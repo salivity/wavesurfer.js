@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Use CanvasGradient in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Yes, CanvasGradient objects can be assigned directly to the waveColor property in Wavesurfer.js. Because Wavesurfer.js utilizes the HTML5 Canvas 2D API for rendering waveforms, properties like waveColor and progressColor accept any valid canvas fill style">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/how-to-use-canvas-gradient-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="How to Use CanvasGradient in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/how-to-use-canvas-gradient-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Yes, CanvasGradient objects can be assigned directly to the waveColor property in Wavesurfer.js. Because Wavesurfer.js utilizes the HTML5 Canvas 2D API for rendering waveforms, properties like waveColor and progressColor accept any valid canvas fill style" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="how-to-use-canvasgradient-in-wavesurferjs">How to Use
+CanvasGradient in Wavesurfer.js</h1>
+<p>Yes, <code>CanvasGradient</code> objects can be assigned directly to
+the <code>waveColor</code> property in Wavesurfer.js. Because
+Wavesurfer.js utilizes the HTML5 Canvas 2D API for rendering waveforms,
+properties like <code>waveColor</code> and <code>progressColor</code>
+accept any valid canvas fill style, including solid color strings,
+patterns, and linear or radial gradients. This article explains how the
+integration works, provides a practical implementation example, and
+covers essential considerations such as gradient dimensions and dynamic
+resizing.</p>
+<h2 id="how-wavesurferjs-handles-gradients">How Wavesurfer.js Handles
+Gradients</h2>
+<p>Under the hood, Wavesurfer.js assigns the values of
+<code>waveColor</code> and <code>progressColor</code> directly to the
+<code>fillStyle</code> property of the rendering canvas context. Because
+the HTML5 Canvas <code>fillStyle</code> property accepts a
+<code>CanvasGradient</code> object, Wavesurfer.js can natively render
+gradients without third-party plugins or complex configuration.</p>
+<p>To use a gradient, you generate a <code>CanvasGradient</code>
+instance using standard canvas methods and pass that instance to the
+<code>WaveSurfer.create()</code> configuration object.</p>
+<h2 id="implementation-example">Implementation Example</h2>
+<p>To create a gradient, instantiate an off-screen canvas element or
+context, build the linear gradient, and apply color stops before
+initializing Wavesurfer.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Create a dummy canvas to generate the CanvasGradient</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> canvas <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">createElement</span>(<span class="st">&#39;canvas&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ctx <span class="op">=</span> canvas<span class="op">.</span><span class="fu">getContext</span>(<span class="st">&#39;2d&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Define the gradient dimensions (x0, y0, x1, y1)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// For a vertical gradient matching a 128px high waveform:</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> waveGradient <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">128</span>)<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>waveGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="dv">0</span><span class="op">,</span> <span class="st">&#39;#ff5e62&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>waveGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="dv">1</span><span class="op">,</span> <span class="st">&#39;#ff9966&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Define an optional progress gradient</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> progressGradient <span class="op">=</span> ctx<span class="op">.</span><span class="fu">createLinearGradient</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">128</span>)<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>progressGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="dv">0</span><span class="op">,</span> <span class="st">&#39;#4facfe&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>progressGradient<span class="op">.</span><span class="fu">addColorStop</span>(<span class="dv">1</span><span class="op">,</span> <span class="st">&#39;#00f2fe&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">// 4. Initialize Wavesurfer with the gradients</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">height</span><span class="op">:</span> <span class="dv">128</span><span class="op">,</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> waveGradient<span class="op">,</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> progressGradient<span class="op">,</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;/path/to/audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h2 id="key-considerations">Key Considerations</h2>
+<h3 id="coordinate-matching">Coordinate Matching</h3>
+<p>A <code>CanvasGradient</code> relies on fixed pixel coordinates. If
+you set a vertical gradient using
+<code>createLinearGradient(0, 0, 0, 128)</code>, the coordinate range
+(<code>0</code> to <code>128</code>) must match the <code>height</code>
+option passed to Wavesurfer. If the waveform container height differs
+from the gradient's coordinate boundaries, the gradient may appear cut
+off, stretched, or solid.</p>
+<h3 id="horizontal-gradients">Horizontal Gradients</h3>
+<p>While vertical gradients depend only on the waveform height,
+horizontal gradients require the width of the waveform container.
+Because canvas containers often have responsive widths, a horizontal
+gradient must be calculated based on the actual pixel width of the
+container element at render time.</p>
+<h3 id="responsive-resizing">Responsive Resizing</h3>
+<p>If your player allows dynamic resizing or re-renders on window size
+changes, you must recreate the <code>CanvasGradient</code> with updated
+dimensions and apply it using
+<code>wavesurfer.setOptions({ waveColor: newGradient })</code> to
+maintain proper color distribution.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/how-to-use-canvas-gradient-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

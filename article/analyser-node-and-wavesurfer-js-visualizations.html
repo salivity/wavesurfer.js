@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnalyserNode and Wavesurfer.js Visualizations - wavesurfer.js</title>
+    <meta name="description" content="Coupling the Web Audio API’s AnalyserNode with Wavesurfer.js transforms standard, static waveform previews into dynamic, multi-dimensional audio experiences. While Wavesurfer.js excels at rendering pre-computed peak data for navigation and playback contro">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/analyser-node-and-wavesurfer-js-visualizations">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="AnalyserNode and Wavesurfer.js Visualizations - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/analyser-node-and-wavesurfer-js-visualizations" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Coupling the Web Audio API’s AnalyserNode with Wavesurfer.js transforms standard, static waveform previews into dynamic, multi-dimensional audio experiences. While Wavesurfer.js excels at rendering pre-computed peak data for navigation and playback contro" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="analysernode-and-wavesurferjs-visualizations">AnalyserNode and
+Wavesurfer.js Visualizations</h1>
+<p>Coupling the Web Audio API’s AnalyserNode with Wavesurfer.js
+transforms standard, static waveform previews into dynamic,
+multi-dimensional audio experiences. While Wavesurfer.js excels at
+rendering pre-computed peak data for navigation and playback control,
+the AnalyserNode extracts real-time frequency and time-domain data
+directly from the audio stream. By bridging these two tools, developers
+can build synchronized, high-performance visualizers such as live
+spectrum analyzers, oscilloscopes, reactive particles, and hybrid audio
+dashboards.</p>
+<h3 id="real-time-frequency-spectrum-analyzers">Real-Time Frequency
+Spectrum Analyzers</h3>
+<p>The primary benefit of integrating an AnalyserNode is tapping into
+Fast Fourier Transform (FFT) data using
+<code>getByteFrequencyData()</code>. While Wavesurfer.js tracks overall
+track progress, the AnalyserNode can feed a secondary
+<code>&lt;canvas&gt;</code> element to display real-time frequency bars.
+This setup creates live visual equalizers (EQ bars), showing energy
+distributions across sub-bass, midrange, and treble frequencies directly
+above or behind the interactive waveform track.</p>
+<h3 id="dynamic-oscilloscopes-and-time-domain-waves">Dynamic
+Oscilloscopes and Time-Domain Waves</h3>
+<p>Wavesurfer.js generally plots an entire file's amplitude profile
+across a static timeline. By calling
+<code>getByteTimeDomainData()</code> from the AnalyserNode, you can
+render an instantaneous oscilloscope view. This visualization shows the
+raw audio wave as it currently hits the speakers, revealing phase
+shifts, transient spikes, and zero-crossings that a pre-rendered,
+downsampled waveform cannot display.</p>
+<h3 id="radial-and-circular-visualizations">Radial and Circular
+Visualizations</h3>
+<p>Instead of traditional linear graphs, real-time frequency bins can be
+plotted in polar coordinates to create circular audio visualizers. In
+this architecture, Wavesurfer.js handles file decoding, transport
+controls (play, pause, seek), and audio routing, while the AnalyserNode
+powers an animated circular HUD or pulsing speaker ring that reacts to
+volume and frequency changes on every animation frame.</p>
+<h3 id="spectrograms-and-waterfall-displays">Spectrograms and Waterfall
+Displays</h3>
+<p>Although Wavesurfer.js provides a dedicated Spectrogram plugin,
+coupling a custom AnalyserNode allows for rolling "waterfall" plots. In
+this mode, incoming frequency slices scroll continuously across the
+screen, mapping frequencies to the vertical axis and amplitude to color
+intensity. This approach is particularly effective for real-time speech
+analysis, sound design, and identifying feedback frequencies during
+playback.</p>
+<h3 id="audio-reactive-ui-and-particle-systems">Audio-Reactive UI and
+Particle Systems</h3>
+<p>Frequency thresholds can be isolated to drive interactive WebGL or
+Canvas 2D effects. By computing the average value of specific frequency
+ranges (such as low-end bass frequencies between 20 Hz and 120 Hz),
+developers can trigger rhythmic UI animations:</p>
+<ul>
+<li>Pulsing glow effects behind the Wavesurfer.js timeline that expand
+on bass drops.</li>
+<li>Dynamic playheads that scale, vibrate, or change color based on
+track intensity.</li>
+<li>Particle engines where particle velocity, size, and emission rates
+correspond to mid and high-frequency transients.</li>
+</ul>
+<h3 id="multi-layer-hybrid-monitoring-dashboards">Multi-Layer Hybrid
+Monitoring Dashboards</h3>
+<p>By sharing the underlying <code>AudioContext</code> created by
+Wavesurfer.js, the AnalyserNode can operate concurrently with other Web
+Audio nodes (such as BiquadFilterNode or GainNode). This enables
+professional mastering suites directly in the browser, pairing
+Wavesurfer’s macro-level timeline scrubbing with micro-level,
+frame-by-frame phase meters, vectorscopes, and stereo field
+visualizers.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/analyser-node-and-wavesurfer-js-visualizations';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

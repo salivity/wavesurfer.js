@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Render Rounded Bar Peaks in Wavesurfer.js Canvas - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js utilizes the HTML5 Canvas 2D API to render waveform visualizations, offering options to display audio amplitude data as discrete vertical bars with rounded tops or ends. This article breaks down the specific Canvas API methods and path-gener">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/render-rounded-bar-peaks-in-wavesurfer-js-canvas">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Render Rounded Bar Peaks in Wavesurfer.js Canvas - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/render-rounded-bar-peaks-in-wavesurfer-js-canvas" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js utilizes the HTML5 Canvas 2D API to render waveform visualizations, offering options to display audio amplitude data as discrete vertical bars with rounded tops or ends. This article breaks down the specific Canvas API methods and path-gener" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="render-rounded-bar-peaks-in-wavesurferjs-canvas">Render Rounded
+Bar Peaks in Wavesurfer.js Canvas</h1>
+<p>Wavesurfer.js utilizes the HTML5 Canvas 2D API to render waveform
+visualizations, offering options to display audio amplitude data as
+discrete vertical bars with rounded tops or ends. This article breaks
+down the specific Canvas API methods and path-generation techniques
+Wavesurfer.js relies on to draw rounded bar peaks when the
+<code>barRadius</code> parameter is configured.</p>
+<h3 id="the-native-method-roundrect">The Native Method:
+<code>roundRect()</code></h3>
+<p>In modern iterations of Wavesurfer.js (such as version 7), the
+library primarily utilizes the native Canvas API method:</p>
+<ul>
+<li><strong><code>ctx.roundRect(x, y, width, height, [radii])</code></strong>:
+Defines a path for a rectangle with rounded corners directly on the
+canvas context. When rendering a bar with a rounded peak, <code>x</code>
+and <code>y</code> specify the bar coordinates, while <code>width</code>
+and <code>height</code> correspond to the calculated bar dimensions
+based on audio amplitude. The <code>radii</code> parameter accepts
+either an individual number or an array of values (e.g.,
+<code>[radius, radius, 0, 0]</code>) to round only the top corners
+(peaks) while leaving the base flat.</li>
+</ul>
+<h3 id="path-construction-fallback-and-legacy-approaches">Path
+Construction: Fallback and Legacy Approaches</h3>
+<p>When targeting environments where <code>roundRect</code> is not
+supported, or in older versions of the library, Wavesurfer.js calculates
+the geometry manually using standard path-drawing primitives:</p>
+<ul>
+<li><strong><code>ctx.beginPath()</code></strong>: Clears the current
+sub-paths and starts a new vector path for each audio bar.</li>
+<li><strong><code>ctx.moveTo(x, y)</code></strong>: Moves the virtual
+pen to the starting vertex of the bar, typically at the base corner or
+below the rounded peak.</li>
+<li><strong><code>ctx.lineTo(x, y)</code></strong>: Draws straight
+segments along the sides of the bar leading up to the start of the
+rounded corner.</li>
+<li><strong><code>ctx.arcTo(x1, y1, x2, y2, radius)</code></strong>:
+Constructs the rounded peak. By supplying tangent points and a radius
+derived from the <code>barRadius</code> option, <code>arcTo()</code>
+inserts circular arcs smoothly connecting the vertical edges to the
+horizontal top.</li>
+<li><strong><code>ctx.arc(x, y, radius, startAngle, endAngle)</code></strong>:
+Used alternatively to draw a half-circle cap across the entire top width
+of the bar when the peak is fully rounded.</li>
+<li><strong><code>ctx.closePath()</code></strong>: Connects the path
+back to the origin coordinates at the baseline to create an enclosed
+shape.</li>
+</ul>
+<h3 id="applying-fills-and-styles">Applying Fills and Styles</h3>
+<p>Once the outline of the rounded bar is calculated, the shape is
+rendered using the configured waveform color:</p>
+<ul>
+<li><strong><code>ctx.fillStyle</code></strong>: Sets the color or
+gradient for the waveform.</li>
+<li><strong><code>ctx.fill()</code></strong>: Fills the interior
+geometry defined by <code>roundRect()</code> or the custom path
+commands, finalizing the rendering of the rounded peak.</li>
+</ul>
+<h3 id="line-cap-rendering-for-symmetrical-bars">Line-Cap Rendering for
+Symmetrical Bars</h3>
+<p>When rendering waveforms centered across a zero-axis where individual
+vertical strokes represent bars, Wavesurfer.js can also create rounded
+peaks via line styles rather than filled shapes:</p>
+<ul>
+<li><strong><code>ctx.lineWidth</code></strong>: Sets the thickness of
+the bar to the specified <code>barWidth</code>.</li>
+<li><strong><code>ctx.lineCap = 'round'</code></strong>: Automatically
+rounds both the top and bottom endpoints of any drawn path segment.</li>
+<li><strong><code>ctx.stroke()</code></strong>: Renders the vertical
+line segment created with <code>moveTo()</code> and
+<code>lineTo()</code>, producing semicircular caps at the amplitude
+peaks without requiring complex path arcs.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/render-rounded-bar-peaks-in-wavesurfer-js-canvas';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

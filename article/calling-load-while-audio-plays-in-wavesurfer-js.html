@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calling load() While Audio Plays in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Calling the load() method while audio is actively playing in Wavesurfer.js immediately halts playback, clears the current audio buffer, resets the waveform display, and initiates the process of fetching and decoding the new track. This article explains th">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/calling-load-while-audio-plays-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Calling load() While Audio Plays in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/calling-load-while-audio-plays-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Calling the load() method while audio is actively playing in Wavesurfer.js immediately halts playback, clears the current audio buffer, resets the waveform display, and initiates the process of fetching and decoding the new track. This article explains th" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="calling-load-while-audio-plays-in-wavesurferjs">Calling load()
+While Audio Plays in Wavesurfer.js</h1>
+<p>Calling the <code>load()</code> method while audio is actively
+playing in Wavesurfer.js immediately halts playback, clears the current
+audio buffer, resets the waveform display, and initiates the process of
+fetching and decoding the new track. This article explains the technical
+sequence of events triggered by this action, including how the
+underlying media element behaves, which lifecycle events are fired, and
+how to avoid common race conditions or unhandled promise rejections.</p>
+<h3 id="immediate-playback-halt-and-state-reset">Immediate Playback Halt
+and State Reset</h3>
+<p>When <code>load()</code> is executed during playback, Wavesurfer.js
+immediately pauses the internal audio engine—whether using the standard
+HTML5 <code>HTMLMediaElement</code> (default in v7) or a Web Audio API
+backend. The current playback position is discarded, the active audio
+stream is detached, and the internal time counter resets to
+<code>0</code>.</p>
+<p>The current waveform visuals are cleared from the canvas. Depending
+on your configuration and the version of Wavesurfer.js, the container
+will either render an empty canvas, display a loading progress bar, or
+hold until the new audio peaks are ready to be drawn.</p>
+<h3 id="event-lifecycle-changes">Event Lifecycle Changes</h3>
+<p>Calling <code>load()</code> interrupts the normal flow of the
+currently playing track and triggers a distinct sequence of events:</p>
+<ol type="1">
+<li><strong>Pause Event:</strong> A <code>pause</code> event is
+dispatched as the playing track is forced to stop.</li>
+<li><strong>Loading Events:</strong> The library emits
+<code>loading</code> (or <code>load</code> in v7), signaling the start
+of the HTTP request and the decoding process for the new audio
+source.</li>
+<li><strong>Ready Event:</strong> Once the new audio data is completely
+fetched and the waveform peaks are calculated, the <code>ready</code>
+event fires.</li>
+</ol>
+<p>Because playback was aborted by loading a new resource, the
+<code>finish</code> event for the original track will not fire.</p>
+<h3 id="playback-does-not-automatically-resume">Playback Does Not
+Automatically Resume</h3>
+<p>Calling <code>load()</code> does not preserve the playback state
+across tracks. Once the new file finishes loading and rendering,
+Wavesurfer.js remains in a paused state at time <code>0</code>. If
+continuous playback is required, you must explicitly listen for the
+<code>ready</code> event and call <code>play()</code>
+programmatically:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;new-audio.mp3&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">once</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">play</span>()<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="potential-promise-rejections-and-race-conditions">Potential
+Promise Rejections and Race Conditions</h3>
+<p>Modern browsers return a <code>Promise</code> when initiating
+playback via the HTML5 audio element's <code>.play()</code> method. If
+<code>load()</code> is invoked immediately after a <code>.play()</code>
+call while that promise is still pending, the browser may throw an
+<code>AbortError</code> with the message: <em>"The play() request was
+interrupted by a call to pause() or load()".</em></p>
+<p>To avoid unhandled rejection warnings in your application, ensure
+that any manual <code>.play()</code> calls gracefully handle promise
+rejections before triggering subsequent <code>load()</code>
+operations:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">play</span>()<span class="op">.</span><span class="fu">catch</span>((error) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (error<span class="op">.</span><span class="at">name</span> <span class="op">!==</span> <span class="st">&#39;AbortError&#39;</span>) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">console</span><span class="op">.</span><span class="fu">error</span>(error)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/calling-load-while-audio-plays-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

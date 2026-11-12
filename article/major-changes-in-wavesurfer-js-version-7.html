@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Major Changes in Wavesurfer.js Version 7 - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js version 7 marks a complete architectural rewrite of the popular open-source web audio visualization library, modernizing its codebase and improving performance. This release transitions the project to TypeScript, significantly reduces the pa">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/major-changes-in-wavesurfer-js-version-7">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Major Changes in Wavesurfer.js Version 7 - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/major-changes-in-wavesurfer-js-version-7" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js version 7 marks a complete architectural rewrite of the popular open-source web audio visualization library, modernizing its codebase and improving performance. This release transitions the project to TypeScript, significantly reduces the pa" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="major-changes-in-wavesurferjs-version-7">Major Changes in
+Wavesurfer.js Version 7</h1>
+<p>Wavesurfer.js version 7 marks a complete architectural rewrite of the
+popular open-source web audio visualization library, modernizing its
+codebase and improving performance. This release transitions the project
+to TypeScript, significantly reduces the package bundle size, introduces
+a streamlined plugin ecosystem, and switches to HTML5 Audio by default
+for superior handling of large audio files. The following breakdown
+covers the essential changes and technical improvements introduced in
+this major release.</p>
+<h3 id="typescript-rewrite-and-zero-dependencies">TypeScript Rewrite and
+Zero Dependencies</h3>
+<p>The entire library was rewritten from scratch in TypeScript,
+providing native type definitions and a safer, more predictable
+developer experience without requiring external <code>@types</code>
+packages. Along with this rewrite, all legacy external dependencies were
+removed. Consequently, the core library's bundle size was reduced by
+roughly 70%, dropping from over 40 KB to under 13 KB gzipped.</p>
+<h3 id="html5-audio-by-default">HTML5 Audio by Default</h3>
+<p>In previous versions, Wavesurfer.js relied heavily on the Web Audio
+API to decode entire audio files into memory before rendering, which
+caused performance bottlenecks and crashes with large files. Version 7
+switches to the native HTML5 <code>HTMLMediaElement</code> as its
+primary playback engine. Audio plays immediately while waveform peaks
+can either be rendered progressively, decoded in chunks, or fetched
+externally via precomputed peak data, preventing memory overhead and
+browser freezing.</p>
+<h3 id="modernized-rendering-engine">Modernized Rendering Engine</h3>
+<p>The canvas-based rendering engine was completely redesigned for
+efficiency and aesthetic flexibility. Version 7 supports native
+multi-channel audio rendering directly in the core without requiring
+third-party plugins. The waveform rendering process utilizes device
+pixel ratio adjustments automatically for crisp display on high-DPI
+screens, while also providing native support for modern CSS styling and
+gradient fills.</p>
+<h3 id="redesigned-modular-plugins">Redesigned Modular Plugins</h3>
+<p>The plugin architecture was unified into an explicit, class-based
+system. All official plugins were rewritten to be imported as standalone
+modules rather than relying on global registrations. Major official
+plugins updated for version 7 include:</p>
+<ul>
+<li><strong>Regions:</strong> Rebuilt for flexible segment creation,
+dragging, and marker management.</li>
+<li><strong>Timeline:</strong> Improved canvas-rendered time markers
+with dynamic scaling.</li>
+<li><strong>Record:</strong> Built-in microphone recording directly to
+the visualizer using the MediaRecorder API.</li>
+<li><strong>Minimap, Hover, and Envelope:</strong> Lightweight modules
+for navigation, previewing scrub points, and volume automation.</li>
+</ul>
+<h3 id="simplified-api-and-lifecycle-management">Simplified API and
+Lifecycle Management</h3>
+<p>The primary API methods and options were simplified to follow modern
+JavaScript standards. Method names were consolidated, and asynchronous
+actions now consistently return native JavaScript Promises. The internal
+event emitter was refactored, replacing legacy event patterns with
+standard, type-safe listener methods such as
+<code>wavesurfer.on('eventName', callback)</code>. Additionally,
+instance cleanup via the <code>destroy()</code> method is more thorough,
+preventing DOM leaks and lingering Web Audio contexts.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/major-changes-in-wavesurfer-js-version-7';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

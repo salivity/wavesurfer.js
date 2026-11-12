@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Wavesurfer Byte Data to Canvas Scope Lines - wavesurfer.js</title>
+    <meta name="description" content="Visualizing audio as an oscilloscope trace requires capturing time-domain waveform data and transforming it into two-dimensional canvas coordinates. This guide covers the essential HTML5 Canvas 2D drawing routines and mathematical mapping techniques neede">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/map-wavesurfer-byte-data-to-canvas-scope-lines">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Map Wavesurfer Byte Data to Canvas Scope Lines - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/map-wavesurfer-byte-data-to-canvas-scope-lines" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Visualizing audio as an oscilloscope trace requires capturing time-domain waveform data and transforming it into two-dimensional canvas coordinates. This guide covers the essential HTML5 Canvas 2D drawing routines and mathematical mapping techniques neede" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="map-wavesurfer-byte-data-to-canvas-scope-lines">Map Wavesurfer
+Byte Data to Canvas Scope Lines</h1>
+<p>Visualizing audio as an oscilloscope trace requires capturing
+time-domain waveform data and transforming it into two-dimensional
+canvas coordinates. This guide covers the essential HTML5 Canvas 2D
+drawing routines and mathematical mapping techniques needed to convert
+raw 8-bit time-domain byte data from Wavesurfer.js (or its underlying
+Web Audio <code>AnalyserNode</code>) into continuous scope lines.</p>
+<h3 id="capturing-the-byte-data">Capturing the Byte Data</h3>
+<p>Wavesurfer.js exposes its underlying Web Audio API context. An
+<code>AnalyserNode</code> connected to the audio pipeline produces
+time-domain byte data through a <code>Uint8Array</code>. The values in
+this array range from 0 to 255, where 128 represents the zero-crossing
+(silence), 0 represents the minimum negative amplitude, and 255
+represents the maximum positive amplitude.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> analyser <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">analyser</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> bufferLength <span class="op">=</span> analyser<span class="op">.</span><span class="at">frequencyBinCount</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> dataArray <span class="op">=</span> <span class="kw">new</span> <span class="bu">Uint8Array</span>(bufferLength)<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>analyser<span class="op">.</span><span class="fu">getByteTimeDomainData</span>(dataArray)<span class="op">;</span></span></code></pre></div>
+<h3 id="canvas-coordinate-mapping-routines">Canvas Coordinate Mapping
+Routines</h3>
+<p>To render these bytes as an oscilloscope line, use the standard 2D
+rendering context (<code>CanvasRenderingContext2D</code>). The mapping
+translates array indices to the horizontal <span
+class="math inline">\(X\)</span> axis and byte values to the vertical
+<span class="math inline">\(Y\)</span> axis.</p>
+<h4 id="1-clearing-the-canvas">1. Clearing the Canvas</h4>
+<p>Before drawing each frame, clear previous artifacts or apply a
+semi-transparent fill to create an analog phosphor decay effect:</p>
+<ul>
+<li><code>ctx.clearRect(0, 0, width, height)</code>: Erases previous
+frames entirely for a clean, sharp trace.</li>
+<li><code>ctx.fillRect(0, 0, width, height)</code> (with an alpha
+<code>fillStyle</code>): Retains faint trails of past frames for a
+classic CRT oscilloscope look.</li>
+</ul>
+<h4 id="2-defining-path-geometry">2. Defining Path Geometry</h4>
+<ul>
+<li><code>ctx.beginPath()</code>: Initializes a new path for the
+waveform trace, clearing any sub-paths remaining from previous
+renders.</li>
+<li><code>ctx.moveTo(x, y)</code>: Sets the starting point of the trace
+using the first data byte.</li>
+<li><code>ctx.lineTo(x, y)</code>: Appends line segments from the
+previous coordinate to each successive sample point across the
+canvas.</li>
+</ul>
+<h4 id="3-stroking-the-vector">3. Stroking the Vector</h4>
+<ul>
+<li><code>ctx.lineWidth</code>: Controls trace thickness.</li>
+<li><code>ctx.strokeStyle</code>: Sets the trace color (such as an
+oscilloscope green or cyan).</li>
+<li><code>ctx.stroke()</code>: Rasterizes the continuous path onto the
+canvas surface.</li>
+</ul>
+<h3 id="implementation-routine">Implementation Routine</h3>
+<p>The following routine demonstrates how to map the array buffer into
+pixel coordinates inside an animation loop:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">drawScope</span>(canvas<span class="op">,</span> ctx<span class="op">,</span> analyser<span class="op">,</span> dataArray<span class="op">,</span> bufferLength) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">requestAnimationFrame</span>(() <span class="kw">=&gt;</span> <span class="fu">drawScope</span>(canvas<span class="op">,</span> ctx<span class="op">,</span> analyser<span class="op">,</span> dataArray<span class="op">,</span> bufferLength))<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  analyser<span class="op">.</span><span class="fu">getByteTimeDomainData</span>(dataArray)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Clear frame</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  ctx<span class="op">.</span><span class="at">fillStyle</span> <span class="op">=</span> <span class="st">&#39;rgb(10, 10, 10)&#39;</span><span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  ctx<span class="op">.</span><span class="fu">fillRect</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> canvas<span class="op">.</span><span class="at">width</span><span class="op">,</span> canvas<span class="op">.</span><span class="at">height</span>)<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Configure trace appearance</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  ctx<span class="op">.</span><span class="at">lineWidth</span> <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  ctx<span class="op">.</span><span class="at">strokeStyle</span> <span class="op">=</span> <span class="st">&#39;#00ff66&#39;</span><span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  ctx<span class="op">.</span><span class="fu">beginPath</span>()<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> sliceWidth <span class="op">=</span> canvas<span class="op">.</span><span class="at">width</span> <span class="op">/</span> bufferLength<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> bufferLength<span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Normalize byte (0-255) to 0.0 - 1.0 range</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> v <span class="op">=</span> dataArray[i] <span class="op">/</span> <span class="fl">255.0</span><span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Scale normalized value to canvas height</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> y <span class="op">=</span> v <span class="op">*</span> canvas<span class="op">.</span><span class="at">height</span><span class="op">;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (i <span class="op">===</span> <span class="dv">0</span>) {</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>      ctx<span class="op">.</span><span class="fu">moveTo</span>(x<span class="op">,</span> y)<span class="op">;</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>      ctx<span class="op">.</span><span class="fu">lineTo</span>(x<span class="op">,</span> y)<span class="op">;</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    x <span class="op">+=</span> sliceWidth<span class="op">;</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Draw the full path across the width</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  ctx<span class="op">.</span><span class="fu">lineTo</span>(canvas<span class="op">.</span><span class="at">width</span><span class="op">,</span> canvas<span class="op">.</span><span class="at">height</span> <span class="op">/</span> <span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>  ctx<span class="op">.</span><span class="fu">stroke</span>()<span class="op">;</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="performance-considerations">Performance Considerations</h3>
+<ul>
+<li><strong>Avoid Sub-pixel Path Overload:</strong> If
+<code>bufferLength</code> exceeds the pixel width of the canvas, step
+through the array using increments larger than 1
+(<code>i += Math.ceil(bufferLength / canvas.width)</code>) to prevent
+unnecessary line segments.</li>
+<li><strong>Path Batching:</strong> Keep all segments within a single
+<code>beginPath()</code> and <code>stroke()</code> sequence per frame.
+Invoking <code>stroke()</code> inside the loop introduces significant
+CPU overhead.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/map-wavesurfer-byte-data-to-canvas-scope-lines';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

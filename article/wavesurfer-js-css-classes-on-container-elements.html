@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js CSS Classes on Container Elements - wavesurfer.js</title>
+    <meta name="description" content="This article explains how Wavesurfer.js handles CSS classes on its container elements, detailing why standard core class names are rarely applied to the root container and how styling is implemented across different versions and plugins. While developers">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-css-classes-on-container-elements">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js CSS Classes on Container Elements - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-css-classes-on-container-elements" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how Wavesurfer.js handles CSS classes on its container elements, detailing why standard core class names are rarely applied to the root container and how styling is implemented across different versions and plugins. While developers" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-css-classes-on-container-elements">Wavesurfer.js
+CSS Classes on Container Elements</h1>
+<p>This article explains how Wavesurfer.js handles CSS classes on its
+container elements, detailing why standard core class names are rarely
+applied to the root container and how styling is implemented across
+different versions and plugins. While developers often expect standard
+utility classes to be injected into their target wrapper, Wavesurfer.js
+relies primarily on Shadow DOM encapsulation, inline styles, or
+plugin-specific class hooks rather than cluttering the host container
+element with predefined classes.</p>
+<h2 id="the-root-container-element">The Root Container Element</h2>
+<p>When you initialize Wavesurfer.js by passing a <code>container</code>
+selector or HTMLElement (e.g.,
+<code>WaveSurfer.create({ container: '#waveform' })</code>), the library
+<strong>does not add any CSS class names to your root container
+element</strong>.</p>
+<p>Your root element retains only the classes and attributes you
+manually defined in your HTML. Instead of modifying the outer element's
+class list, Wavesurfer injects internal DOM nodes or attaches a Shadow
+Root directly to that container.</p>
+<h2 id="modern-wavesurferjs-version-7-dom-structure">Modern
+Wavesurfer.js (Version 7+) DOM Structure</h2>
+<p>In Wavesurfer.js v7 and newer, the library underwent a complete
+rewrite focusing on modern Web APIs:</p>
+<ul>
+<li><strong>Shadow DOM:</strong> By default, Wavesurfer attaches an open
+Shadow Root (<code>#shadow-root (open)</code>) inside your specified
+container.</li>
+<li><strong>Inline Styles:</strong> The structural elements—such as the
+main scroll container, the canvas wrapper, and the progress
+container—rely almost entirely on direct inline CSS properties (like
+<code>position: relative</code>, <code>overflow: auto</code>, and
+<code>display: flex</code>) rather than class names.</li>
+<li><strong>Canvas and Cursor:</strong> Elements like
+<code>&lt;canvas&gt;</code> and the playback cursor are generated
+internally without global CSS classes, protecting them from unintended
+stylesheet collisions from your application.</li>
+</ul>
+<p>Because these elements reside inside the Shadow DOM and do not use
+class names, traditional external CSS selectors (like
+<code>.waveform-container .wave</code>) will not affect the core
+rendering elements.</p>
+<h2 id="legacy-wavesurferjs-version-6-and-below">Legacy Wavesurfer.js
+(Version 6 and Below)</h2>
+<p>In older versions of Wavesurfer.js, custom HTML tags and inline
+styles were used instead of CSS classes:</p>
+<ul>
+<li><strong><code>&lt;wave&gt;</code> Elements:</strong> Wavesurfer
+appended a custom HTML tag named <code>&lt;wave&gt;</code> directly into
+your container to act as the primary visual wrapper.</li>
+<li><strong>Progress <code>&lt;wave&gt;</code>:</strong> A second,
+nested <code>&lt;wave&gt;</code> tag was placed inside the primary
+<code>&lt;wave&gt;</code> element to handle the progress clip and
+playback state.</li>
+<li><strong>No Default Container Classes:</strong> Even in legacy
+versions, the outer container element received no automated class names
+unless added via custom JavaScript callbacks.</li>
+</ul>
+<h2 id="plugin-generated-css-class-names">Plugin-Generated CSS Class
+Names</h2>
+<p>While the core library does not generate classes on the main
+container, several official Wavesurfer.js plugins append elements that
+do feature predictable CSS class names. These elements are rendered
+inside the container or the plugin's dedicated mount point:</p>
+<h3 id="1-regions-plugin-wavesurferpluginsregions">1. Regions Plugin
+(<code>@wavesurfer/plugins/regions</code>)</h3>
+<ul>
+<li><strong><code>wavesurfer-region</code></strong>: Assigned to each
+individual region container element.</li>
+<li><strong><code>wavesurfer-handle</code></strong>: Assigned to the
+drag handles on the edges of a region.</li>
+<li><strong><code>wavesurfer-handle-start</code></strong>: Specific
+class for the left/start boundary handle.</li>
+<li><strong><code>wavesurfer-handle-end</code></strong>: Specific class
+for the right/end boundary handle.</li>
+</ul>
+<h3 id="2-timeline-plugin-wavesurferpluginstimeline">2. Timeline Plugin
+(<code>@wavesurfer/plugins/timeline</code>)</h3>
+<ul>
+<li>Modern versions of the timeline plugin inject notched elements with
+inline positioning. In earlier implementations, classes such as
+<strong><code>wavesurfer-timeline</code></strong> or
+<strong><code>wavesurfer-time</code></strong> were used to define
+timeline wrappers and timestamps.</li>
+</ul>
+<h3 id="3-minimap-plugin-wavesurferpluginsminimap">3. Minimap Plugin
+(<code>@wavesurfer/plugins/minimap</code>)</h3>
+<ul>
+<li>The minimap typically renders into an internal wrapper or a
+user-specified container. In legacy implementations, elements could be
+targeted using the <strong><code>wavesurfer-minimap</code></strong>
+class or configured container targets.</li>
+</ul>
+<h2 id="customizing-wavesurfer-styles">Customizing Wavesurfer
+Styles</h2>
+<p>Because Wavesurfer.js does not generate utility classes on the
+container:</p>
+<ol type="1">
+<li><strong>Use Configuration Options:</strong> Customize colors,
+heights, and cursors using the initialization parameters
+(<code>waveColor</code>, <code>progressColor</code>,
+<code>cursorColor</code>, <code>cursorWidth</code>,
+<code>barWidth</code>).</li>
+<li><strong>Target Your Container:</strong> Style the outer dimensions,
+background, and border radius by applying custom CSS classes directly to
+your host <code>&lt;div&gt;</code> before initializing the player.</li>
+<li><strong>Target Plugin Classes:</strong> When using plugins like
+Regions, override the generated classes (such as
+<code>.wavesurfer-region</code>) in your global stylesheet to customize
+handles, borders, and hover effects.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-css-classes-on-container-elements';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

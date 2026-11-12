@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defer Offscreen Peaks in Wavesurfer.js Soundboards - wavesurfer.js</title>
+    <meta name="description" content="Building a soundboard containing dozens or hundreds of audio clips often leads to severe browser performance bottlenecks if every waveform visualizer is rendered at initial page load. When using Wavesurfer.js, initializing multiple instances simultaneousl">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/defer-offscreen-peaks-in-wavesurfer-js-soundboards">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Defer Offscreen Peaks in Wavesurfer.js Soundboards - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/defer-offscreen-peaks-in-wavesurfer-js-soundboards" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Building a soundboard containing dozens or hundreds of audio clips often leads to severe browser performance bottlenecks if every waveform visualizer is rendered at initial page load. When using Wavesurfer.js, initializing multiple instances simultaneousl" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="defer-offscreen-peaks-in-wavesurferjs-soundboards">Defer
+Offscreen Peaks in Wavesurfer.js Soundboards</h1>
+<p>Building a soundboard containing dozens or hundreds of audio clips
+often leads to severe browser performance bottlenecks if every waveform
+visualizer is rendered at initial page load. When using Wavesurfer.js,
+initializing multiple instances simultaneously forces unnecessary audio
+decoding, DOM calculations, and canvas drawing operations for items the
+user cannot currently see. Deferring the rendering of peak
+visualizations for offscreen soundboard tracks significantly reduces
+memory consumption, cuts initial loading times, and preserves smooth
+scrolling. The following techniques outline how to implement this
+deferred rendering efficiently.</p>
+<h3 id="1-intersection-observer-for-lazy-initialization">1. Intersection
+Observer for Lazy Initialization</h3>
+<p>The standard and most effective pattern for deferring rendering is
+utilizing the browser's native <code>IntersectionObserver</code> API.
+Instead of mounting a complete Wavesurfer.js instance for every
+soundboard item during page setup:</p>
+<ul>
+<li>Render a lightweight placeholder element with fixed dimensions
+representing the track.</li>
+<li>Attach an <code>IntersectionObserver</code> to each placeholder with
+a predefined root margin (for example, <code>200px</code>) to start
+rendering slightly before the item enters the viewport.</li>
+<li>Initialize the <code>WaveSurfer.create()</code> instance and trigger
+rendering only when the entry intersects the visible viewport.</li>
+<li>Call <code>observer.unobserve(entry.target)</code> once the waveform
+has finished drawing to release observer resources.</li>
+</ul>
+<h3 id="2-supplying-pre-computed-peaks">2. Supplying Pre-Computed
+Peaks</h3>
+<p>By default, Wavesurfer.js downloads and decodes the entire audio file
+using the Web Audio API to calculate peak data before drawing the
+waveform. When deferred items finally come into view, doing this
+calculations in real time can cause scrolling stutter.</p>
+<p>Extract the peak data on the server during audio upload (using
+utilities like <code>audiowaveform</code>) and store the resulting JSON
+array. Pass this pre-rendered peak data via the <code>peaks</code>
+option in <code>wavesurfer.load(url, peaks)</code>. This bypasses
+client-side audio decoding completely, allowing the canvas to paint the
+waveform instantly upon entering the viewport without taxing the main
+thread.</p>
+<h3 id="3-list-virtualization-and-instance-destruction">3. List
+Virtualization and Instance Destruction</h3>
+<p>For extensive soundboards containing hundreds of clips, merely
+lazy-loading instances is insufficient because keeping hundreds of
+active canvas elements and Web Audio contexts in memory will eventually
+degrade performance.</p>
+<p>Implement DOM virtualization using libraries such as TanStack Virtual
+or custom windowing:</p>
+<ul>
+<li>Mount only the soundboard elements visible in the current viewport
+plus a small buffer.</li>
+<li>When a soundboard item scrolls completely out of view, call
+<code>wavesurfer.destroy()</code> on its instance to release audio
+contexts and clear canvas buffers from GPU memory.</li>
+<li>When the item scrolls back into view, re-instantiate Wavesurfer
+using the cached peak data.</li>
+</ul>
+<h3 id="4-lightweight-canvas-previews">4. Lightweight Canvas
+Previews</h3>
+<p>If a visual indication of the waveform is required before the full
+interactive audio player is needed, separate the visualization from the
+playback engine.</p>
+<p>Render a static, lightweight 2D canvas using the pre-computed peak
+array directly, without initializing Wavesurfer.js. Only instantiate the
+complete Wavesurfer.js player when the user explicitly hovers over,
+interacts with, or clicks the play button on that specific soundboard
+item.</p>
+<h3 id="5-managing-audiocontext-limits">5. Managing AudioContext
+Limits</h3>
+<p>Browsers restrict the number of simultaneously active
+<code>AudioContext</code> instances (often between 6 and 50 depending on
+the browser). Deferred rendering prevents reaching this ceiling on
+initial load. Ensure that deferred Wavesurfer instances either share a
+single global <code>AudioContext</code> via the
+<code>audioContext</code> configuration option or rely solely on HTML5
+Audio elements (<code>backend: 'MediaElement'</code>) until playback is
+actively requested.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/defer-offscreen-peaks-in-wavesurfer-js-soundboards';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

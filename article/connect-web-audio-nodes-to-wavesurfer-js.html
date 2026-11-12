@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Web Audio Nodes to Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Integrating external Web Audio API nodes into Wavesurfer.js allows developers to apply custom effects, dynamic equalizers, and real-time audio manipulation directly to waveform visualizations. This article explains how to route audio nodes through Wavesur">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/connect-web-audio-nodes-to-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Connect Web Audio Nodes to Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/connect-web-audio-nodes-to-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Integrating external Web Audio API nodes into Wavesurfer.js allows developers to apply custom effects, dynamic equalizers, and real-time audio manipulation directly to waveform visualizations. This article explains how to route audio nodes through Wavesur" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="connect-web-audio-nodes-to-wavesurferjs">Connect Web Audio Nodes
+to Wavesurfer.js</h1>
+<p>Integrating external Web Audio API nodes into Wavesurfer.js allows
+developers to apply custom effects, dynamic equalizers, and real-time
+audio manipulation directly to waveform visualizations. This article
+explains how to route audio nodes through Wavesurfer.js, identifying the
+core method used for filter integration and providing practical
+implementation steps to connect custom nodes into the playback
+pipeline.</p>
+<h2 id="the-core-method-setfilters">The Core Method:
+<code>setFilters()</code></h2>
+<p>The primary method used to insert and connect external Web Audio
+nodes into the Wavesurfer.js processing chain is
+<code>setFilters()</code>.</p>
+<p>In Wavesurfer.js instances running the Web Audio backend,
+<code>wavesurfer.setFilters()</code> accepts an array of Web Audio
+<code>AudioNode</code> objects. The library automatically disconnects
+the default internal routing and splices your array of filter nodes
+sequentially between the source node and the final destination (or
+analyser node).</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Example: Inserting BiquadFilterNodes using setFilters</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> lowpass <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">ac</span><span class="op">.</span><span class="fu">createBiquadFilter</span>()<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>lowpass<span class="op">.</span><span class="at">type</span> <span class="op">=</span> <span class="st">&#39;lowpass&#39;</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>lowpass<span class="op">.</span><span class="at">frequency</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="dv">1000</span><span class="op">,</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">ac</span><span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> gainNode <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">ac</span><span class="op">.</span><span class="fu">createGain</span>()<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="fl">0.8</span><span class="op">,</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">ac</span><span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Connect the nodes into the Wavesurfer audio pipeline</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">setFilters</span>([lowpass<span class="op">,</span> gainNode])<span class="op">;</span></span></code></pre></div>
+<p>When <code>setFilters()</code> is invoked, Wavesurfer.js chains the
+nodes in the exact order they appear in the array:
+<code>Source -&gt; lowpass -&gt; gainNode -&gt; Analyser/Destination</code>.</p>
+<hr />
+<h2 id="connecting-external-sources-with-native-web-audio">Connecting
+External Sources with Native Web Audio</h2>
+<p>If you are working with an external audio source—such as a microphone
+stream (<code>MediaStreamAudioSourceNode</code>) or an external
+synthesizer node—rather than an audio file loaded directly through
+Wavesurfer, you must bridge the external node using the native Web Audio
+<code>.connect()</code> method alongside Wavesurfer's internal
+context.</p>
+<h3 id="1-access-the-audio-context">1. Access the Audio Context</h3>
+<p>Wavesurfer exposes its internal <code>AudioContext</code> via the
+backend:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioContext <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="fu">getAudioContext</span>()<span class="op">;</span></span></code></pre></div>
+<p>Always create your external nodes using this shared context to
+prevent errors caused by routing nodes across mismatched audio
+contexts.</p>
+<h3 id="2-route-external-nodes-manually">2. Route External Nodes
+Manually</h3>
+<p>To direct an external source through a filter chain and into
+Wavesurfer's visualizer without using the built-in loader:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create an external source (e.g., from an HTML5 Audio element or stream)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> externalSource <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createMediaElementSource</span>(audioElement)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Create your custom filter</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> filterNode <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createBiquadFilter</span>()<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>filterNode<span class="op">.</span><span class="at">type</span> <span class="op">=</span> <span class="st">&#39;peaking&#39;</span><span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>filterNode<span class="op">.</span><span class="at">frequency</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="dv">1000</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Connect external source -&gt; filter -&gt; Wavesurfer&#39;s analyser -&gt; destination</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>externalSource<span class="op">.</span><span class="fu">connect</span>(filterNode)<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>filterNode<span class="op">.</span><span class="fu">connect</span>(wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">analyser</span>)<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">analyser</span><span class="op">.</span><span class="fu">connect</span>(audioContext<span class="op">.</span><span class="at">destination</span>)<span class="op">;</span></span></code></pre></div>
+<hr />
+<h2 id="working-with-wavesurferjs-v7">Working with Wavesurfer.js v7</h2>
+<p>In Wavesurfer.js version 7, playback defaults to an HTML5 Media
+Element rather than a pure Web Audio buffer backend. To connect Web
+Audio filters in version 7:</p>
+<ol type="1">
+<li>Retrieve the media element using
+<code>wavesurfer.getMediaElement()</code>.</li>
+<li>Create an <code>AudioContext</code> and instantiate a source via
+<code>createMediaElementSource()</code>.</li>
+<li>Connect your custom nodes directly using native Web Audio API
+methods.</li>
+</ol>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioContext <span class="op">=</span> <span class="kw">new</span> <span class="bu">AudioContext</span>()<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> mediaElement <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getMediaElement</span>()<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> source <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createMediaElementSource</span>(mediaElement)<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> filter <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createBiquadFilter</span>()<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>filter<span class="op">.</span><span class="at">type</span> <span class="op">=</span> <span class="st">&#39;highpass&#39;</span><span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>filter<span class="op">.</span><span class="at">frequency</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="dv">500</span><span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Complete the audio graph</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>source<span class="op">.</span><span class="fu">connect</span>(filter)<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>filter<span class="op">.</span><span class="fu">connect</span>(audioContext<span class="op">.</span><span class="at">destination</span>)<span class="op">;</span></span></code></pre></div>
+<p>By leveraging <code>setFilters()</code> for legacy and buffer-based
+pipelines, or native node chaining via
+<code>createMediaElementSource()</code> in modern versions, you can
+insert any custom Web Audio processing node directly into the
+Wavesurfer.js workflow.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/connect-web-audio-nodes-to-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Frequency Domain Data Array Lengths - wavesurfer.js</title>
+    <meta name="description" content="This article provides an overview of the array length options available for frequency domain data when working with Wavesurfer.js. Because Wavesurfer.js relies on the Web Audio API to analyze audio signals, frequency data arrays are directly governed by t">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-frequency-domain-data-array-lengths">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Frequency Domain Data Array Lengths - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-frequency-domain-data-array-lengths" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides an overview of the array length options available for frequency domain data when working with Wavesurfer.js. Because Wavesurfer.js relies on the Web Audio API to analyze audio signals, frequency data arrays are directly governed by t" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-frequency-domain-data-array-lengths">Wavesurfer.js
+Frequency Domain Data Array Lengths</h1>
+<p>This article provides an overview of the array length options
+available for frequency domain data when working with Wavesurfer.js.
+Because Wavesurfer.js relies on the Web Audio API to analyze audio
+signals, frequency data arrays are directly governed by the Fast Fourier
+Transform (FFT) configuration. Understanding the relationship between
+the FFT size and the resulting frequency bins allows developers to
+choose the optimal array length for their specific visualization and
+performance requirements.</p>
+<h3 id="understanding-frequency-bin-count">Understanding Frequency Bin
+Count</h3>
+<p>When extracting frequency domain data in Wavesurfer.js (such as when
+building real-time visualizers or rendering spectrograms), data is
+processed using an <code>AnalyserNode</code>. Frequency domain data is
+written to a <code>Uint8Array</code> via
+<code>getByteFrequencyData()</code> or a <code>Float32Array</code> via
+<code>getFloatFrequencyData()</code>.</p>
+<p>The length of these typed arrays is strictly dictated by the
+analyzer's <code>frequencyBinCount</code> property. The
+<code>frequencyBinCount</code> is always exactly half of the configured
+<code>fftSize</code>:</p>
+<p><span class="math display">\[\text{Array Length} =
+\frac{\text{fftSize}}{2}\]</span></p>
+<h3 id="available-array-length-options">Available Array Length
+Options</h3>
+<p>According to the Web Audio API specification, <code>fftSize</code>
+must be a power of two between <span class="math inline">\(2^5\)</span>
+(32) and <span class="math inline">\(2^{15}\)</span> (32768).
+Consequently, the array length options for frequency domain data
+are:</p>
+<ul>
+<li><strong>16</strong> (from <code>fftSize: 32</code>)</li>
+<li><strong>32</strong> (from <code>fftSize: 64</code>)</li>
+<li><strong>64</strong> (from <code>fftSize: 128</code>)</li>
+<li><strong>128</strong> (from <code>fftSize: 256</code>)</li>
+<li><strong>256</strong> (from <code>fftSize: 512</code>)</li>
+<li><strong>512</strong> (from <code>fftSize: 1024</code>)</li>
+<li><strong>1024</strong> (from <code>fftSize: 2048</code>, standard
+default)</li>
+<li><strong>2048</strong> (from <code>fftSize: 4096</code>)</li>
+<li><strong>4096</strong> (from <code>fftSize: 8192</code>)</li>
+<li><strong>8192</strong> (from <code>fftSize: 16384</code>)</li>
+<li><strong>16384</strong> (from <code>fftSize: 32768</code>)</li>
+</ul>
+<p>The default array length is typically <strong>1024</strong> because
+standard Web Audio nodes default to an <code>fftSize</code> of 2048.</p>
+<h3 id="configuring-array-length-in-wavesurferjs">Configuring Array
+Length in Wavesurfer.js</h3>
+<p>Depending on how Wavesurfer.js is implemented, the frequency array
+length can be set in two primary ways:</p>
+<ol type="1">
+<li><p><strong>Using the Spectrogram Plugin:</strong><br />
+When configuring the Spectrogram plugin, you pass the
+<code>fftSamples</code> parameter. The value of <code>fftSamples</code>
+represents the <code>fftSize</code>. Setting
+<code>fftSamples: 1024</code> generates frequency data with an array
+length of 512.</p></li>
+<li><p><strong>Custom Web Audio Nodes:</strong><br />
+If you tap into the audio context using custom analyzer nodes connected
+to the Wavesurfer audio output or media element, you define
+<code>analyser.fftSize</code>. Allocating your data array should match
+this size:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> analyser <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">analyser</span><span class="op">;</span> <span class="co">// or custom audioContext AnalyserNode</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>analyser<span class="op">.</span><span class="at">fftSize</span> <span class="op">=</span> <span class="dv">512</span><span class="op">;</span> <span class="co">// Must be power of 2 between 32 and 32768</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Array length will be 256</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> frequencyData <span class="op">=</span> <span class="kw">new</span> <span class="bu">Uint8Array</span>(analyser<span class="op">.</span><span class="at">frequencyBinCount</span>)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>analyser<span class="op">.</span><span class="fu">getByteFrequencyData</span>(frequencyData)<span class="op">;</span></span></code></pre></div></li>
+</ol>
+<h3 id="choosing-the-right-length">Choosing the Right Length</h3>
+<ul>
+<li><strong>Smaller arrays (16 to 256 bins):</strong> Ideal for
+low-resolution, high-performance UI elements such as standard graphic
+equalizers or responsive bar visualizers where CPU usage must remain
+minimal.</li>
+<li><strong>Medium arrays (512 to 2048 bins):</strong> The standard
+range for general audio visualizers and waveform representations,
+providing a balanced trade-off between spectral detail and rendering
+frame rates.</li>
+<li><strong>Larger arrays (4096 to 16384 bins):</strong> Best suited for
+high-precision scientific analysis, detailed spectrogram views, or pitch
+detection, though they introduce higher processing overhead and temporal
+smearing.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-frequency-domain-data-array-lengths';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

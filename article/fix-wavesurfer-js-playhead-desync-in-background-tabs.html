@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Wavesurfer.js Playhead Desync in Background Tabs - wavesurfer.js</title>
+    <meta name="description" content="When a browser tab loses focus, aggressive throttling suspends requestAnimationFrame loops to conserve battery and CPU resources. Because the underlying HTML5 audio element or Web Audio context continues to play in the background, Wavesurfer.js stops upda">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/fix-wavesurfer-js-playhead-desync-in-background-tabs">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fix Wavesurfer.js Playhead Desync in Background Tabs - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/fix-wavesurfer-js-playhead-desync-in-background-tabs" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="When a browser tab loses focus, aggressive throttling suspends requestAnimationFrame loops to conserve battery and CPU resources. Because the underlying HTML5 audio element or Web Audio context continues to play in the background, Wavesurfer.js stops upda" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="fix-wavesurferjs-playhead-desync-in-background-tabs">Fix
+Wavesurfer.js Playhead Desync in Background Tabs</h1>
+<p>When a browser tab loses focus, aggressive throttling suspends
+<code>requestAnimationFrame</code> loops to conserve battery and CPU
+resources. Because the underlying HTML5 audio element or Web Audio
+context continues to play in the background, Wavesurfer.js stops
+updating its visual canvas, resulting in a frozen or desynchronized
+playhead when the user returns. This guide explains why this
+desynchronization occurs and details actionable solutions—ranging from
+the <code>visibilitychange</code> API to Web Workers—to keep the audio
+and visualization aligned.</p>
+<h3 id="why-background-throttling-breaks-wavesurferjs">Why Background
+Throttling Breaks Wavesurfer.js</h3>
+<p>Modern web browsers drop <code>requestAnimationFrame</code> execution
+to zero frames per second for hidden tabs. Wavesurfer.js uses animation
+frames to drive smooth continuous rendering of the progress bar,
+playhead, and cursor across the waveform canvas.</p>
+<p>While the rendering loop halts entirely, the browser's audio thread
+runs unimpeded to ensure uninterrupted playback. When the user switches
+back to the tab, the visual playhead either stays stuck at the point
+where the tab was hidden, snaps violently, or drifts out of sync because
+delta calculations accumulated incorrectly during the pause.</p>
+<hr />
+<h3 id="solution-1-resynchronize-on-visibility-change">Solution 1:
+Resynchronize on Visibility Change</h3>
+<p>The cleanest and most resource-efficient approach is to force
+Wavesurfer.js to resynchronize its visual state as soon as the user
+returns to the tab. You can achieve this by listening to the Page
+Visibility API's <code>visibilitychange</code> event.</p>
+<p>When the document becomes visible again, query the exact
+<code>currentTime</code> from the audio source and tell Wavesurfer.js to
+re-render:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">document</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;visibilitychange&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span><span class="bu">document</span><span class="op">.</span><span class="at">hidden</span> <span class="op">&amp;&amp;</span> wavesurfer<span class="op">.</span><span class="fu">isPlaying</span>()) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Retrieve the exact current playback time</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> currentTime <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>()<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Force Wavesurfer to seek/redraw at the current time without interrupting audio</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">setTime</span>(currentTime)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>In Wavesurfer.js v7, rendering is internally tied closely to media
+element events. Calling <code>setTime()</code> updates the internal
+visual progress calculation immediately, clearing out any frame delta
+lag accumulated during the freeze.</p>
+<hr />
+<h3 id="solution-2-fall-back-to-timeupdate-events">Solution 2: Fall Back
+to <code>timeupdate</code> Events</h3>
+<p>If you rely on continuous custom tracking (such as displaying
+real-time transcripts, scrolling waveforms, or external playheads), do
+not depend purely on request animation loops. HTML5
+<code>&lt;audio&gt;</code> elements continue firing standard
+<code>timeupdate</code> events even when backgrounded (typically around
+3 to 4 times per second).</p>
+<p>Configure Wavesurfer to bind critical state changes to
+<code>timeupdate</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;timeupdate&#39;</span><span class="op">,</span> (currentTime) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">document</span><span class="op">.</span><span class="at">hidden</span>) {</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Keep low-frequency internal counters updated in the background</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">updateExternalPlayheadTracker</span>(currentTime)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<hr />
+<h3 id="solution-3-offload-timers-to-a-web-worker">Solution 3: Offload
+Timers to a Web Worker</h3>
+<p>If your application requires continuous, real-time visual
+synchronization even in background tabs (for example, picture-in-picture
+mode or audio processing graphs), main-thread timers
+(<code>setInterval</code>, <code>setTimeout</code>, and
+<code>requestAnimationFrame</code>) will not suffice.</p>
+<p>Browsers do not throttle Web Workers as aggressively as main-thread
+UI rendering loops. You can implement a worker-based timer to keep
+interval ticks constant:</p>
+<ol type="1">
+<li>Create an inline Web Worker that runs a non-throttled interval
+loop.</li>
+<li>Post a message to the main thread on every tick.</li>
+<li>Update the playhead programmatically.</li>
+</ol>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// worker-timer.js</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> workerBlob <span class="op">=</span> <span class="kw">new</span> <span class="bu">Blob</span>([<span class="vs">`</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="vs">  let intervalId;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="vs">  self.onmessage = function(e) {</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="vs">    if (e.data === &#39;start&#39;) {</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="vs">      intervalId = setInterval(() =&gt; postMessage(&#39;tick&#39;), 100);</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="vs">    } else if (e.data === &#39;stop&#39;) {</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="vs">      clearInterval(intervalId);</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="vs">  };</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="vs">`</span>]<span class="op">,</span> { <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;application/javascript&#39;</span> })<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> timerWorker <span class="op">=</span> <span class="kw">new</span> <span class="bu">Worker</span>(URL<span class="op">.</span><span class="fu">createObjectURL</span>(workerBlob))<span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Listen for playback events</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;play&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> timerWorker<span class="op">.</span><span class="fu">postMessage</span>(<span class="st">&#39;start&#39;</span>))<span class="op">;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;pause&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> timerWorker<span class="op">.</span><span class="fu">postMessage</span>(<span class="st">&#39;stop&#39;</span>))<span class="op">;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;finish&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> timerWorker<span class="op">.</span><span class="fu">postMessage</span>(<span class="st">&#39;stop&#39;</span>))<span class="op">;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>timerWorker<span class="op">.</span><span class="at">onmessage</span> <span class="op">=</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">document</span><span class="op">.</span><span class="at">hidden</span> <span class="op">&amp;&amp;</span> wavesurfer<span class="op">.</span><span class="fu">isPlaying</span>()) {</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Keep progress synchronized across custom background tasks</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> currentProgress <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>() <span class="op">/</span> wavesurfer<span class="op">.</span><span class="fu">getDuration</span>()<span class="op">;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="at">drawer</span><span class="op">.</span><span class="fu">progress</span>(currentProgress)<span class="op">;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<hr />
+<h3 id="summary-of-best-practices">Summary of Best Practices</h3>
+<ul>
+<li>For basic playback and visual waveforms, use the
+<strong><code>visibilitychange</code> API</strong> to snap the playhead
+back to the accurate audio position when the user refocuses the
+tab.</li>
+<li>Avoid calculating continuous playback state manually using elapsed
+frame deltas; always read directly from
+<code>wavesurfer.getCurrentTime()</code> or the underlying
+<code>mediaElement.currentTime</code>.</li>
+<li>If persistent background updates are strictly required, bypass
+main-thread throttling via <strong>Web Workers</strong>.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/fix-wavesurfer-js-playhead-desync-in-background-tabs';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

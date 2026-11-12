@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Shifting Libraries for Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js provides robust audio visualization and playback capabilities, but it does not include native digital signal processing (DSP) algorithms for independent pitch shifting. To alter pitch without affecting playback speed, developers must route W">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/pitch-shifting-libraries-for-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Pitch Shifting Libraries for Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/pitch-shifting-libraries-for-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js provides robust audio visualization and playback capabilities, but it does not include native digital signal processing (DSP) algorithms for independent pitch shifting. To alter pitch without affecting playback speed, developers must route W" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="pitch-shifting-libraries-for-wavesurferjs">Pitch Shifting
+Libraries for Wavesurfer.js</h1>
+<p>Wavesurfer.js provides robust audio visualization and playback
+capabilities, but it does not include native digital signal processing
+(DSP) algorithms for independent pitch shifting. To alter pitch without
+affecting playback speed, developers must route Wavesurfer’s Web Audio
+pipeline through third-party DSP libraries. The most seamless libraries
+for this integration are SoundTouchJS, Tone.js, and Jungle.js, each
+offering distinct trade-offs between audio fidelity, processing
+overhead, and ease of implementation.</p>
+<h3 id="soundtouchjs">SoundTouchJS</h3>
+<p>SoundTouchJS is a JavaScript port of the well-known C++ SoundTouch
+library. It uses the WSOLA (Waveform Similarity Overlap-Add) algorithm,
+which allows developers to manipulate pitch, tempo, and playback rate
+independently with minimal phase distortion.</p>
+<p>Because SoundTouchJS operates directly on raw audio buffers
+(<code>Float32Array</code>), it integrates cleanly with Wavesurfer.js
+when using a custom <code>AudioWorkletNode</code> or
+<code>ScriptProcessorNode</code>. To implement it, you intercept
+Wavesurfer’s decoded audio buffer
+(<code>wavesurfer.backend.buffer</code>), feed the audio chunks into the
+SoundTouch processing pipeline, and direct the output back to the audio
+context destination. It is the premier choice when high-quality musical
+or speech pitch preservation is necessary.</p>
+<h3 id="tonejs-tonepitchshift">Tone.js (Tone.PitchShift)</h3>
+<p>Tone.js is a comprehensive Web Audio framework that includes a
+dedicated <code>Tone.PitchShift</code> effect node. It uses a delay-line
+modulation technique with crossfading to shift pitch in real time,
+making it exceptionally low-latency.</p>
+<p>Tone.js integrates easily because it is built natively on top of the
+Web Audio API. Because Wavesurfer.js exposes its underlying
+<code>AudioContext</code> and output nodes via
+<code>wavesurfer.backend</code>, you can route Wavesurfer’s output
+directly through a <code>Tone.PitchShift</code> node using standard
+connection calls (<code>Tone.connect</code> or native
+<code>.connect()</code> methods). You set Wavesurfer’s backend to use
+WebAudio mode, disconnect the default output, connect Wavesurfer to the
+<code>Tone.PitchShift</code> node, and connect the pitch shifter to
+<code>Tone.Destination</code>.</p>
+<h3 id="junglejs">Jungle.js</h3>
+<p>Jungle.js is a lightweight, zero-dependency utility originally
+created for Google Web Audio demos. It creates an <code>AudioNode</code>
+graph consisting of modulated delay lines and LFOs (Low-Frequency
+Oscillators) to achieve real-time pitch shifting.</p>
+<p>Its primary advantage is simplicity. Jungle creates a native Web
+Audio composite node that features standard <code>.connect()</code> and
+<code>.disconnect()</code> methods. You can pass the
+<code>wavesurfer.backend.ac</code> (AudioContext) into the Jungle
+constructor, and insert the resulting node into the signal chain using
+Wavesurfer's filter methods or manual node routing. While
+computationally lightweight and easy to configure, Jungle introduces
+comb-filtering and slight flanging artifacts, making it better suited
+for sound effects rather than high-fidelity music manipulation.</p>
+<h3 id="implementation-considerations">Implementation
+Considerations</h3>
+<p>To integrate any of these libraries seamlessly, initialize
+Wavesurfer.js using the <code>WebAudio</code> backend rather than the
+default HTML5 <code>MediaElement</code> backend. The WebAudio backend
+gives you direct access to the audio graph via
+<code>wavesurfer.backend.source</code> and
+<code>wavesurfer.backend.setFilter()</code>, allowing you to insert
+nodes directly into the processing chain without interrupting
+Wavesurfer's timeline tracking or waveform rendering.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/pitch-shifting-libraries-for-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js CSP: Workers and Blob URLs - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js commonly uses inline Web Workers generated from Blob URLs to decode audio and render waveform peaks without freezing the browser&#39;s main thread. However, strict browser security policies—primarily Content Security Policy (CSP)—frequently bloc">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-csp-workers-and-blob-ur-ls">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js CSP: Workers and Blob URLs - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-csp-workers-and-blob-ur-ls" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js commonly uses inline Web Workers generated from Blob URLs to decode audio and render waveform peaks without freezing the browser&#39;s main thread. However, strict browser security policies—primarily Content Security Policy (CSP)—frequently bloc" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-csp-workers-and-blob-urls">Wavesurfer.js CSP:
+Workers and Blob URLs</h1>
+<p>Wavesurfer.js commonly uses inline Web Workers generated from Blob
+URLs to decode audio and render waveform peaks without freezing the
+browser's main thread. However, strict browser security
+policies—primarily Content Security Policy (CSP)—frequently block these
+mechanisms by default, leading to broken audio rendering and console
+security errors. This guide outlines which specific security directives
+restrict Wavesurfer.js, why these violations occur, and how to configure
+your security headers to resolve them.</p>
+<h3 id="why-wavesurferjs-triggers-csp-violations">Why Wavesurfer.js
+Triggers CSP Violations</h3>
+<p>To process audio buffers asynchronously, Wavesurfer.js (or its
+audio-decoding plugins) often packages worker script code into an
+in-memory <code>Blob</code> and initializes a worker using
+<code>URL.createObjectURL(blob)</code>. While this avoids the need to
+host separate JavaScript files for worker threads, browsers treat Blob
+URLs as distinct origin targets that require explicit permission under
+modern security standards.</p>
+<h3 id="key-policies-and-directives-that-restrict-wavesurferjs">Key
+Policies and Directives That Restrict Wavesurfer.js</h3>
+<h4 id="1-worker-src">1. <code>worker-src</code></h4>
+<p>The <code>worker-src</code> directive governs the sources that may be
+instantiated as Web Workers, Shared Workers, or Service Workers.</p>
+<ul>
+<li><p><strong>The Problem:</strong> By default, policies restricted to
+<code>worker-src 'self'</code> will reject workers created with a
+<code>blob:</code> scheme.</p></li>
+<li><p><strong>The Error:</strong>
+<code>Refused to create a worker from 'blob:...' because it violates the following Content Security Policy directive: "worker-src 'self'"</code>.</p></li>
+<li><p><strong>The Fix:</strong> Add the <code>blob:</code> scheme to
+<code>worker-src</code>:</p>
+<pre class="http"><code>Content-Security-Policy: worker-src &#39;self&#39; blob:;</code></pre></li>
+</ul>
+<h4 id="2-child-src-fallback">2. <code>child-src</code> (Fallback)</h4>
+<p>Under CSP Level 2 and in older browsers, <code>worker-src</code> was
+not supported. Instead, worker execution fell under the
+<code>child-src</code> directive (and originally
+<code>script-src</code>).</p>
+<ul>
+<li><p><strong>The Problem:</strong> If <code>worker-src</code> is
+omitted, the browser falls back to <code>child-src</code>. If
+<code>child-src</code> only allows <code>'self'</code>, the Blob Worker
+will fail.</p></li>
+<li><p><strong>The Fix:</strong> Provide <code>blob:</code> in both
+<code>worker-src</code> and <code>child-src</code> for backward
+compatibility:</p>
+<pre class="http"><code>Content-Security-Policy: worker-src &#39;self&#39; blob:; child-src &#39;self&#39; blob:;</code></pre></li>
+</ul>
+<h4 id="3-script-src">3. <code>script-src</code></h4>
+<p>Some browsers or strict CSP implementations treat the script content
+executed inside an inline worker as falling under the main script
+evaluation rules.</p>
+<ul>
+<li><p><strong>The Problem:</strong> If a CSP does not permit the worker
+to execute, or if the initialization script relies on eval-like dynamic
+evaluation, the browser may enforce restrictions via
+<code>script-src</code>.</p></li>
+<li><p><strong>The Fix:</strong> Ensure <code>script-src</code> includes
+<code>blob:</code> if your target browsers do not fully isolate
+<code>worker-src</code>:</p>
+<pre class="http"><code>Content-Security-Policy: script-src &#39;self&#39; blob:;</code></pre></li>
+</ul>
+<h4 id="4-media-src-and-connect-src">4. <code>media-src</code> and
+<code>connect-src</code></h4>
+<p>Wavesurfer.js requires access to the raw audio source data to draw
+waveforms.</p>
+<ul>
+<li><p><strong><code>connect-src</code>:</strong> Wavesurfer uses
+<code>fetch</code> or <code>XMLHttpRequest</code> with
+<code>responseType: 'arraybuffer'</code> to load audio files. If your
+audio files are hosted on an external CDN, S3 bucket, or use
+<code>blob:</code> endpoints, your <code>connect-src</code> must
+whitelist those origins:</p>
+<pre class="http"><code>connect-src &#39;self&#39; blob: https://cdn.example.com;</code></pre></li>
+<li><p><strong><code>media-src</code>:</strong> If using HTML5 audio
+playback (<code>backend: 'MediaElement'</code>), the
+<code>&lt;audio&gt;</code> element loading the track will be evaluated
+against <code>media-src</code>. Ensure <code>blob:</code> and your media
+domains are allowed:</p>
+<pre class="http"><code>media-src &#39;self&#39; blob: data: https://cdn.example.com;</code></pre></li>
+</ul>
+<h3 id="cross-origin-isolation-coop-and-coep">Cross-Origin Isolation
+(COOP and COEP)</h3>
+<p>If your application enables high-performance features like
+<code>SharedArrayBuffer</code>, you may have the following headers
+enabled:</p>
+<ul>
+<li><code>Cross-Origin-Opener-Policy: same-origin</code></li>
+<li><code>Cross-Origin-Embedder-Policy: require-corp</code></li>
+</ul>
+<p>Under these conditions, any media or worker created from a Blob URL
+must either be same-origin or configured properly with appropriate
+Cross-Origin Resource Sharing (CORS) headers, or the browser will block
+access to the audio buffer.</p>
+<h3 id="alternative-solution-external-workers">Alternative Solution:
+External Workers</h3>
+<p>If your organization completely disallows <code>blob:</code> in your
+CSP for security reasons, you cannot rely on inline worker generation.
+In this scenario, you must:</p>
+<ol type="1">
+<li>Extract the Wavesurfer worker script into a static file hosted
+directly on your domain (e.g.,
+<code>/js/wavesurfer-worker.js</code>).</li>
+<li>Pass the external worker URL into Wavesurfer's configuration,
+allowing it to satisfy standard <code>'self'</code> security constraints
+without requiring <code>blob:</code>.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-csp-workers-and-blob-ur-ls';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

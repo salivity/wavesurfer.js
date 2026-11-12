@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Regions Plugin dragSelection Explained - wavesurfer.js</title>
+    <meta name="description" content="The dragSelection option in the Wavesurfer.js Regions plugin enables interactive, mouse-driven creation of audio segments directly on a waveform visualizer. This article explains the primary purpose of this feature, how it alters user interaction, its com">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-regions-plugin-drag-selection-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Regions Plugin dragSelection Explained - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-regions-plugin-drag-selection-explained" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The dragSelection option in the Wavesurfer.js Regions plugin enables interactive, mouse-driven creation of audio segments directly on a waveform visualizer. This article explains the primary purpose of this feature, how it alters user interaction, its com" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="wavesurferjs-regions-plugin-dragselection-explained">Wavesurfer.js
+Regions Plugin dragSelection Explained</h1>
+<p>The <code>dragSelection</code> option in the Wavesurfer.js Regions
+plugin enables interactive, mouse-driven creation of audio segments
+directly on a waveform visualizer. This article explains the primary
+purpose of this feature, how it alters user interaction, its common
+real-world use cases, and how to implement it effectively within audio
+applications.</p>
+<h3 id="what-is-the-purpose-of-dragselection">What Is the Purpose of
+<code>dragSelection</code>?</h3>
+<p>In Wavesurfer.js, the core waveform component typically registers a
+mouse click or drag as a scrub/seek command, updating the playback head
+position. The purpose of <code>dragSelection</code> is to override or
+augment this behavior so users can click, hold, and drag across the
+waveform to instantly generate a new audio region with defined start and
+end timestamps.</p>
+<p>Without this option enabled, regions must be generated
+programmatically using predefined timestamps. With
+<code>dragSelection</code> active, the user directly controls the bounds
+of the segment using intuitive visual feedback.</p>
+<h3 id="how-it-works">How It Works</h3>
+<p>When <code>dragSelection</code> is enabled (either as a boolean
+configuration option in older versions or via the
+<code>enableDragSelection()</code> helper method in Wavesurfer.js
+v7):</p>
+<ol type="1">
+<li><strong>Selection Initiation:</strong> Clicking down on the waveform
+marks the start time of the new region.</li>
+<li><strong>Dynamic Resizing:</strong> Moving the cursor while holding
+the mouse button dynamically updates the end boundary in real time.</li>
+<li><strong>Region Finalization:</strong> Releasing the mouse button
+finishes the region creation process, generating a persistent region
+element within the DOM.</li>
+<li><strong>Event Emission:</strong> The plugin emits lifecycle events,
+such as <code>region-created</code> and <code>region-updated</code>,
+allowing developers to capture the selection bounds and execute
+corresponding business logic.</li>
+</ol>
+<h3 id="common-use-cases">Common Use Cases</h3>
+<ul>
+<li><strong>Audio Trimming and Cutting:</strong> Enabling users to
+visually mark sections of a track to export, crop, or slice.</li>
+<li><strong>Audio Annotation and Labeling:</strong> Allowing annotators
+to highlight specific words, phonetic sounds, or sound events for
+machine learning datasets.</li>
+<li><strong>Looping Specific Passages:</strong> Giving users the ability
+to highlight a portion of a track for continuous looped playback during
+practice or analysis.</li>
+<li><strong>Collaborative Feedback:</strong> Letting listeners pinpoint
+precise timestamps to leave comments or critique specific sections of an
+audio file.</li>
+</ul>
+<h3 id="configuration-and-customization">Configuration and
+Customization</h3>
+<p>The feature allows customization to match user interface
+requirements. Developers can pass options to define:</p>
+<ul>
+<li><strong>Visual Styling:</strong> Set default background colors and
+opacities for dynamically drawn selections.</li>
+<li><strong>Resizing and Dragging:</strong> Determine whether the newly
+created region can be resized or moved after the initial drag is
+completed.</li>
+<li><strong>Constraints:</strong> Enforce minimum or maximum durations
+to prevent accidental zero-length selections or overly large
+segments.</li>
+</ul>
+<p>By providing a direct, tactile method for highlighting sound data,
+<code>dragSelection</code> transforms static waveform playback into an
+interactive audio workstation experience.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-regions-plugin-drag-selection-explained';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

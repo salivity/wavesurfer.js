@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is the Wavesurfer.js Regions Plugin? - wavesurfer.js</title>
+    <meta name="description" content="The Regions plugin is an essential extension for Wavesurfer.js that allows developers to create, display, and interact with specific segments of an audio waveform. This article explains the primary purpose of the Regions plugin, its core features, and how">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/what-is-the-wavesurfer-js-regions-plugin">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is the Wavesurfer.js Regions Plugin? - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/what-is-the-wavesurfer-js-regions-plugin" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The Regions plugin is an essential extension for Wavesurfer.js that allows developers to create, display, and interact with specific segments of an audio waveform. This article explains the primary purpose of the Regions plugin, its core features, and how" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-the-wavesurferjs-regions-plugin">What Is the
+Wavesurfer.js Regions Plugin?</h1>
+<p>The Regions plugin is an essential extension for Wavesurfer.js that
+allows developers to create, display, and interact with specific
+segments of an audio waveform. This article explains the primary purpose
+of the Regions plugin, its core features, and how it is used in modern
+web applications to enable audio editing, transcription, looping, and
+annotation.</p>
+<h3 id="understanding-the-regions-plugin">Understanding the Regions
+Plugin</h3>
+<p>Wavesurfer.js provides interactive, customizable audio waveform
+visualizations using the Web Audio API and HTML5 Canvas. While the core
+library handles rendering the waveform and controlling overall audio
+playback, the Regions plugin adds the ability to isolate and manage
+distinct time ranges within that waveform.</p>
+<p>A "region" is defined by a start time and an end time. Visually, it
+appears as an overlaid, colored block on top of the waveform canvas that
+corresponds precisely to that duration of the audio track.</p>
+<h3 id="key-capabilities-and-features">Key Capabilities and
+Features</h3>
+<p>The Regions plugin provides several built-in functionalities that
+make audio manipulation straightforward:</p>
+<ul>
+<li><strong>Visual Segmentation:</strong> Developers can highlight
+multiple distinct sections of a track using custom colors, opacity, and
+HTML labels to represent different parts of the audio.</li>
+<li><strong>Interactive Editing:</strong> Users can click and drag the
+edges of a region to resize it, or drag the entire region horizontally
+to move it across the timeline. These interactions can also be locked to
+make regions read-only.</li>
+<li><strong>Playback Control:</strong> Regions can be programmed to play
+independently. When combined with standard Wavesurfer methods, clicking
+a region can start playback from its start point and automatically stop
+or loop when it reaches the end point.</li>
+<li><strong>Event Handling:</strong> The plugin emits lifecycle
+events—such as <code>region-created</code>, <code>region-updated</code>,
+<code>region-clicked</code>, and <code>region-out</code>—enabling
+developers to trigger custom application logic when users interact with
+specific parts of the audio.</li>
+<li><strong>Custom Metadata:</strong> Each region object can store
+custom data attributes, such as speaker IDs, notes, or tags, linking
+backend data directly to the visual interface.</li>
+</ul>
+<h3 id="common-use-cases">Common Use Cases</h3>
+<p>The Regions plugin is widely used in web-based audio tools across
+various industries:</p>
+<ol type="1">
+<li><strong>Audio Editing and Trimming:</strong> Web-based digital audio
+workstations (DAWs) use regions to allow users to select parts of a
+track for cutting, copying, deleting, or exporting.</li>
+<li><strong>Speech Transcription and Translation:</strong> In
+transcription interfaces, regions represent sentences or spoken
+segments. Clicking a region plays that exact snippet, making it easy for
+transcribers to review and type out dialogue.</li>
+<li><strong>Music Analysis and Structure Tagging:</strong> Music
+applications use regions to mark and label song structures, such as
+intros, verses, choruses, and bridges.</li>
+<li><strong>Machine Learning and Audio Annotation:</strong> Data
+labeling teams use regions to annotate sounds—such as speech, background
+noise, or specific acoustic events—to create labeled training datasets
+for AI models.</li>
+<li><strong>Looping and Sampling:</strong> Samplers and beat-making
+tools use regions to isolate loops or one-shot sound effects from a
+longer recording.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/what-is-the-wavesurfer-js-regions-plugin';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

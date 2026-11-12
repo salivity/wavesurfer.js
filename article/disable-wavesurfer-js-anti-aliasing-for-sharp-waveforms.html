@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disable Wavesurfer.js Anti-Aliasing for Sharp Waveforms - wavesurfer.js</title>
+    <meta name="description" content="This guide explains how to disable canvas smoothing and anti-aliasing in Wavesurfer.js to achieve crisp, retro, pixelized waveform displays. By default, browsers apply anti-aliasing to HTML5 &lt;canvas&gt; elements, softening lines and peaks. You can override t">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/disable-wavesurfer-js-anti-aliasing-for-sharp-waveforms">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Disable Wavesurfer.js Anti-Aliasing for Sharp Waveforms - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/disable-wavesurfer-js-anti-aliasing-for-sharp-waveforms" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide explains how to disable canvas smoothing and anti-aliasing in Wavesurfer.js to achieve crisp, retro, pixelized waveform displays. By default, browsers apply anti-aliasing to HTML5 &lt;canvas&gt; elements, softening lines and peaks. You can override t" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="disable-wavesurferjs-anti-aliasing-for-sharp-waveforms">Disable
+Wavesurfer.js Anti-Aliasing for Sharp Waveforms</h1>
+<p>This guide explains how to disable canvas smoothing and anti-aliasing
+in Wavesurfer.js to achieve crisp, retro, pixelized waveform displays.
+By default, browsers apply anti-aliasing to HTML5
+<code>&lt;canvas&gt;</code> elements, softening lines and peaks. You can
+override this behavior by combining Wavesurfer.js configuration options,
+canvas context properties, and CSS rules to produce a sharp,
+pixel-perfect visualization.</p>
+<h3 id="1-adjust-wavesurferjs-initialization-settings">1. Adjust
+Wavesurfer.js Initialization Settings</h3>
+<p>Modern versions of Wavesurfer.js automatically scale the canvas to
+match the device's pixel ratio for smoother rendering. To create a raw,
+pixelated look, force a 1:1 pixel mapping and use clean integer values
+for bar widths and gaps:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">pixelRatio</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span> <span class="co">// Prevents automatic subpixel scaling</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barWidth</span><span class="op">:</span> <span class="dv">2</span><span class="op">,</span>   <span class="co">// Use integer pixel sizes</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barGap</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span>     <span class="co">// Consistent integer spacing</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">barRadius</span><span class="op">:</span> <span class="dv">0</span>   <span class="co">// Disables rounded corners</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Setting <code>pixelRatio: 1</code> prevents subpixel interpolation,
+while setting <code>barRadius: 0</code> ensures rectangular bars with
+sharp edges.</p>
+<h3 id="2-apply-css-image-rendering-properties">2. Apply CSS Image
+Rendering Properties</h3>
+<p>The most reliable way to force browsers to disable anti-aliasing
+across rendering engines is using CSS image-rendering rules on the
+generated <code>&lt;canvas&gt;</code> elements:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span> canvas {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">image-rendering</span><span class="ch">:</span> <span class="dv">-moz-crisp-edges</span><span class="op">;</span>         <span class="co">/* Firefox */</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">image-rendering</span><span class="ch">:</span> <span class="dv">-webkit-crisp-edges</span><span class="op">;</span>      <span class="co">/* Webkit browsers */</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">image-rendering</span><span class="ch">:</span> <span class="dv">pixelated</span><span class="op">;</span>                <span class="co">/* Standard Chrome, Edge, Safari */</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">image-rendering</span><span class="ch">:</span> <span class="dv">crisp-edges</span><span class="op">;</span>              <span class="co">/* Modern standard */</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Applying <code>image-rendering: pixelated</code> instructs the
+browser’s compositor to scale and render the canvas using
+nearest-neighbor interpolation rather than bilinear filtering,
+eliminating blurry edges.</p>
+<h3 id="3-disable-context-smoothing-in-javascript">3. Disable Context
+Smoothing in JavaScript</h3>
+<p>If you perform custom drawing or use plugins that redraw the canvas,
+disable image smoothing directly on the canvas's 2D rendering
+context:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;ready&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> container <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;#waveform&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> canvases <span class="op">=</span> container<span class="op">.</span><span class="fu">querySelectorAll</span>(<span class="st">&#39;canvas&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  canvases<span class="op">.</span><span class="fu">forEach</span>((canvas) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> ctx <span class="op">=</span> canvas<span class="op">.</span><span class="fu">getContext</span>(<span class="st">&#39;2d&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (ctx) {</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>      ctx<span class="op">.</span><span class="at">imageSmoothingEnabled</span> <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>      ctx<span class="op">.</span><span class="at">webkitImageSmoothingEnabled</span> <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      ctx<span class="op">.</span><span class="at">mozImageSmoothingEnabled</span> <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>      ctx<span class="op">.</span><span class="at">msImageSmoothingEnabled</span> <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="4-align-coordinates-to-whole-pixels">4. Align Coordinates to
+Whole Pixels</h3>
+<p>Subpixel values in bar dimensions or line widths can trigger
+anti-aliasing even when smoothing properties are disabled. Ensure any
+custom drawing logic or Wavesurfer styling coordinates fall directly on
+whole pixel increments (e.g., <code>1px</code>, <code>2px</code>) rather
+than fractional values (e.g., <code>1.5px</code>) to prevent edge
+blurring.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/disable-wavesurfer-js-anti-aliasing-for-sharp-waveforms';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

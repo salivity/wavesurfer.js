@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typed Arrays Reduce Wavesurfer.js Peak Data Size - wavesurfer.js</title>
+    <meta name="description" content="This article explains how using Int8Array and Int16Array binary typed arrays significantly decreases the data payload size of precomputed waveform peaks in Wavesurfer.js. By quantizing floating-point audio data into compact integer representations and byp">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/typed-arrays-reduce-wavesurfer-js-peak-data-size">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Typed Arrays Reduce Wavesurfer.js Peak Data Size - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/typed-arrays-reduce-wavesurfer-js-peak-data-size" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains how using Int8Array and Int16Array binary typed arrays significantly decreases the data payload size of precomputed waveform peaks in Wavesurfer.js. By quantizing floating-point audio data into compact integer representations and byp" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="typed-arrays-reduce-wavesurferjs-peak-data-size">Typed Arrays
+Reduce Wavesurfer.js Peak Data Size</h1>
+<p>This article explains how using <code>Int8Array</code> and
+<code>Int16Array</code> binary typed arrays significantly decreases the
+data payload size of precomputed waveform peaks in Wavesurfer.js. By
+quantizing floating-point audio data into compact integer
+representations and bypassing JSON serialization, these typed arrays
+eliminate overhead, decrease network bandwidth requirements, and
+accelerate rendering performance in web applications.</p>
+<h3 id="the-overhead-of-standard-peak-data">The Overhead of Standard
+Peak Data</h3>
+<p>Wavesurfer.js renders visual audio waveforms by plotting arrays of
+minimum and maximum amplitude values across an audio track. A common
+approach involves exporting these peaks on a server and sending them to
+the client as a JSON array of floating-point numbers.</p>
+<p>This approach creates substantial network overhead:</p>
+<ul>
+<li><strong>JSON Serialization:</strong> In JSON, a float like
+<code>-0.852341</code> is stored as an ASCII string taking 9 to 10
+bytes, plus additional bytes for punctuation (commas and brackets).</li>
+<li><strong>High Precision Waste:</strong> Visual waveform rendering
+requires only enough vertical resolution to map to screen pixels.
+Storing full 32-bit or 64-bit floating-point precision provides far more
+fidelity than a browser canvas can visually represent.</li>
+</ul>
+<h3 id="how-int8array-and-int16array-reduce-payload-size">How Int8Array
+and Int16Array Reduce Payload Size</h3>
+<p>Binary typed arrays replace text-based JSON floats with dense,
+fixed-width binary representations.</p>
+<h4 id="1-quantization-to-lower-bit-depths">1. Quantization to Lower Bit
+Depths</h4>
+<p>Before transmission, normalized floating-point peaks (which range
+from <code>-1.0</code> to <code>1.0</code>) are quantized into
+integers:</p>
+<ul>
+<li><strong><code>Int8Array</code> (8-bit signed):</strong> Audio peaks
+are multiplied by <code>127</code> and rounded, fitting values within
+the <code>-128</code> to <code>127</code> range. This represents 256
+discrete vertical levels, which is often sufficient for standard
+waveform displays.</li>
+<li><strong><code>Int16Array</code> (16-bit signed):</strong> Peaks are
+multiplied by <code>32767</code> and rounded, fitting values within the
+<code>-32768</code> to <code>32767</code> range. This provides over
+65,000 discrete steps, suitable for high-resolution displays or
+zoomed-in waveform visualizers.</li>
+</ul>
+<h4 id="2-fixed-byte-allocations">2. Fixed Byte Allocations</h4>
+<p>Typed arrays operate directly on raw binary memory
+(<code>ArrayBuffer</code>):</p>
+<ul>
+<li>An <code>Int8Array</code> consumes exactly <strong>1 byte per
+value</strong>.</li>
+<li>An <code>Int16Array</code> consumes exactly <strong>2 bytes per
+value</strong>.</li>
+</ul>
+<p>For a track requiring 20,000 peak points:</p>
+<ul>
+<li>Standard JSON float array: <strong>~140 KB to 200 KB</strong></li>
+<li>Raw <code>Float32Array</code>: <strong>80 KB</strong></li>
+<li><code>Int16Array</code>: <strong>40 KB</strong></li>
+<li><code>Int8Array</code>: <strong>20 KB</strong></li>
+</ul>
+<p>Switching to <code>Int8Array</code> yields an approximate <strong>85%
+to 90% reduction</strong> in raw payload size compared to standard JSON
+representations.</p>
+<h3 id="network-and-parsing-efficiency">Network and Parsing
+Efficiency</h3>
+<p>Aside from raw byte reduction, typed arrays improve performance
+through modern transport and decoding mechanisms:</p>
+<ul>
+<li><strong>Direct Binary Fetching:</strong> The client can fetch the
+peak data as an <code>arraybuffer</code> via <code>fetch()</code> or
+<code>XMLHttpRequest</code>. This bypasses HTTP text-encoding overhead
+and gzip decompression limitations on structured text.</li>
+<li><strong>Instant In-Memory Instantiation:</strong> Unlike JSON, which
+requires the browser to parse strings into JavaScript numbers (a
+CPU-heavy task for large arrays), typed arrays can be instantiated
+directly over the received <code>ArrayBuffer</code> without memory
+reallocation.</li>
+<li><strong>Native Wavesurfer.js Ingestion:</strong> Wavesurfer.js can
+accept these arrays directly into its <code>peaks</code> option. If
+normalized ranges (<code>-1.0</code> to <code>1.0</code>) are required
+by specific internal renderers, the typed array elements can be scaled
+back through a single linear operation, or the canvas coordinate mapping
+can be adjusted to scale directly from the integer range.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/typed-arrays-reduce-wavesurfer-js-peak-data-size';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Position Overlays in Zoomed Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Managing custom overlay user interfaces—such as custom playheads, cue markers, selection ranges, or floating toolbars—on a zoomed-in Wavesurfer.js instance requires synchronizing absolute time coordinates with dynamic scroll offsets. When an audio wavefor">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/position-overlays-in-zoomed-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Position Overlays in Zoomed Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/position-overlays-in-zoomed-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Managing custom overlay user interfaces—such as custom playheads, cue markers, selection ranges, or floating toolbars—on a zoomed-in Wavesurfer.js instance requires synchronizing absolute time coordinates with dynamic scroll offsets. When an audio wavefor" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="position-overlays-in-zoomed-wavesurferjs">Position Overlays in
+Zoomed Wavesurfer.js</h1>
+<p>Managing custom overlay user interfaces—such as custom playheads, cue
+markers, selection ranges, or floating toolbars—on a zoomed-in
+Wavesurfer.js instance requires synchronizing absolute time coordinates
+with dynamic scroll offsets. When an audio waveform is zoomed using
+<code>wavesurfer.zoom(pxPerSec)</code>, the underlying canvas expands
+horizontally inside a scrollable wrapper
+(<code>overflow-x: auto</code>). The optimal strategy to manage UI
+overlays relies on dividing overlays into content-relative elements
+(anchored directly to audio timestamps) and viewport-relative elements
+(fixed inside the visible window), then driving their positions through
+container injection, passive scroll synchronization, and
+hardware-accelerated transforms.</p>
+<h3
+id="content-relative-overlays-injecting-into-the-scroll-wrapper">Content-Relative
+Overlays: Injecting into the Scroll Wrapper</h3>
+<p>For UI components that must remain attached to a precise audio
+timestamp (such as custom annotations or event markers), the most
+effective approach is mounting the overlay DOM elements directly inside
+Wavesurfer’s scroll container rather than an external parent
+container.</p>
+<ol type="1">
+<li><strong>Target the Scroll Element:</strong> Retrieve the internal
+scroll container via <code>wavesurfer.getWrapper()</code>.</li>
+<li><strong>Calculate Absolute Pixel Positions:</strong> Compute the
+horizontal offset using the current zoom level: <span
+class="math display">\[\text{Left Offset (px)} = \text{Audio Time
+(seconds)} \times \text{pixelsPerSecond}\]</span></li>
+<li><strong>Apply CSS Absolute Positioning:</strong> Set the overlay's
+CSS to <code>position: absolute</code> with <code>top: 0</code> and
+<code>left: [calculated_px]px</code>.</li>
+</ol>
+<p>Because the overlay resides inside the scrollable container, the
+browser handles position updates natively during user scrolling via the
+GPU. This eliminates visual jitter, scroll lag, and synchronization
+drift without requiring JavaScript scroll listeners.</p>
+<h3
+id="viewport-relative-overlays-synchronizing-with-scroll-events">Viewport-Relative
+Overlays: Synchronizing with Scroll Events</h3>
+<p>Certain overlay elements—such as a fixed-center playhead, sticky
+timecode headers, or floating audio editing controls—must remain visible
+within the user's viewport while the waveform scrolls beneath them.</p>
+<p>Managing these elements requires tracking the scroll container’s
+visible bounds:</p>
+<ol type="1">
+<li><p><strong>Attach Passive Scroll Listeners:</strong> Bind a scroll
+event listener to the wrapper returned by
+<code>wavesurfer.getWrapper()</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> scrollContainer <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getWrapper</span>()<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>scrollContainer<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;scroll&#39;</span><span class="op">,</span> handleScroll<span class="op">,</span> { <span class="dt">passive</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span></code></pre></div></li>
+<li><p><strong>Read Bounds via <code>scrollLeft</code>:</strong> Read
+<code>scrollContainer.scrollLeft</code> to determine the current visible
+time window: <span class="math display">\[\text{Start Time} =
+\frac{\text{scrollLeft}}{\text{pixelsPerSecond}}\]</span> <span
+class="math display">\[\text{End Time} = \frac{\text{scrollLeft} +
+\text{clientWidth}}{\text{pixelsPerSecond}}\]</span></p></li>
+<li><p><strong>Update with <code>requestAnimationFrame</code>:</strong>
+To prevent layout thrashing and maintain 60/120 FPS performance, read
+scroll values and update overlay styles inside a
+<code>requestAnimationFrame</code> callback.</p></li>
+<li><p><strong>Use Transforms Instead of Offsets:</strong> Position
+sticky or viewport-constrained elements using
+<code>transform: translate3d(x, y, 0)</code> rather than adjusting
+<code>left</code> or <code>margin-left</code>. This keeps operations on
+the compositor thread.</p></li>
+</ol>
+<h3 id="handling-dynamic-zoom-and-resize-events">Handling Dynamic Zoom
+and Resize Events</h3>
+<p>Zooming modifies the horizontal scale factor, invalidating previously
+calculated pixel coordinates. A complete overlay strategy requires
+subscribing to lifecycle events:</p>
+<ul>
+<li><strong>The <code>zoom</code> Event:</strong> Listen for
+<code>wavesurfer.on('zoom', (pxPerSec) =&gt; { ... })</code>. Recompute
+the pixel offsets of all content-relative overlays using the new
+<code>pxPerSec</code> multiplier.</li>
+<li><strong>The <code>redraw</code> Event:</strong> Whenever audio data
+or waveform dimensions change, trigger a layout recalculation for
+elements tied to waveform boundaries.</li>
+<li><strong>Resize Observer:</strong> Attach a
+<code>ResizeObserver</code> to the main Wavesurfer container to
+recalculate visible limits when the browser window or container
+dimensions change.</li>
+</ul>
+<h3 id="coordinate-mapping-pattern">Coordinate Mapping Pattern</h3>
+<p>Store all overlay locations in application state as raw audio seconds
+rather than pixel values. Treat audio time as the single source of
+truth:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">syncOverlayPosition</span>(overlayElement<span class="op">,</span> timestampInSeconds<span class="op">,</span> pxPerSec) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> pixelPosition <span class="op">=</span> timestampInSeconds <span class="op">*</span> pxPerSec<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  overlayElement<span class="op">.</span><span class="at">style</span><span class="op">.</span><span class="at">transform</span> <span class="op">=</span> <span class="vs">`translate3d(</span><span class="sc">${</span>pixelPosition<span class="sc">}</span><span class="vs">px, 0, 0)`</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>By decoupling the underlying time data from the pixel
+representations, you ensure that zooming, horizontal scrolling, and
+responsive container resizing can instantly project overlays to their
+correct positions without cumulative drift.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/position-overlays-in-zoomed-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

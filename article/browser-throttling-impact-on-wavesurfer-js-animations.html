@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Throttling Impact on Wavesurfer.js Animations - wavesurfer.js</title>
+    <meta name="description" content="Modern web browsers deliberately throttle background tabs to conserve battery life and system resources, which significantly degrades the performance of canvas-based audio visualizations like Wavesurfer.js. While audio playback usually continues uninterru">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/browser-throttling-impact-on-wavesurfer-js-animations">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Browser Throttling Impact on Wavesurfer.js Animations - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/browser-throttling-impact-on-wavesurfer-js-animations" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Modern web browsers deliberately throttle background tabs to conserve battery life and system resources, which significantly degrades the performance of canvas-based audio visualizations like Wavesurfer.js. While audio playback usually continues uninterru" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="browser-throttling-impact-on-wavesurferjs-animations">Browser
+Throttling Impact on Wavesurfer.js Animations</h1>
+<p>Modern web browsers deliberately throttle background tabs to conserve
+battery life and system resources, which significantly degrades the
+performance of canvas-based audio visualizations like Wavesurfer.js.
+While audio playback usually continues uninterrupted through hardware or
+background threads, the visual components powered by
+<code>requestAnimationFrame</code> or JavaScript timers are throttled or
+suspended entirely. This disconnect causes visual freezing, playhead
+desynchronization, and jarring rendering jumps when the user returns to
+the tab.</p>
+<h3 id="the-mechanics-of-background-throttling">The Mechanics of
+Background Throttling</h3>
+<p>To minimize CPU and GPU overhead, browsers like Chrome, Firefox, and
+Safari aggressively alter rendering loops when a tab is minimized,
+placed behind another window, or made inactive:</p>
+<ul>
+<li><strong><code>requestAnimationFrame</code> Suspension:</strong>
+Browsers halt or reduce the execution of
+<code>requestAnimationFrame</code> (rAF) callbacks down to zero or once
+per second. Because Wavesurfer.js relies on rAF to redraw the canvas
+smoothly at 60 FPS, the visual render loop effectively pauses.</li>
+<li><strong>Timer Clamping:</strong> Traditional JavaScript timers
+(<code>setInterval</code> and <code>setTimeout</code>) are clamped to a
+minimum interval, typically 1,000 milliseconds or higher. Any fallback
+rendering logic tied to these timers slows to a crawl.</li>
+<li><strong>Offscreen Canvas Invalidation:</strong> Background tabs may
+deprioritize GPU commands, delaying draw calls to the HTML5
+<code>&lt;canvas&gt;</code> element until the tab regains focus.</li>
+</ul>
+<h3 id="core-impacts-on-wavesurferjs">Core Impacts on Wavesurfer.js</h3>
+<h4 id="1-audio-and-visual-desynchronization">1. Audio and Visual
+Desynchronization</h4>
+<p>The HTML5 <code>&lt;audio&gt;</code> element and the Web Audio API
+operate independently of the browser's main UI thread, allowing sound to
+play normally in the background. However, Wavesurfer.js's canvas
+rendering logic runs on the main thread. As audio progresses, the canvas
+stops updating, causing the visual state to drift completely out of sync
+with the underlying sound track.</p>
+<h4 id="2-visual-freezing-and-frame-drops">2. Visual Freezing and Frame
+Drops</h4>
+<p>While the tab remains hidden, the playhead remains stationary, the
+progress bar does not advance, and dynamic waveform animations stop. If
+real-time features like microphone input visualizations or region
+dragging are active, they will stall indefinitely until the user
+returns.</p>
+<h4 id="3-playhead-snapping-rubber-banding">3. Playhead Snapping
+("Rubber-Banding")</h4>
+<p>When a user switches back to the throttled tab, the browser triggers
+the Page Visibility API and resumes the rAF loop. Wavesurfer.js reads
+the current playback time from the audio source and immediately updates
+the canvas. This creates an abrupt visual jump, where the playhead snaps
+from its old position directly to the current audio timestamp, bypassing
+the expected smooth transition.</p>
+<h4 id="4-post-tab-switching-cpu-spikes">4. Post-Tab Switching CPU
+Spikes</h4>
+<p>If unhandled loops or event queues accumulate during the inactive
+state, the browser may process a rapid burst of queued operations upon
+reactivation. This can cause brief micro-stutters, delayed UI response,
+or momentary audio crackling while the main thread clears its backlog
+and redraws the waveform canvas.</p>
+<h3 id="mitigating-the-effects">Mitigating the Effects</h3>
+<p>To manage the effects of background throttling in production
+applications:</p>
+<ul>
+<li><strong>Listen to the Page Visibility API:</strong> Attach listeners
+to <code>document.visibilitychange</code>. When
+<code>document.hidden</code> is true, pause unnecessary rendering
+updates, and force a single synchronization redraw of the playhead as
+soon as the document becomes visible again.</li>
+<li><strong>Rely on Real Audio Time:</strong> Ensure visual position
+calculations strictly derive from <code>audio.currentTime</code> or
+<code>AudioContext.currentTime</code> rather than counting accumulated
+animation frames, preventing cumulative timing drift.</li>
+<li><strong>Offload Logic via Web Workers:</strong> For custom
+extensions or continuous background calculations, run tracking scripts
+inside Web Workers, which are subject to less aggressive throttling than
+main-thread UI animations.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/browser-throttling-impact-on-wavesurfer-js-animations';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

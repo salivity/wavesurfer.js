@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freeing Memory and Canvas Contexts in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js is a standard solution for rendering interactive audio waveforms in web applications, but rendering large audio files can introduce severe memory leaks if internal resources are not disposed of properly. This article outlines targeted garbag">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/freeing-memory-and-canvas-contexts-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Freeing Memory and Canvas Contexts in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/freeing-memory-and-canvas-contexts-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js is a standard solution for rendering interactive audio waveforms in web applications, but rendering large audio files can introduce severe memory leaks if internal resources are not disposed of properly. This article outlines targeted garbag" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="freeing-memory-and-canvas-contexts-in-wavesurferjs">Freeing
+Memory and Canvas Contexts in Wavesurfer.js</h1>
+<p>Wavesurfer.js is a standard solution for rendering interactive audio
+waveforms in web applications, but rendering large audio files can
+introduce severe memory leaks if internal resources are not disposed of
+properly. This article outlines targeted garbage collection and memory
+management strategies to ensure that dereferenced peak arrays, audio
+buffers, and HTML5 canvas rendering contexts are completely purged from
+browser memory when destroying or updating waveform instances.</p>
+<h3 id="the-lifecycle-of-peak-arrays-and-canvas-buffers">The Lifecycle
+of Peak Arrays and Canvas Buffers</h3>
+<p>Wavesurfer.js processes audio into multi-channel peak data, often
+represented as large <code>Float32Array</code> instances. When
+visualizing hours of audio or repeatedly loading tracks in Single Page
+Applications (SPAs), these arrays consume substantial heap memory.
+Simultaneously, the underlying rendering engine allocates
+hardware-accelerated <code>&lt;canvas&gt;</code> elements.</p>
+<p>Browser garbage collectors cannot reclaim these resources if:</p>
+<ol type="1">
+<li>Retaining paths exist in active closures or event listeners.</li>
+<li>The browser engine retains the backing store of a detached
+<code>&lt;canvas&gt;</code> element in GPU/system memory.</li>
+<li>Decoded <code>AudioBuffer</code> or peak arrays remain cached in
+local component state.</li>
+</ol>
+<h3 id="explicit-canvas-backing-store-deallocation">Explicit Canvas
+Backing-Store Deallocation</h3>
+<p>Removing a <code>&lt;canvas&gt;</code> element from the DOM does not
+immediately free its graphical backing store. To force the browser's
+rendering engine to deallocate canvas memory immediately, you must reset
+the canvas dimensions before dereferencing:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">releaseCanvas</span>(canvas) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>canvas) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Resetting dimensions clears the GPU backing buffer</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  canvas<span class="op">.</span><span class="at">width</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  canvas<span class="op">.</span><span class="at">height</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Clear reference to context if cached locally</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> ctx <span class="op">=</span> canvas<span class="op">.</span><span class="fu">getContext</span>(<span class="st">&#39;2d&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (ctx) {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span><span class="fu">clearRect</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  canvas<span class="op">.</span><span class="fu">remove</span>()<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>When tearing down an instance of Wavesurfer, traverse the wrapper
+element to locate all generated canvas elements (including progress and
+wave layers) and apply this clearing step before the nodes are dropped
+from memory.</p>
+<h3 id="breaking-retaining-paths-in-peaks-and-buffers">Breaking
+Retaining Paths in Peaks and Buffers</h3>
+<p>Passing pre-computed peaks to Wavesurfer avoids client-side decoding
+overhead, but caching these arrays in persistent objects prevents
+garbage collection.</p>
+<p>To allow Mark-and-Sweep garbage collection to mark peak data as
+unreachable:</p>
+<ol type="1">
+<li><strong>Nullify Local Arrays:</strong> If you compute or fetch peaks
+as multidimensional arrays or <code>Float32Array</code> objects, set
+their variables to <code>null</code> immediately after passing them to
+<code>wavesurfer.load()</code> or after rendering completes.</li>
+<li><strong>Sever Worker References:</strong> If using a Web Worker to
+calculate peaks, ensure the message payload drops its local references
+or uses transferable objects (<code>arrayBuffer.transfer()</code> or
+passing the buffer in the second argument of <code>postMessage</code>)
+so memory ownership is yielded rather than cloned.</li>
+</ol>
+<h3 id="proper-execution-of-destroy">Proper Execution of
+<code>destroy()</code></h3>
+<p>Calling <code>wavesurfer.destroy()</code> is essential, but default
+teardown can fail to release all references if custom bindings are
+attached. A complete disposal sequence requires:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">destroyWaveformInstance</span>(wavesurfer) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>wavesurfer) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 1. Unsubscribe from all internal and external audio events</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">unAll</span>()<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 2. Clear canvas buffers directly</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> container <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getWrapper</span>()<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (container) {</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> canvases <span class="op">=</span> container<span class="op">.</span><span class="fu">querySelectorAll</span>(<span class="st">&#39;canvas&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    canvases<span class="op">.</span><span class="fu">forEach</span>(releaseCanvas)<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 3. Invoke native destruction to close AudioContext and remove DOM nodes</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">destroy</span>()<span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// 4. Nullify the instance</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  wavesurfer <span class="op">=</span> <span class="kw">null</span><span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="decoupling-event-listeners-and-closures">Decoupling Event
+Listeners and Closures</h3>
+<p>Memory leaks associated with peak data often trace back to window
+resize handlers, custom animation loops
+(<code>requestAnimationFrame</code>), or state management hooks. When an
+event listener retains access to the <code>wavesurfer</code> instance or
+its <code>peaks</code> variable through scope:</p>
+<ul>
+<li>Always remove window-level listeners
+(<code>window.removeEventListener('resize', ...)</code>) during unmount
+phases.</li>
+<li>Cancel pending animation frames (<code>cancelAnimationFrame</code>)
+driving custom playhead or audio visualization updates.</li>
+<li>Use <code>WeakMap</code> or <code>WeakRef</code> patterns if you
+maintain an external metadata cache tied to waveform DOM containers,
+ensuring cached analysis data does not outlive the visual element.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/freeing-memory-and-canvas-contexts-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

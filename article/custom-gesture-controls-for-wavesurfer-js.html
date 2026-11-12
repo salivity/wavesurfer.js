@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Gesture Controls for Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Integrating custom gesture controls into Wavesurfer.js allows users to navigate, zoom, and interact with audio waveforms using mobile touch gestures and trackpads. This guide covers how to bind custom gestures—such as pinch-to-zoom, two-finger panning, an">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/custom-gesture-controls-for-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Custom Gesture Controls for Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/custom-gesture-controls-for-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Integrating custom gesture controls into Wavesurfer.js allows users to navigate, zoom, and interact with audio waveforms using mobile touch gestures and trackpads. This guide covers how to bind custom gestures—such as pinch-to-zoom, two-finger panning, an" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="custom-gesture-controls-for-wavesurferjs">Custom Gesture
+Controls for Wavesurfer.js</h1>
+<p>Integrating custom gesture controls into Wavesurfer.js allows users
+to navigate, zoom, and interact with audio waveforms using mobile touch
+gestures and trackpads. This guide covers how to bind custom
+gestures—such as pinch-to-zoom, two-finger panning, and double-tap
+actions—to a Wavesurfer.js instance using both the Hammer.js library and
+native browser Pointer Events.</p>
+<h3 id="preparing-the-container">Preparing the Container</h3>
+<p>Before attaching touch listeners, ensure the Wavesurfer wrapper
+element allows custom touch handling. By default, mobile browsers
+capture gestures for scrolling and zooming the entire page. Set the CSS
+<code>touch-action</code> property on your waveform container to prevent
+default behavior:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span> {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">touch-action</span><span class="ch">:</span> <span class="dv">pan-y</span><span class="op">;</span> <span class="co">/* Allows vertical page scroll while capturing horizontal gestures */</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">user-select</span><span class="ch">:</span> <span class="dv">none</span><span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">overflow</span><span class="ch">:</span> <span class="dv">hidden</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h3 id="method-1-binding-gestures-with-hammerjs">Method 1: Binding
+Gestures with Hammer.js</h3>
+<p>Hammer.js simplifies complex multi-touch recognition like pinches and
+directional pans.</p>
+<h4 id="1-pinch-to-zoom">1. Pinch-to-Zoom</h4>
+<p>To zoom in and out of the waveform, bind the <code>pinch</code>
+recognizer to modify Wavesurfer's <code>zoom</code> level based on the
+event scale.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> container <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;waveform&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ws <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> container<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F4A85&#39;</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#383351&#39;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">minPxPerSec</span><span class="op">:</span> <span class="dv">50</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> hammer <span class="op">=</span> <span class="kw">new</span> Hammer<span class="op">.</span><span class="fu">Manager</span>(container)<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Enable Pinch recognizer</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> pinch <span class="op">=</span> <span class="kw">new</span> Hammer<span class="op">.</span><span class="fu">Pinch</span>()<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>hammer<span class="op">.</span><span class="fu">add</span>(pinch)<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> initialZoom <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>hammer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;pinchstart&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Store the zoom level at the start of the gesture</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  initialZoom <span class="op">=</span> ws<span class="op">.</span><span class="at">options</span><span class="op">.</span><span class="at">minPxPerSec</span> <span class="op">||</span> <span class="dv">50</span><span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>hammer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;pinchmove&#39;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Calculate new pixels per second using gesture scale</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> newZoom <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="dv">20</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">min</span>(<span class="dv">1000</span><span class="op">,</span> initialZoom <span class="op">*</span> e<span class="op">.</span><span class="at">scale</span>))<span class="op">;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  ws<span class="op">.</span><span class="fu">zoom</span>(newZoom)<span class="op">;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="2-pan-horizontal-waveform-scrubbing--scrolling">2. Pan
+(Horizontal Waveform Scrubbing / Scrolling)</h4>
+<p>When the waveform is zoomed in, use the <code>pan</code> event to
+smoothly scroll along the time axis.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> pan <span class="op">=</span> <span class="kw">new</span> Hammer<span class="op">.</span><span class="fu">Pan</span>({ <span class="dt">direction</span><span class="op">:</span> Hammer<span class="op">.</span><span class="at">DIRECTION_HORIZONTAL</span><span class="op">,</span> <span class="dt">threshold</span><span class="op">:</span> <span class="dv">10</span> })<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>hammer<span class="op">.</span><span class="fu">add</span>(pan)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Ensure Pan and Pinch can be recognized simultaneously if needed</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>pinch<span class="op">.</span><span class="fu">recognizeWith</span>(pan)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> startScrollLeft <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>hammer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;panstart&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> scrollContainer <span class="op">=</span> ws<span class="op">.</span><span class="fu">getWrapper</span>()<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  startScrollLeft <span class="op">=</span> scrollContainer<span class="op">.</span><span class="at">scrollLeft</span><span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>hammer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;panmove&#39;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> scrollContainer <span class="op">=</span> ws<span class="op">.</span><span class="fu">getWrapper</span>()<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Dragging right moves the view to earlier in the track</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  scrollContainer<span class="op">.</span><span class="at">scrollLeft</span> <span class="op">=</span> startScrollLeft <span class="op">-</span> e<span class="op">.</span><span class="at">deltaX</span><span class="op">;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="3-double-tap-to-playpause">3. Double Tap to Play/Pause</h4>
+<p>Add a double-tap recognizer to toggle playback without interfering
+with single-click seeking:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> doubleTap <span class="op">=</span> <span class="kw">new</span> Hammer<span class="op">.</span><span class="fu">Tap</span>({ <span class="dt">event</span><span class="op">:</span> <span class="st">&#39;doubletap&#39;</span><span class="op">,</span> <span class="dt">taps</span><span class="op">:</span> <span class="dv">2</span> })<span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>hammer<span class="op">.</span><span class="fu">add</span>(doubleTap)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>hammer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;doubletap&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  ws<span class="op">.</span><span class="fu">playPause</span>()<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<hr />
+<h3 id="method-2-implementing-native-pointer-events">Method 2:
+Implementing Native Pointer Events</h3>
+<p>If you prefer to avoid third-party dependencies, modern browsers
+support Pointer Events (<code>pointerdown</code>,
+<code>pointermove</code>, <code>pointerup</code>), which unify mouse,
+pen, and touch inputs.</p>
+<h4 id="tracking-multi-touch-for-pinch-to-zoom">Tracking Multi-Touch for
+Pinch-to-Zoom</h4>
+<p>Native pinch recognition requires tracking active pointers in a cache
+and calculating the Euclidean distance between two contact points.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> container <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;waveform&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> activePointers <span class="op">=</span> <span class="kw">new</span> <span class="bu">Map</span>()<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> initialDistance <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> initialZoom <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">getDistance</span>(p1<span class="op">,</span> p2) {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">hypot</span>(p1<span class="op">.</span><span class="at">clientX</span> <span class="op">-</span> p2<span class="op">.</span><span class="at">clientX</span><span class="op">,</span> p1<span class="op">.</span><span class="at">clientY</span> <span class="op">-</span> p2<span class="op">.</span><span class="at">clientY</span>)<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;pointerdown&#39;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  activePointers<span class="op">.</span><span class="fu">set</span>(e<span class="op">.</span><span class="at">pointerId</span><span class="op">,</span> e)<span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  container<span class="op">.</span><span class="fu">setPointerCapture</span>(e<span class="op">.</span><span class="at">pointerId</span>)<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (activePointers<span class="op">.</span><span class="at">size</span> <span class="op">===</span> <span class="dv">2</span>) {</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> [p1<span class="op">,</span> p2] <span class="op">=</span> <span class="bu">Array</span><span class="op">.</span><span class="fu">from</span>(activePointers<span class="op">.</span><span class="fu">values</span>())<span class="op">;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    initialDistance <span class="op">=</span> <span class="fu">getDistance</span>(p1<span class="op">,</span> p2)<span class="op">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    initialZoom <span class="op">=</span> ws<span class="op">.</span><span class="at">options</span><span class="op">.</span><span class="at">minPxPerSec</span> <span class="op">||</span> <span class="dv">50</span><span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;pointermove&#39;</span><span class="op">,</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>activePointers<span class="op">.</span><span class="fu">has</span>(e<span class="op">.</span><span class="at">pointerId</span>)) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  activePointers<span class="op">.</span><span class="fu">set</span>(e<span class="op">.</span><span class="at">pointerId</span><span class="op">,</span> e)<span class="op">;</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Two fingers active: perform zoom</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (activePointers<span class="op">.</span><span class="at">size</span> <span class="op">===</span> <span class="dv">2</span>) {</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> [p1<span class="op">,</span> p2] <span class="op">=</span> <span class="bu">Array</span><span class="op">.</span><span class="fu">from</span>(activePointers<span class="op">.</span><span class="fu">values</span>())<span class="op">;</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> currentDistance <span class="op">=</span> <span class="fu">getDistance</span>(p1<span class="op">,</span> p2)<span class="op">;</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (initialDistance <span class="op">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> scale <span class="op">=</span> currentDistance <span class="op">/</span> initialDistance<span class="op">;</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> newZoom <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="dv">10</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">min</span>(<span class="dv">500</span><span class="op">,</span> initialZoom <span class="op">*</span> scale))<span class="op">;</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>      ws<span class="op">.</span><span class="fu">zoom</span>(newZoom)<span class="op">;</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> cleanupPointer <span class="op">=</span> (e) <span class="kw">=&gt;</span> {</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>  activePointers<span class="op">.</span><span class="fu">delete</span>(e<span class="op">.</span><span class="at">pointerId</span>)<span class="op">;</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>  <span class="cf">try</span> {</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    container<span class="op">.</span><span class="fu">releasePointerCapture</span>(e<span class="op">.</span><span class="at">pointerId</span>)<span class="op">;</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">catch</span> (err) {</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Pointer capture might have already been released</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (activePointers<span class="op">.</span><span class="at">size</span> <span class="op">&lt;</span> <span class="dv">2</span>) {</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    initialDistance <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;pointerup&#39;</span><span class="op">,</span> cleanupPointer)<span class="op">;</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>container<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;pointercancel&#39;</span><span class="op">,</span> cleanupPointer)<span class="op">;</span></span></code></pre></div>
+<h3 id="choosing-between-native-events-and-hammerjs">Choosing Between
+Native Events and Hammer.js</h3>
+<ul>
+<li><strong>Hammer.js</strong> is best suited for legacy application
+support or when complex multi-finger gestures (rotations, swipes with
+velocity thresholds, and multi-tap states) are required with minimal
+custom math.</li>
+<li><strong>Native Pointer Events</strong> are recommended for modern
+applications using Wavesurfer.js v7+. They reduce bundle size, eliminate
+external library synchronization issues, and offer native performance
+with the browser's hardware-accelerated event loop.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/custom-gesture-controls-for-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

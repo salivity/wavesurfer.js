@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crisp Canvas Graphics in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Wavesurfer.js renders interactive audio waveforms using the HTML5 &lt;canvas&gt; element, which can appear blurry or soft when scaled across high-DPI displays or non-standard container sizes. Applying the CSS image-rendering property directly to the canvas elem">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/crisp-canvas-graphics-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Crisp Canvas Graphics in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/crisp-canvas-graphics-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Wavesurfer.js renders interactive audio waveforms using the HTML5 &lt;canvas&gt; element, which can appear blurry or soft when scaled across high-DPI displays or non-standard container sizes. Applying the CSS image-rendering property directly to the canvas elem" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="crisp-canvas-graphics-in-wavesurferjs">Crisp Canvas Graphics in
+Wavesurfer.js</h1>
+<p>Wavesurfer.js renders interactive audio waveforms using the HTML5
+<code>&lt;canvas&gt;</code> element, which can appear blurry or soft
+when scaled across high-DPI displays or non-standard container sizes.
+Applying the CSS <code>image-rendering</code> property directly to the
+canvas elements inside Wavesurfer.js forces browsers to use sharp
+scaling algorithms instead of default bilinear smoothing. This guide
+explains which <code>image-rendering</code> values achieve crisp canvas
+visuals and how to implement them effectively.</p>
+<h3 id="the-essential-image-rendering-css-properties">The Essential
+<code>image-rendering</code> CSS Properties</h3>
+<p>To prevent canvas blurriness and enforce sharp rendering, use the
+following <code>image-rendering</code> properties across modern and
+legacy browsers:</p>
+<ul>
+<li><strong><code>image-rendering: pixelated;</code></strong> This is
+the modern standard supported by Chromium browsers (Chrome, Edge) and
+Safari. When an image or canvas is scaled up, it uses a nearest-neighbor
+algorithm to keep edges sharp and pixel-perfect rather than blurring
+transitions.</li>
+<li><strong><code>image-rendering: crisp-edges;</code></strong> This is
+the standard property used primarily by Firefox. It preserves contrast
+and sharp lines without smoothing, making it ideal for the high-contrast
+bar and waveform graphs Wavesurfer.js generates.</li>
+<li><strong><code>image-rendering: -webkit-optimize-contrast;</code></strong>
+A legacy WebKit property that serves as a fallback for older versions of
+Safari and Chrome to boost line contrast and reduce anti-aliasing
+blur.</li>
+</ul>
+<h3 id="applying-the-css-to-wavesurferjs">Applying the CSS to
+Wavesurfer.js</h3>
+<p>Wavesurfer.js dynamically inserts one or more
+<code>&lt;canvas&gt;</code> elements into the container defined during
+initialization. You can target these canvases directly in your
+stylesheet using the container's ID or class.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* Target all canvas elements generated by Wavesurfer.js */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#waveform</span> canvas {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">image-rendering</span><span class="ch">:</span> <span class="dv">-webkit-optimize-contrast</span><span class="op">;</span> <span class="co">/* Legacy WebKit fallback */</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">image-rendering</span><span class="ch">:</span> <span class="dv">crisp-edges</span><span class="op">;</span>               <span class="co">/* Firefox */</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">image-rendering</span><span class="ch">:</span> <span class="dv">pixelated</span><span class="op">;</span>                 <span class="co">/* Chrome, Edge, Safari */</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="canvas-resolution-considerations">Canvas Resolution
+Considerations</h3>
+<p>While CSS <code>image-rendering</code> governs how the browser scales
+the rendered bitmap, optimal sharpness in Wavesurfer.js also relies on
+matching the canvas's internal pixel dimensions to the screen's hardware
+pixels.</p>
+<p>Ensure that your Wavesurfer.js initialization options take the device
+pixel ratio into account:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">pixelRatio</span><span class="op">:</span> <span class="bu">window</span><span class="op">.</span><span class="at">devicePixelRatio</span> <span class="op">||</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Combining <code>pixelRatio: window.devicePixelRatio</code> with CSS
+<code>image-rendering: pixelated</code> ensures the canvas draws at true
+native display resolution while preventing any layout-induced
+interpolation blur.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/crisp-canvas-graphics-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

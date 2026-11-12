@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highlight Audio Peaks Over 0 dB in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This guide explains how to detect and visually highlight clipped audio peaks over 0 dBFS in Wavesurfer.js. Standard waveform rendering in Wavesurfer.js normalizes audio display but does not inherently flag digital clipping out of the box. By accessing the">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/highlight-audio-peaks-over-0-d-b-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Highlight Audio Peaks Over 0 dB in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/highlight-audio-peaks-over-0-d-b-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide explains how to detect and visually highlight clipped audio peaks over 0 dBFS in Wavesurfer.js. Standard waveform rendering in Wavesurfer.js normalizes audio display but does not inherently flag digital clipping out of the box. By accessing the" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="highlight-audio-peaks-over-0-db-in-wavesurferjs">Highlight Audio
+Peaks Over 0 dB in Wavesurfer.js</h1>
+<p>This guide explains how to detect and visually highlight clipped
+audio peaks over 0 dBFS in Wavesurfer.js. Standard waveform rendering in
+Wavesurfer.js normalizes audio display but does not inherently flag
+digital clipping out of the box. By accessing the decoded audio buffer
+data, identifying sample values that reach or exceed the 0 dBFS
+threshold (values <span class="math inline">\(\ge 1.0\)</span> or <span
+class="math inline">\(\le -1.0\)</span>), and utilizing the
+Wavesurfer.js Regions plugin, you can automatically mark clipped areas
+with visible colored overlays across your waveform.</p>
+<h2 id="understanding-0-dbfs-in-the-web-audio-api">Understanding 0 dBFS
+in the Web Audio API</h2>
+<p>In digital audio decoded by browsers via the Web Audio API, samples
+are stored as 32-bit floating-point numbers ranging from
+<code>-1.0</code> to <code>1.0</code>. A sample value of
+<code>1.0</code> or <code>-1.0</code> corresponds to 0 dBFS (decibels
+relative to full scale). Any digital signal attempting to exceed this
+range results in clipping, causing harmonic distortion. To visually flag
+these sections in Wavesurfer.js, you must analyze the underlying
+<code>AudioBuffer</code> and map the timestamps of these peak values
+onto the visual timeline.</p>
+<h2
+id="step-by-step-implementation-using-the-regions-plugin">Step-by-Step
+Implementation Using the Regions Plugin</h2>
+<p>The most effective way to highlight clipped peaks without altering
+the core waveform drawing algorithm is using the official
+<code>RegionsPlugin</code>.</p>
+<h3 id="1-initialize-wavesurfer-and-the-regions-plugin">1. Initialize
+Wavesurfer and the Regions Plugin</h3>
+<p>Set up your Wavesurfer instance alongside the Regions plugin:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> RegionsPlugin <span class="im">from</span> <span class="st">&#39;wavesurfer.js/dist/plugins/regions.esm.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wsRegions <span class="op">=</span> RegionsPlugin<span class="op">.</span><span class="fu">create</span>()<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#312E81&#39;</span><span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">plugins</span><span class="op">:</span> [wsRegions]<span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;path/to/audio-file.wav&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="2-analyze-the-audiobuffer-for-clipping">2. Analyze the
+AudioBuffer for Clipping</h3>
+<p>Listen for the <code>decode</code> event, which fires as soon as the
+audio file has been downloaded and decoded into an
+<code>AudioBuffer</code>. Iterate through the channel data to locate
+samples where the absolute amplitude meets or exceeds the clipping
+threshold (typically <code>0.99</code> to <code>1.0</code> to catch
+near-clipping and hard-clipped limits).</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;decode&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> buffer <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getDecodedData</span>()<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>buffer) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> sampleRate <span class="op">=</span> buffer<span class="op">.</span><span class="at">sampleRate</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> numChannels <span class="op">=</span> buffer<span class="op">.</span><span class="at">numberOfChannels</span><span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> threshold <span class="op">=</span> <span class="fl">0.999</span><span class="op">;</span> <span class="co">// Peak threshold for 0 dBFS</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> clipRanges <span class="op">=</span> []<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">let</span> channel <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> channel <span class="op">&lt;</span> numChannels<span class="op">;</span> channel<span class="op">++</span>) {</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> channelData <span class="op">=</span> buffer<span class="op">.</span><span class="fu">getChannelData</span>(channel)<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> isClipping <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> clipStart <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> channelData<span class="op">.</span><span class="at">length</span><span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="kw">const</span> isPeak <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>(channelData[i]) <span class="op">&gt;=</span> threshold<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (isPeak <span class="op">&amp;&amp;</span> <span class="op">!</span>isClipping) {</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        isClipping <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        clipStart <span class="op">=</span> i <span class="op">/</span> sampleRate<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> <span class="cf">if</span> (<span class="op">!</span>isPeak <span class="op">&amp;&amp;</span> isClipping) {</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        isClipping <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> clipEnd <span class="op">=</span> i <span class="op">/</span> sampleRate<span class="op">;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>        clipRanges<span class="op">.</span><span class="fu">push</span>({ <span class="dt">start</span><span class="op">:</span> clipStart<span class="op">,</span> <span class="dt">end</span><span class="op">:</span> clipEnd })<span class="op">;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Handle audio that ends on a clipped sample</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (isClipping) {</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>      clipRanges<span class="op">.</span><span class="fu">push</span>({ <span class="dt">start</span><span class="op">:</span> clipStart<span class="op">,</span> <span class="dt">end</span><span class="op">:</span> channelData<span class="op">.</span><span class="at">length</span> <span class="op">/</span> sampleRate })<span class="op">;</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">highlightClippedPeaks</span>(clipRanges)<span class="op">;</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="3-draw-red-overlay-regions-on-the-waveform">3. Draw Red Overlay
+Regions on the Waveform</h3>
+<p>Because individual clipped peaks can be as brief as a single sample
+(a fraction of a millisecond), expand extremely short durations to a
+minimum visible width (e.g., 20 to 50 milliseconds) so users can easily
+see them on the interface.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">highlightClippedPeaks</span>(clipRanges) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Clear any existing regions before drawing</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  wsRegions<span class="op">.</span><span class="fu">clearRegions</span>()<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> minVisualDuration <span class="op">=</span> <span class="fl">0.03</span><span class="op">;</span> <span class="co">// Minimum display width in seconds (30ms)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  clipRanges<span class="op">.</span><span class="fu">forEach</span>((range) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> { start<span class="op">,</span> end } <span class="op">=</span> range<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (end <span class="op">-</span> start <span class="op">&lt;</span> minVisualDuration) {</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>      end <span class="op">=</span> start <span class="op">+</span> minVisualDuration<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    wsRegions<span class="op">.</span><span class="fu">addRegion</span>({</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">start</span><span class="op">:</span> start<span class="op">,</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">end</span><span class="op">:</span> end<span class="op">,</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">color</span><span class="op">:</span> <span class="st">&#39;rgba(239, 68, 68, 0.6)&#39;</span><span class="op">,</span> <span class="co">// Semi-transparent red</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">drag</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">resize</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h2 id="alternative-colorized-custom-peak-rendering">Alternative:
+Colorized Custom Peak Rendering</h2>
+<p>If you do not want to use floating region overlays, you can calculate
+the peaks beforehand and use Wavesurfer's custom rendering hooks:</p>
+<ol type="1">
+<li>Extract peak arrays manually from the <code>AudioBuffer</code>.</li>
+<li>Split the waveform peaks into linear segments.</li>
+<li>Pass a custom <code>renderFunction</code> option to
+<code>WaveSurfer.create()</code> that iterates over peak coordinates in
+the internal HTML5 <code>&lt;canvas&gt;</code> context, rendering path
+strokes in red (<code>#EF4444</code>) whenever a sample reaches the
+maximum canvas height boundaries.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/highlight-audio-peaks-over-0-d-b-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

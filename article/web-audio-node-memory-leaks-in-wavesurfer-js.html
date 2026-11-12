@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Audio Node Memory Leaks in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Failing to properly unlink and disconnect Web Audio node graphs in Wavesurfer.js prevents the browser&#39;s garbage collector from freeing decoded audio buffers, internal processing pipelines, and related event listeners. Because the Web Audio API retains act">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/web-audio-node-memory-leaks-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Web Audio Node Memory Leaks in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/web-audio-node-memory-leaks-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Failing to properly unlink and disconnect Web Audio node graphs in Wavesurfer.js prevents the browser&#39;s garbage collector from freeing decoded audio buffers, internal processing pipelines, and related event listeners. Because the Web Audio API retains act" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="web-audio-node-memory-leaks-in-wavesurferjs">Web Audio Node
+Memory Leaks in Wavesurfer.js</h1>
+<p>Failing to properly unlink and disconnect Web Audio node graphs in
+Wavesurfer.js prevents the browser's garbage collector from freeing
+decoded audio buffers, internal processing pipelines, and related event
+listeners. Because the Web Audio API retains active internal references
+to nodes connected to an <code>AudioContext</code>, unclosed graphs
+cause linear memory growth each time an audio file or component reloads,
+eventually leading to audio degradation, severe latency, and browser tab
+crashes.</p>
+<h3 id="how-web-audio-nodes-evade-garbage-collection">How Web Audio
+Nodes Evade Garbage Collection</h3>
+<p>The Web Audio API is implemented directly in the browser's native C++
+engine. Unlike standard JavaScript objects that are garbage-collected
+once they fall out of scope, an <code>AudioNode</code> remains rooted in
+memory as long as it is connected downstream to an active
+<code>AudioContext.destination</code> or maintains an active output
+connection.</p>
+<p>When Wavesurfer.js initializes, it builds a graph typically
+consisting of an <code>AudioBufferSourceNode</code> or
+<code>MediaElementAudioSourceNode</code>, routed through
+<code>GainNode</code>, <code>AnalyserNode</code>, and optional custom
+filter nodes before reaching the output destination. If these nodes are
+not explicitly decoupled via <code>disconnect()</code>, the browser
+assumes the audio pipeline is still actively routing or processing
+signals, keeping the entire chain rooted in memory indefinitely.</p>
+<h3 id="retained-audiobuffer-allocations">Retained AudioBuffer
+Allocations</h3>
+<p>The most severe consequence of an unlinked node graph is the
+permanent retention of the raw <code>AudioBuffer</code>. Uncompressed
+PCM audio requires significantly more memory than compressed files like
+MP3 or AAC:</p>
+<ul>
+<li>A standard 3-minute stereo track at 44.1 kHz, 32-bit float requires
+approximately 60 MB of raw RAM.</li>
+<li>If a single-page application (SPA) mounts and unmounts Wavesurfer.js
+instances without severing node connections, these multi-megabyte
+allocations continuously stack in heap memory.</li>
+<li>Even if the JavaScript reference to the Wavesurfer instance is
+discarded, the native audio thread retains the buffer via the connected
+source node.</li>
+</ul>
+<h3 id="leaked-event-handlers-and-processing-loops">Leaked Event
+Handlers and Processing Loops</h3>
+<p>Wavesurfer.js relies on internal listeners, animation loops
+(<code>requestAnimationFrame</code>), and sometimes
+<code>ScriptProcessorNode</code> or <code>AudioWorkletNode</code> for
+real-time waveform visualization and playback tracking.</p>
+<p>When nodes remain connected:</p>
+<ul>
+<li>Analyser nodes continue sampling empty or stale signals, wasting CPU
+cycles on unnecessary FFT (Fast Fourier Transform) calculations.</li>
+<li>Associated JavaScript callbacks and event listeners attached to the
+audio context or source elements remain pinned in memory, holding onto
+scope closures that prevent surrounding application variables and
+components from being garbage-collected.</li>
+</ul>
+<h3 id="audio-thread-starvation-and-context-exhaustion">Audio Thread
+Starvation and Context Exhaustion</h3>
+<p>Browsers enforce a strict limit on the number of simultaneous
+hardware-bound <code>AudioContext</code> instances—often between 6 and
+32 depending on the browser and platform.</p>
+<p>If Wavesurfer instances are destroyed without closing the
+<code>AudioContext</code> or severing node graphs, the browser quickly
+exhausts its hardware context budget. Once this limit is reached,
+subsequent attempts to initialize audio will throw errors or silently
+fail, causing playback to freeze and resulting in audio stuttering
+across the entire browser session.</p>
+<h3 id="preventing-node-graph-leaks-in-wavesurferjs">Preventing Node
+Graph Leaks in Wavesurfer.js</h3>
+<p>To completely prevent memory leaks, you must explicitly dismantle the
+node graph during teardown:</p>
+<ol type="1">
+<li><strong>Invoke Wavesurfer's Native Cleanup:</strong> Always call
+<code>wavesurfer.destroy()</code> when tearing down a component. This
+method disconnects internal filters, unbinds media events, and clears
+references.</li>
+<li><strong>Sever Custom Nodes:</strong> If you injected custom Web
+Audio nodes (such as equalizers, panners, or dynamic compressors) via
+Wavesurfer's backend, manually call <code>node.disconnect()</code> on
+each node starting from the source down to the destination.</li>
+<li><strong>Close the AudioContext:</strong> If you provided a custom
+<code>AudioContext</code>, ensure you invoke
+<code>audioContext.close()</code> to release system-level audio thread
+resources.</li>
+<li><strong>Nullify Buffer References:</strong> Ensure all external
+references to the decoded audio buffer are set to <code>null</code> to
+facilitate immediate garbage collection.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/web-audio-node-memory-leaks-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

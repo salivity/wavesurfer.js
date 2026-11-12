@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding Active Color in Wavesurfer.js Regions - wavesurfer.js</title>
+    <meta name="description" content="This article explains the purpose and functionality of the active color property in Wavesurfer.js regions. It explores how this styling mechanism provides dynamic visual feedback, distinguishes the current playback or selection state from idle regions, an">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/understanding-active-color-in-wavesurfer-js-regions">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Understanding Active Color in Wavesurfer.js Regions - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/understanding-active-color-in-wavesurfer-js-regions" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains the purpose and functionality of the active color property in Wavesurfer.js regions. It explores how this styling mechanism provides dynamic visual feedback, distinguishes the current playback or selection state from idle regions, an" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="understanding-active-color-in-wavesurferjs-regions">Understanding
+Active Color in Wavesurfer.js Regions</h1>
+<p>This article explains the purpose and functionality of the active
+color property in Wavesurfer.js regions. It explores how this styling
+mechanism provides dynamic visual feedback, distinguishes the current
+playback or selection state from idle regions, and improves user
+interaction during waveform analysis and editing.</p>
+<h3 id="providing-real-time-playback-feedback">Providing Real-Time
+Playback Feedback</h3>
+<p>The primary purpose of the active color in the Wavesurfer.js Regions
+plugin is to indicate real-time playback status. In an audio timeline
+populated with multiple segments, a static appearance makes it difficult
+for users to track which slice of audio is currently being rendered.</p>
+<p>When the audio playhead enters the boundaries of a region, the region
+transitions into an active state. Applying an active color dynamically
+changes the region’s background or border styling for the exact duration
+the playhead remains inside it. Once the playhead moves past the end
+timestamp, the region reverts to its default idle color. This automatic
+shift acts as an intuitive visual cue synchronized with audio
+output.</p>
+<h3 id="differentiating-selection-and-focus">Differentiating Selection
+and Focus</h3>
+<p>Beyond automated playback tracking, the active color highlights
+focused or selected regions. When users interact with an audio
+waveform—such as clicking a region to loop audio, trim boundaries, or
+inspect metadata—the active styling visually confirms the target of user
+input.</p>
+<p>Without a dedicated active state, users cannot easily distinguish
+which segment is currently selected, especially when regions are closely
+packed, adjacent, or overlapping. The active color establishes a clear
+visual hierarchy, elevating the focused segment above idle background
+markers.</p>
+<h3 id="enhancing-workflow-in-complex-audio-applications">Enhancing
+Workflow in Complex Audio Applications</h3>
+<p>In dense audio annotation tasks, such as transcription, speech
+analysis, or sample curation, a project often contains dozens of
+distinct regions. The active color property serves critical functional
+roles in these environments:</p>
+<ul>
+<li><strong>Error Prevention:</strong> Ensures users know exactly which
+segment will be deleted, split, or modified before executing keyboard
+shortcuts or UI commands.</li>
+<li><strong>Loop Demarcation:</strong> Clearly outlines the boundaries
+of an active loop during continuous repetition.</li>
+<li><strong>Accessibility:</strong> Increases contrast against the base
+waveform canvas, making it easier for users to track audio progress at a
+glance without relying solely on the thin vertical playhead line.</li>
+</ul>
+<h3 id="technical-implementation">Technical Implementation</h3>
+<p>In Wavesurfer.js, the active visual state is typically handled either
+by configuring region options directly during initialization or by
+listening to region lifecycle events. When a region triggers the
+<code>region-in</code> event, the application updates the region's
+<code>color</code> property to the designated active color, and resets
+it upon <code>region-out</code>. Alternatively, modern implementations
+apply an <code>.active</code> CSS class to the region's DOM element,
+allowing the active color to be controlled cleanly through stylesheet
+rules.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/understanding-active-color-in-wavesurfer-js-regions';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

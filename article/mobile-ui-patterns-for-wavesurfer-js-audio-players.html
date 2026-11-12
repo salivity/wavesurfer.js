@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile UI Patterns for Wavesurfer.js Audio Players - wavesurfer.js</title>
+    <meta name="description" content="Designing audio players for mobile devices using Wavesurfer.js presents unique challenges, primarily balancing dense waveform visualization with limited screen real estate and touch-based interactions. This article covers the most effective mobile UI patt">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/mobile-ui-patterns-for-wavesurfer-js-audio-players">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Mobile UI Patterns for Wavesurfer.js Audio Players - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/mobile-ui-patterns-for-wavesurfer-js-audio-players" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Designing audio players for mobile devices using Wavesurfer.js presents unique challenges, primarily balancing dense waveform visualization with limited screen real estate and touch-based interactions. This article covers the most effective mobile UI patt" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="mobile-ui-patterns-for-wavesurferjs-audio-players">Mobile UI
+Patterns for Wavesurfer.js Audio Players</h1>
+<p>Designing audio players for mobile devices using Wavesurfer.js
+presents unique challenges, primarily balancing dense waveform
+visualization with limited screen real estate and touch-based
+interactions. This article covers the most effective mobile UI patterns
+for Wavesurfer.js implementations, focusing on responsive layout
+strategies, touch ergonomics, adaptive waveform rendering, and
+persistent playback architectures.</p>
+<h3 id="the-collapsible-mini-player-to-full-screen-modal">The
+Collapsible Mini-Player to Full-Screen Modal</h3>
+<p>The most established pattern for mobile audio is the persistent
+mini-player docked at the bottom of the viewport that expands into a
+full-screen view.</p>
+<p>On mobile screens, rendering a detailed, full-width waveform inline
+can interrupt page flow and consume valuable reading space. Instead,
+place a condensed bar at the bottom of the screen displaying track
+metadata and a primary play/pause button. When tapped, this bar
+transitions into a full-screen modal featuring the complete
+Wavesurfer.js visualizer. This approach isolates CPU-heavy canvas
+rendering to dedicated views and gives users ample space to scrub
+through long-form audio tracks without triggering accidental page
+scrolls.</p>
+<h3 id="simplified-and-spaced-bar-visualizations">Simplified and Spaced
+Bar Visualizations</h3>
+<p>The default high-density waveform can become an illegible, noisy blur
+on high-DPI mobile viewports. It also increases canvas draw calls,
+impacting battery life and frame rates.</p>
+<p>A better pattern is utilizing spaced, rounded vertical bars using
+Wavesurfer’s <code>barWidth</code>, <code>barGap</code>, and
+<code>barRadius</code> parameters:</p>
+<ul>
+<li><strong><code>barWidth</code>:</strong> 2px to 4px</li>
+<li><strong><code>barGap</code>:</strong> 2px to 3px</li>
+<li><strong><code>barRadius</code>:</strong> 2px or more for softened
+touch-friendly aesthetics</li>
+</ul>
+<p>This pattern improves clarity on small screens, looks modern, and
+significantly reduces the rendering load on low-powered mobile
+devices.</p>
+<h3 id="horizontal-scroller-with-fixed-playhead">Horizontal Scroller
+with Fixed Playhead</h3>
+<p>For lengthy audio files such as podcasts, audiobooks, or voice
+recordings, squeezing an entire 60-minute waveform into 375 pixels of
+screen width renders scrubbing nearly impossible.</p>
+<p>The scrolling waveform pattern decouples the waveform width from the
+viewport width. Set a fixed <code>minPxPerSec</code> to allow the
+waveform container to horizontally scroll. Fix the playback indicator
+(cursor) in the center of the viewport, moving the canvas underneath it
+as audio progresses. Combine this with mobile swipe gestures so users
+can flick horizontally to navigate through time with
+micro-precision.</p>
+<h3 id="touch-target-layering-and-scroll-delegation">Touch Target
+Layering and Scroll Delegation</h3>
+<p>Wavesurfer.js relies on click and drag events directly on its
+<code>&lt;canvas&gt;</code> element. On mobile, this often leads to UX
+friction where a user attempting to scroll down the page accidentally
+seeks the audio.</p>
+<p>To solve this:</p>
+<ol type="1">
+<li><strong>Deactivate inline drag seeking:</strong> Disable automatic
+click-to-seek directly on the waveform if the player is embedded in a
+scrollable page.</li>
+<li><strong>Add a dedicated scrub handle:</strong> Overlay a thumb
+indicator that users must explicitly touch and drag to scrub, preventing
+accidental time jumps during vertical page scrolls.</li>
+<li><strong>Expand the vertical hit area:</strong> Make the interactive
+wrapper around the waveform 44 to 48 pixels tall—the recommended minimum
+for mobile touch targets—even if the visible waveform is only 24 to 32
+pixels tall.</li>
+</ol>
+<h3 id="adaptive-resolution-and-pre-rendered-peaks">Adaptive Resolution
+and Pre-rendered Peaks</h3>
+<p>Canvas rendering directly impacts mobile browser memory and
+performance. When designing responsive layouts:</p>
+<ul>
+<li><strong>Pre-computed Peaks:</strong> Always generate and fetch audio
+peaks on the server as JSON rather than decoding whole audio files on
+the client. Mobile browsers will crash or drop frames if forced to
+decode multi-megabyte audio files through Web Audio APIs on slow network
+connections.</li>
+<li><strong>Dynamic <code>pixelRatio</code> Handling:</strong> Mobile
+screens often feature device pixel ratios of 2x or 3x. While Wavesurfer
+handles high-DPI displays automatically, setting the canvas to render at
+1x or 1.5x on lower-tier mobile hardware preserves memory and maintains
+smooth playback animations without visible degradation.</li>
+</ul>
+<h3 id="floating-action-and-sticky-toolbars">Floating Action and Sticky
+Toolbars</h3>
+<p>When displaying an inline waveform inside content (such as an article
+or chat application), anchor key controls—play, pause, skip 15s forward,
+and skip 15s backward—to a sticky toolbar or floating action cluster.
+Placing these controls within the natural thumb zone (the bottom third
+of the mobile screen) ensures that scrubbing the waveform and
+controlling playback can be accomplished comfortably with one hand.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/mobile-ui-patterns-for-wavesurfer-js-audio-players';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Render Wavesurfer Waveforms with Node-Canvas - wavesurfer.js</title>
+    <meta name="description" content="Generating server-side waveform images that match client-side Wavesurfer.js visualizations requires synchronizing audio peak extraction and canvas rendering parameters between the browser and Node.js. By configuring node-canvas with matching dimensions, p">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/render-wavesurfer-waveforms-with-node-canvas">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Render Wavesurfer Waveforms with Node-Canvas - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/render-wavesurfer-waveforms-with-node-canvas" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Generating server-side waveform images that match client-side Wavesurfer.js visualizations requires synchronizing audio peak extraction and canvas rendering parameters between the browser and Node.js. By configuring node-canvas with matching dimensions, p" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="render-wavesurfer-waveforms-with-node-canvas">Render Wavesurfer
+Waveforms with Node-Canvas</h1>
+<p>Generating server-side waveform images that match client-side
+Wavesurfer.js visualizations requires synchronizing audio peak
+extraction and canvas rendering parameters between the browser and
+Node.js. By configuring <code>node-canvas</code> with matching
+dimensions, pixel density, bar geometry, and normalization mathematics,
+you can export static PNG files that are visually indistinguishable from
+live Wavesurfer.js components.</p>
+<h3 id="1-match-canvas-dimensions-and-pixel-ratio">1. Match Canvas
+Dimensions and Pixel Ratio</h3>
+<p>Wavesurfer.js scales the HTML5 canvas based on the browser's device
+pixel ratio (<code>window.devicePixelRatio</code>) to prevent blurriness
+on high-DPI displays. In <code>node-canvas</code>, you must explicitly
+account for this scaling:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> { createCanvas } <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;canvas&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> width <span class="op">=</span> <span class="dv">800</span><span class="op">;</span> <span class="co">// Desired CSS width</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> height <span class="op">=</span> <span class="dv">128</span><span class="op">;</span> <span class="co">// Desired CSS height</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> pixelRatio <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// Set to 1 for standard 1:1 matching, or 2 for Retina</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> canvas <span class="op">=</span> <span class="fu">createCanvas</span>(width <span class="op">*</span> pixelRatio<span class="op">,</span> height <span class="op">*</span> pixelRatio)<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ctx <span class="op">=</span> canvas<span class="op">.</span><span class="fu">getContext</span>(<span class="st">&#39;2d&#39;</span>)<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>ctx<span class="op">.</span><span class="fu">scale</span>(pixelRatio<span class="op">,</span> pixelRatio)<span class="op">;</span></span></code></pre></div>
+<p>If your frontend configuration sets <code>pixelRatio: 1</code> or
+explicitly defines <code>renderOptions</code>, match that value on the
+server. Otherwise, default frontend renders will produce images scaled
+by the client screen's DPI.</p>
+<h3 id="2-synchronize-peak-decimation">2. Synchronize Peak
+Decimation</h3>
+<p>Wavesurfer does not render raw PCM samples directly; it decodes audio
+into min and max floating-point amplitudes grouped into "peaks" based on
+the total width or number of bars.</p>
+<p>To match Wavesurfer's peak generation:</p>
+<ul>
+<li>Split your decoded linear PCM data (from a 32-bit float array) into
+buckets.</li>
+<li>The number of buckets should equal the render width in pixels, or if
+using bars, <code>Math.floor(width / (barWidth + barGap))</code>.</li>
+<li>For each bucket, calculate the maximum positive value and minimum
+negative value (between <code>-1.0</code> and <code>1.0</code>).</li>
+</ul>
+<h3 id="3-replicate-drawing-parameters-and-math">3. Replicate Drawing
+Parameters and Math</h3>
+<p>Wavesurfer.js offers continuous line rendering and discrete bar
+rendering. The discrete bar style (<code>barWidth &gt; 0</code>) is the
+most common. Configure <code>node-canvas</code> to iterate over the
+calculated peaks using identical geometry rules:</p>
+<ul>
+<li><strong>Bar Placement:</strong> Each bar is positioned horizontally
+at <code>i * (barWidth + barGap)</code>.</li>
+<li><strong>Bar Alignment:</strong> Peaks are mirrored vertically around
+the vertical center (<code>height / 2</code>). A peak value of
+<code>1.0</code> extends to <code>0</code> (top), and <code>-1.0</code>
+extends to <code>height</code> (bottom).</li>
+<li><strong>Bar Radius:</strong> If Wavesurfer's <code>barRadius</code>
+option is set, use <code>ctx.roundRect()</code> or arc drawing methods
+to round the bar ends.</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">drawWaveform</span>(ctx<span class="op">,</span> peaks<span class="op">,</span> options) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> { width<span class="op">,</span> height<span class="op">,</span> barWidth <span class="op">=</span> <span class="dv">2</span><span class="op">,</span> barGap <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> barRadius <span class="op">=</span> <span class="dv">0</span><span class="op">,</span> waveColor <span class="op">=</span> <span class="st">&#39;#4F46E5&#39;</span> } <span class="op">=</span> options<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> halfHeight <span class="op">=</span> height <span class="op">/</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  ctx<span class="op">.</span><span class="at">fillStyle</span> <span class="op">=</span> waveColor<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">let</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> peaks<span class="op">.</span><span class="at">length</span><span class="op">;</span> i <span class="op">+=</span> <span class="dv">2</span>) {</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> min <span class="op">=</span> peaks[i]<span class="op">;</span>     <span class="co">// e.g., -0.8</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> max <span class="op">=</span> peaks[i <span class="op">+</span> <span class="dv">1</span>]<span class="op">;</span> <span class="co">// e.g., 0.8</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> barX <span class="op">=</span> (i <span class="op">/</span> <span class="dv">2</span>) <span class="op">*</span> (barWidth <span class="op">+</span> barGap)<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> topY <span class="op">=</span> halfHeight <span class="op">-</span> (max <span class="op">*</span> halfHeight)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> barHeight <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="dv">1</span><span class="op">,</span> (max <span class="op">-</span> min) <span class="op">*</span> halfHeight)<span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (barRadius <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> <span class="kw">typeof</span> ctx<span class="op">.</span><span class="at">roundRect</span> <span class="op">===</span> <span class="st">&#39;function&#39;</span>) {</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      ctx<span class="op">.</span><span class="fu">beginPath</span>()<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      ctx<span class="op">.</span><span class="fu">roundRect</span>(barX<span class="op">,</span> topY<span class="op">,</span> barWidth<span class="op">,</span> barHeight<span class="op">,</span> barRadius)<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      ctx<span class="op">.</span><span class="fu">fill</span>()<span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>      ctx<span class="op">.</span><span class="fu">fillRect</span>(barX<span class="op">,</span> topY<span class="op">,</span> barWidth<span class="op">,</span> barHeight)<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="4-color-normalization-and-anti-aliasing">4. Color,
+Normalization, and Anti-Aliasing</h3>
+<ul>
+<li><strong>Color:</strong> Pass identical hex, RGB, or canvas gradient
+values to <code>ctx.fillStyle</code>.</li>
+<li><strong>Normalization:</strong> Wavesurfer normalizes waveforms by
+default (<code>normalize: true</code>), scaling the peak values so the
+highest absolute peak reaches <code>1.0</code>. Divide all peak values
+by the absolute maximum peak in the file before drawing.</li>
+<li><strong>Anti-Aliasing:</strong> <code>node-canvas</code> applies
+anti-aliasing by default. To match standard browser rendering, leave
+<code>ctx.imageSmoothingEnabled = true</code> and ensure bar coordinates
+do not shift into subpixel boundaries by applying
+<code>Math.round()</code> to horizontal coordinates if
+<code>barGap</code> is an integer.</li>
+</ul>
+<h3 id="5-exporting-the-buffer">5. Exporting the Buffer</h3>
+<p>Once drawn, extract the raw PNG buffer directly to disk or an API
+response:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> fs <span class="op">=</span> <span class="pp">require</span>(<span class="st">&#39;fs&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> buffer <span class="op">=</span> canvas<span class="op">.</span><span class="fu">toBuffer</span>(<span class="st">&#39;image/png&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>fs<span class="op">.</span><span class="fu">writeFileSync</span>(<span class="st">&#39;waveform.png&#39;</span><span class="op">,</span> buffer)<span class="op">;</span></span></code></pre></div>
+<p>Using these shared calculations ensures the resulting PNG matches the
+vector output generated by Wavesurfer.js in the browser.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/render-wavesurfer-waveforms-with-node-canvas';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

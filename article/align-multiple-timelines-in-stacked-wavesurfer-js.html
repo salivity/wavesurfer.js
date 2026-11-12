@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Align Multiple Timelines in Stacked Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Aligning multiple timeline plugins across stacked Wavesurfer.js instances requires ensuring identical horizontal scaling, synchronized scroll offsets, and consistent container geometry. When building multi-track audio editors or stacked waveform visualize">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/align-multiple-timelines-in-stacked-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Align Multiple Timelines in Stacked Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/align-multiple-timelines-in-stacked-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Aligning multiple timeline plugins across stacked Wavesurfer.js instances requires ensuring identical horizontal scaling, synchronized scroll offsets, and consistent container geometry. When building multi-track audio editors or stacked waveform visualize" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="align-multiple-timelines-in-stacked-wavesurferjs">Align Multiple
+Timelines in Stacked Wavesurfer.js</h1>
+<p>Aligning multiple timeline plugins across stacked Wavesurfer.js
+instances requires ensuring identical horizontal scaling, synchronized
+scroll offsets, and consistent container geometry. When building
+multi-track audio editors or stacked waveform visualizers, disparities
+in audio duration, padding, or zoom levels can cause timelines to fall
+out of sync. This guide details how to configure timeline options,
+synchronize zoom and scroll events, and implement architectural
+strategies to keep multiple Wavesurfer.js timelines perfectly
+aligned.</p>
+<h3 id="1-ensure-identical-container-dimensions-and-css-box-models">1.
+Ensure Identical Container Dimensions and CSS Box Models</h3>
+<p>Misalignment frequently occurs due to subtle CSS differences across
+track containers. Every stacked track must share the exact same width,
+borders, margins, and padding.</p>
+<ul>
+<li>Set <code>box-sizing: border-box</code> on all track wrapper
+elements.</li>
+<li>If track controls (e.g., mute, solo, track labels) sit beside the
+waveforms, ensure these sidebars have a fixed, identical width across
+all rows.</li>
+<li>Do not apply horizontal padding or borders directly to the
+<code>div</code> assigned as the Wavesurfer <code>container</code>.
+Apply styling to an outer parent element instead.</li>
+</ul>
+<h3 id="2-standardize-zoom-and-audio-durations">2. Standardize Zoom and
+Audio Durations</h3>
+<p>Wavesurfer timelines calculate tick positions based on the ratio of
+pixels to audio duration. If the stacked audio files have different
+lengths, their default timelines will not align visually.</p>
+<h4 id="normalize-audio-duration">Normalize Audio Duration</h4>
+<p>To keep ticks aligned across files of unequal lengths, determine the
+maximum duration among all tracks and pad shorter audio clips, or
+manually set the primary track's duration across all timeline
+calculations:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> maxDuration <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="op">...</span>tracks<span class="op">.</span><span class="fu">map</span>(t <span class="kw">=&gt;</span> t<span class="op">.</span><span class="at">duration</span>))<span class="op">;</span></span></code></pre></div>
+<h4 id="lock-minpxpersec-across-instances">Lock <code>minPxPerSec</code>
+Across Instances</h4>
+<p>When initializing Wavesurfer and the Timeline plugin, pass the
+identical <code>minPxPerSec</code> (pixels per second) value to each
+instance:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> TimelinePlugin <span class="im">from</span> <span class="st">&#39;wavesurfer.js/dist/plugins/timeline.esm.js&#39;</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> commonPxPerSec <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ws1 <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform-1&#39;</span><span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">minPxPerSec</span><span class="op">:</span> commonPxPerSec<span class="op">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">plugins</span><span class="op">:</span> [</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    TimelinePlugin<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#timeline-1&#39;</span><span class="op">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">primaryLabelInterval</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">secondaryLabelInterval</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    })<span class="op">,</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  ]<span class="op">,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ws2 <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform-2&#39;</span><span class="op">,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">minPxPerSec</span><span class="op">:</span> commonPxPerSec<span class="op">,</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">plugins</span><span class="op">:</span> [</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    TimelinePlugin<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#timeline-2&#39;</span><span class="op">,</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>      <span class="dt">primaryLabelInterval</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>      <span class="dt">secondaryLabelInterval</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    })<span class="op">,</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  ]<span class="op">,</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="3-synchronize-zoom-events">3. Synchronize Zoom Events</h3>
+<p>When users zoom in or out, every Wavesurfer instance must receive the
+new <code>minPxPerSec</code> value simultaneously to maintain
+alignment.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">zoomAll</span>(pxPerSec) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  instances<span class="op">.</span><span class="fu">forEach</span>((ws) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    ws<span class="op">.</span><span class="fu">zoom</span>(pxPerSec)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="4-synchronize-horizontal-scrolling">4. Synchronize Horizontal
+Scrolling</h3>
+<p>When waveforms overflow their containers and enable horizontal
+scrolling, scrolling one waveform must scroll all other stacked
+waveforms and their corresponding timelines.</p>
+<p>Listen to the <code>scroll</code> event on the wrapper or the scroll
+container of one instance and propagate the <code>scrollLeft</code>
+position to the others:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> scrollContainer1 <span class="op">=</span> ws1<span class="op">.</span><span class="fu">getWrapper</span>()<span class="op">.</span><span class="at">parentElement</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> scrollContainer2 <span class="op">=</span> ws2<span class="op">.</span><span class="fu">getWrapper</span>()<span class="op">.</span><span class="at">parentElement</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> isSyncing <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">syncScroll</span>(source<span class="op">,</span> target) {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  source<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;scroll&#39;</span><span class="op">,</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="op">!</span>isSyncing) {</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      isSyncing <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      target<span class="op">.</span><span class="at">scrollLeft</span> <span class="op">=</span> source<span class="op">.</span><span class="at">scrollLeft</span><span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      isSyncing <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="fu">syncScroll</span>(scrollContainer1<span class="op">,</span> scrollContainer2)<span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="fu">syncScroll</span>(scrollContainer2<span class="op">,</span> scrollContainer1)<span class="op">;</span></span></code></pre></div>
+<h3 id="5-architectural-alternative-use-a-single-master-timeline">5.
+Architectural Alternative: Use a Single Master Timeline</h3>
+<p>Rendering separate Timeline plugins for every stacked track increases
+DOM overhead and the likelihood of visual drift. In most professional
+audio interfaces, a single "master" timeline is placed at the top or
+bottom of the stack.</p>
+<ol type="1">
+<li>Instantiate the <code>TimelinePlugin</code> on only the primary (or
+longest) track.</li>
+<li>Render the timeline in a dedicated sticky header above the
+waveforms.</li>
+<li>Synchronize the scrolling and zooming of all stacked waveforms to
+this master timeline.</li>
+</ol>
+<p>This pattern eliminates the need to calculate and draw redundant
+timeline canvases while ensuring the playhead and time intervals remain
+uniform across all tracks.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/align-multiple-timelines-in-stacked-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

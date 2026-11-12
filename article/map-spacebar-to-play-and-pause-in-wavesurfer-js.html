@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Spacebar to Play and Pause in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Integrating keyboard shortcuts into web audio applications significantly improves accessibility and user experience. This article explains how to capture spacebar presses using a standard JavaScript keydown event listener, prevent default browser scrollin">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/map-spacebar-to-play-and-pause-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Map Spacebar to Play and Pause in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/map-spacebar-to-play-and-pause-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Integrating keyboard shortcuts into web audio applications significantly improves accessibility and user experience. This article explains how to capture spacebar presses using a standard JavaScript keydown event listener, prevent default browser scrollin" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="map-spacebar-to-play-and-pause-in-wavesurferjs">Map Spacebar to
+Play and Pause in Wavesurfer.js</h1>
+<p>Integrating keyboard shortcuts into web audio applications
+significantly improves accessibility and user experience. This article
+explains how to capture spacebar presses using a standard JavaScript
+<code>keydown</code> event listener, prevent default browser scrolling
+behavior, ignore typing inside form fields, and map the key event
+directly to the Wavesurfer.js playback toggle method.</p>
+<h3 id="setting-up-the-keydown-listener">Setting Up the Keydown
+Listener</h3>
+<p>To control Wavesurfer.js playback with the keyboard, attach an event
+listener to the global <code>window</code> or <code>document</code>
+object that listens for the <code>keydown</code> event. When a key is
+pressed, the browser generates a <code>KeyboardEvent</code> object
+containing details about which key was pressed.</p>
+<h3 id="identifying-the-spacebar">Identifying the Spacebar</h3>
+<p>The <code>KeyboardEvent</code> object provides two primary properties
+to identify keys: <code>event.code</code> and <code>event.key</code>.
+For mapping physical keyboard keys regardless of keyboard layout,
+<code>event.code === 'Space'</code> is the most reliable condition.
+Alternatively, checking <code>event.key === ' '</code> or legacy
+<code>event.keyCode === 32</code> works, but modern JavaScript standards
+favor <code>event.code</code>.</p>
+<h3 id="preventing-default-page-scrolling">Preventing Default Page
+Scrolling</h3>
+<p>By default, pressing the spacebar in a web browser scrolls the
+viewport downward. To ensure the spacebar only affects audio playback,
+invoke <code>event.preventDefault()</code> immediately after confirming
+the spacebar was pressed.</p>
+<h3 id="avoiding-conflicts-with-form-elements">Avoiding Conflicts with
+Form Elements</h3>
+<p>If a user is typing inside an <code>&lt;input&gt;</code>,
+<code>&lt;textarea&gt;</code>, or content-editable container, pressing
+the spacebar should register as a blank character rather than triggering
+audio playback. You can prevent this conflict by inspecting
+<code>event.target.tagName</code>.</p>
+<h3 id="complete-implementation-example">Complete Implementation
+Example</h3>
+<p>Assuming an instance of Wavesurfer has already been initialized as
+<code>wavesurfer</code>, the mapping logic is implemented as
+follows:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize Wavesurfer instance</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#violet&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#purple&#39;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;/path/to/audio.mp3&#39;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Add the global keydown listener</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;keydown&#39;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Check if the pressed key is the spacebar</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="at">code</span> <span class="op">===</span> <span class="st">&#39;Space&#39;</span>) {</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ignore input if the user is typing in a form control</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> targetTag <span class="op">=</span> <span class="bu">event</span><span class="op">.</span><span class="at">target</span><span class="op">.</span><span class="at">tagName</span><span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (targetTag <span class="op">===</span> <span class="st">&#39;INPUT&#39;</span> <span class="op">||</span> targetTag <span class="op">===</span> <span class="st">&#39;TEXTAREA&#39;</span> <span class="op">||</span> <span class="bu">event</span><span class="op">.</span><span class="at">target</span><span class="op">.</span><span class="at">isContentEditable</span>) {</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Stop default scrolling behavior</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Toggle playback using the Wavesurfer API</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">playPause</span>()<span class="op">;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h3 id="how-the-mapping-executes">How the Mapping Executes</h3>
+<p>When the user presses the spacebar:</p>
+<ol type="1">
+<li>The <code>keydown</code> event fires on <code>window</code>.</li>
+<li>The conditional check verifies that the pressed key's
+<code>code</code> matches <code>'Space'</code>.</li>
+<li>The event target check ensures focus is not inside an editable text
+area.</li>
+<li><code>event.preventDefault()</code> suppresses the default scroll
+action.</li>
+<li>The <code>wavesurfer.playPause()</code> method is executed, which
+checks the internal playback state of the audio buffer and toggles
+between the playing and paused states.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/map-spacebar-to-play-and-pause-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

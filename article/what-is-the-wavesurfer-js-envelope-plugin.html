@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What Is the Wavesurfer.js Envelope Plugin? - wavesurfer.js</title>
+    <meta name="description" content="The Envelope plugin in Wavesurfer.js is an extension designed to provide dynamic volume automation and audio envelope shaping directly on top of a rendered waveform. This article explains the core purpose of the Envelope plugin, its key features, primary">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/what-is-the-wavesurfer-js-envelope-plugin">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="What Is the Wavesurfer.js Envelope Plugin? - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/what-is-the-wavesurfer-js-envelope-plugin" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The Envelope plugin in Wavesurfer.js is an extension designed to provide dynamic volume automation and audio envelope shaping directly on top of a rendered waveform. This article explains the core purpose of the Envelope plugin, its key features, primary" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="what-is-the-wavesurferjs-envelope-plugin">What Is the
+Wavesurfer.js Envelope Plugin?</h1>
+<p>The Envelope plugin in Wavesurfer.js is an extension designed to
+provide dynamic volume automation and audio envelope shaping directly on
+top of a rendered waveform. This article explains the core purpose of
+the Envelope plugin, its key features, primary use cases in web
+applications, and how it handles interactive gain adjustments along an
+audio timeline.</p>
+<h2 id="understanding-the-envelope-plugin">Understanding the Envelope
+Plugin</h2>
+<p>Wavesurfer.js is a widely used JavaScript library that generates
+interactive, customizable audio waveforms using the Web Audio API and
+HTML5 Canvas. While the core library focuses on visualizing and playing
+audio, the Envelope plugin adds a dedicated layer for managing volume
+levels across specific time intervals.</p>
+<p>Visually, the plugin overlays a customizable curve across the
+waveform, defined by draggable control points (nodes). Functionally, it
+translates this visual curve into real-time gain modifications, altering
+the output volume as the playback head moves through the track.</p>
+<h2 id="core-features-and-capabilities">Core Features and
+Capabilities</h2>
+<ul>
+<li><strong>Interactive Control Points:</strong> Users can add,
+reposition, and delete points along the audio timeline. Each point
+represents a specific timestamp paired with a corresponding volume level
+(gain multiplier).</li>
+<li><strong>Linear and Curved Interpolation:</strong> The plugin
+automatically interpolates the gain between adjacent points, allowing
+for smooth volume transitions rather than abrupt volume jumps.</li>
+<li><strong>Visual Customization:</strong> Developers can style the
+envelope line, control points, and drag handles to match the
+application's user interface design.</li>
+<li><strong>Event Handling:</strong> The plugin emits lifecycle events,
+such as when points are added, dragged, or deleted, making it easy to
+sync state changes with backend databases or other UI elements.</li>
+<li><strong>Real-Time Gain Processing:</strong> By connecting directly
+to the Web Audio API's <code>GainNode</code>, the plugin adjusts
+playback volume instantly without requiring offline audio
+rendering.</li>
+</ul>
+<h2 id="primary-use-cases">Primary Use Cases</h2>
+<h3 id="1-fade-ins-and-fade-outs">1. Fade-Ins and Fade-Outs</h3>
+<p>The most common application of the Envelope plugin is creating smooth
+fade-in and fade-out effects at the start and end of audio tracks. By
+placing points at zero volume at the boundaries and ramping up to full
+volume, users can eliminate audio clipping and create polished
+transitions.</p>
+<h3 id="2-audio-ducking">2. Audio Ducking</h3>
+<p>In podcast and voiceover production, background music needs to be
+temporarily lowered whenever a person speaks. The Envelope plugin allows
+users to visually configure this "ducking" effect by pulling down the
+volume curve during spoken sections and raising it back up during
+pauses.</p>
+<h3 id="3-web-based-digital-audio-workstations-daws">3. Web-Based
+Digital Audio Workstations (DAWs)</h3>
+<p>Browser-based audio editors use the Envelope plugin as a built-in
+volume automation track. Musicians, sound designers, and editors can
+draw precise dynamic contours to balance multi-track mixes, automate
+sound effects, and master finished audio.</p>
+<h3 id="4-dynamic-normalization-and-leveling">4. Dynamic Normalization
+and Leveling</h3>
+<p>For recordings with inconsistent sound levels—such as conference
+calls or remote interviews—the envelope interface allows users to
+manually boost quiet segments and suppress unusually loud peaks.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/what-is-the-wavesurfer-js-envelope-plugin';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

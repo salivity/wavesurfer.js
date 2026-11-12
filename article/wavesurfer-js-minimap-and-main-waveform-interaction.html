@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Minimap and Main Waveform Interaction - wavesurfer.js</title>
+    <meta name="description" content="The Wavesurfer.js Minimap plugin functions as a real-time, synchronized navigation tool that provides an overview of an entire audio file alongside the main waveform. By mapping playback states, zoom levels, and viewport positions between a miniature over">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-minimap-and-main-waveform-interaction">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Minimap and Main Waveform Interaction - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-minimap-and-main-waveform-interaction" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="The Wavesurfer.js Minimap plugin functions as a real-time, synchronized navigation tool that provides an overview of an entire audio file alongside the main waveform. By mapping playback states, zoom levels, and viewport positions between a miniature over" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="wavesurferjs-minimap-and-main-waveform-interaction">Wavesurfer.js
+Minimap and Main Waveform Interaction</h1>
+<p>The Wavesurfer.js Minimap plugin functions as a real-time,
+synchronized navigation tool that provides an overview of an entire
+audio file alongside the main waveform. By mapping playback states, zoom
+levels, and viewport positions between a miniature overview and a
+detailed view, the plugin allows users to inspect zoomed-in audio
+details while maintaining continuous spatial awareness of the entire
+track.</p>
+<h3 id="full-length-audio-representation">Full-Length Audio
+Representation</h3>
+<p>While the primary Wavesurfer.js waveform can be zoomed in to show
+micro-details of milliseconds of audio, the minimap renders the entire
+duration of the audio within a fixed container. Both components share
+the same underlying decoded audio buffer or pre-rendered peak data,
+ensuring that the waveform geometry depicted in the minimap is an
+accurate, condensed miniature of the main waveform.</p>
+<h3 id="the-viewport-selection-box">The Viewport Selection Box</h3>
+<p>The most prominent visual interaction between the two components is
+the visible viewport overlay on the minimap. When the main waveform is
+zoomed beyond the width of its container, a highlighted rectangular
+overlay appears over the minimap.</p>
+<p>The dimensions and position of this overlay correspond mathematically
+to the visible portion of the main waveform:</p>
+<ul>
+<li><strong>Width:</strong> Proportional to the ratio between the main
+waveform container width and its total zoomed scrollable width.</li>
+<li><strong>Horizontal Position:</strong> Maps directly to the scroll
+offset (<code>scrollLeft</code>) of the main waveform container.</li>
+</ul>
+<p>As a user zooms in on the main waveform, the minimap's viewport box
+shrinks. When the user zooms out, the viewport box expands until it
+covers the full width of the minimap when no horizontal scrolling is
+required.</p>
+<h3 id="bidirectional-event-synchronization">Bidirectional Event
+Synchronization</h3>
+<p>The minimap and the main waveform communicate via an internal
+event-driven architecture that listens for playback, scroll, and user
+interaction events:</p>
+<ol type="1">
+<li><strong>Main to Minimap Synchronization:</strong>
+<ul>
+<li><strong>Playback and Seeking:</strong> As the main waveform plays or
+seeks via the <code>audioprocess</code> or <code>timeupdate</code>
+events, the minimap updates its own playhead position
+synchronously.</li>
+<li><strong>Scrolling:</strong> When the user scrolls the main container
+horizontally, the minimap updates the position of its viewport box in
+real time.</li>
+<li><strong>Zooming:</strong> Changes to the <code>minPxPerSec</code>
+property on the main instance trigger recalculations of the minimap
+overlay width.</li>
+</ul></li>
+<li><strong>Minimap to Main Synchronization:</strong>
+<ul>
+<li><strong>Dragging the Viewport Box:</strong> Users can click and drag
+the highlighted overlay across the minimap. This directly manipulates
+the scroll position of the main waveform, panning through the audio
+smoothly.</li>
+<li><strong>Click-to-Seek:</strong> Clicking outside the highlighted box
+on the minimap jumps both the playhead and the main waveform's scroll
+position directly to that corresponding timestamp in the audio
+track.</li>
+</ul></li>
+</ol>
+<p>Through this bidirectional architecture, the minimap decouples audio
+navigation from playback, giving users an intuitive way to scrub, pan,
+and maintain context across long audio files.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-minimap-and-main-waveform-interaction';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

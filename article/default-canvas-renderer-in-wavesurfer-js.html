@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Default Canvas Renderer in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="This article provides an overview of the default canvas renderer mechanism in Wavesurfer.js, explaining how the library processes audio data and draws visual waveforms in the browser. You will learn about the role of the HTML5 Canvas 2D API, how audio pea">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/default-canvas-renderer-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Default Canvas Renderer in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/default-canvas-renderer-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides an overview of the default canvas renderer mechanism in Wavesurfer.js, explaining how the library processes audio data and draws visual waveforms in the browser. You will learn about the role of the HTML5 Canvas 2D API, how audio pea" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="default-canvas-renderer-in-wavesurferjs">Default Canvas Renderer
+in Wavesurfer.js</h1>
+<p>This article provides an overview of the default canvas renderer
+mechanism in Wavesurfer.js, explaining how the library processes audio
+data and draws visual waveforms in the browser. You will learn about the
+role of the HTML5 Canvas 2D API, how audio peaks are mapped to visual
+coordinates, and the rendering strategies used to handle interactive
+playback and device scaling.</p>
+<h2 id="the-core-rendering-engine-html5-canvas-2d">The Core Rendering
+Engine: HTML5 Canvas 2D</h2>
+<p>By default, Wavesurfer.js utilizes the standard HTML5
+<code>&lt;canvas&gt;</code> element driven by the 2D rendering context
+(<code>CanvasRenderingContext2D</code>) to draw audio waveforms. When an
+audio file is loaded, Wavesurfer.js decodes the audio data using the Web
+Audio API (<code>AudioContext.decodeAudioData</code>) to generate an
+<code>AudioBuffer</code>, from which it extracts channel peak data. The
+default renderer reads these calculated minimum and maximum amplitude
+values and plots them onto the canvas surface.</p>
+<h2 id="peak-extraction-and-coordinate-mapping">Peak Extraction and
+Coordinate Mapping</h2>
+<p>Before drawing begins, the renderer converts the raw PCM audio
+samples into visual "peaks":</p>
+<ol type="1">
+<li><strong>Sampling</strong>: Wavesurfer.js divides the audio buffer
+into discrete buckets or columns based on the pixel width of the target
+container and the configured <code>minPxPerSec</code> (minimum pixels
+per second) setting.</li>
+<li><strong>Min/Max Normalization</strong>: For each bucket, the
+algorithm identifies the highest and lowest amplitude values (ranging
+between -1.0 and 1.0).</li>
+<li><strong>Coordinate Transformation</strong>: These normalized values
+are mapped to visual coordinates on the Y-axis. An amplitude of
+<code>0</code> corresponds to the vertical center of the canvas,
+positive values extend toward the top, and negative values extend toward
+the bottom.</li>
+</ol>
+<h2 id="drawing-implementation-bars-and-waves">Drawing Implementation:
+Bars and Waves</h2>
+<p>The renderer supports two primary visual representations—continuous
+line paths and separated bars:</p>
+<ul>
+<li><strong>Continuous Waves</strong>: The renderer initiates a path
+using <code>ctx.beginPath()</code>, iterates through the peak array,
+draws lines (<code>ctx.lineTo</code>) connecting the top peaks, reverses
+direction to connect the bottom peaks, and fills the resulting polygon
+via <code>ctx.fill()</code>.</li>
+<li><strong>Bar Mode</strong>: If parameters like <code>barWidth</code>
+and <code>barGap</code> are defined, the renderer uses
+<code>ctx.fillRect()</code> to render discrete vertical rectangles for
+each sample interval, skipping pixels according to the configured
+gap.</li>
+</ul>
+<h2 id="managing-playback-progress">Managing Playback Progress</h2>
+<p>To display the distinction between played and unplayed audio,
+Wavesurfer.js creates two visual layers. The default mechanism handles
+this by drawing the waveform twice—one colored for the remaining audio
+(background) and one for the played portion (progress).</p>
+<p>In modern versions of Wavesurfer.js, this is achieved by rendering
+both layers into the DOM (often utilizing a wrapper with
+<code>overflow: hidden</code> or CSS clip paths) or using a single
+canvas with clipped rendering context regions. As playback advances, the
+width of the progress layer adjusts to match the exact percentage of
+current playback time relative to total duration.</p>
+<h2 id="resolution-and-device-pixel-ratio">Resolution and Device Pixel
+Ratio</h2>
+<p>To maintain sharp visuals on high-density displays (such as Apple
+Retina screens), the default canvas renderer detects the browser's
+<code>window.devicePixelRatio</code>. It scales the underlying canvas
+width and height attributes by this pixel ratio while maintaining the
+original CSS dimensions on the container element. The 2D context is then
+scaled using <code>ctx.scale(dpr, dpr)</code> prior to drawing,
+preventing blurry or pixelated waveforms.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/default-canvas-renderer-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

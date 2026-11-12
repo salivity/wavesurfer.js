@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Spectrogram Plugin Explained - wavesurfer.js</title>
+    <meta name="description" content="This article provides an overview of the spectrogram plugin for Wavesurfer.js, detailing its purpose, the visual data it renders, and its practical applications. By converting raw audio into a detailed visual representation of frequency over time, this pl">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-spectrogram-plugin-explained">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Spectrogram Plugin Explained - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-spectrogram-plugin-explained" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides an overview of the spectrogram plugin for Wavesurfer.js, detailing its purpose, the visual data it renders, and its practical applications. By converting raw audio into a detailed visual representation of frequency over time, this pl" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-spectrogram-plugin-explained">Wavesurfer.js
+Spectrogram Plugin Explained</h1>
+<p>This article provides an overview of the spectrogram plugin for
+Wavesurfer.js, detailing its purpose, the visual data it renders, and
+its practical applications. By converting raw audio into a detailed
+visual representation of frequency over time, this plugin expands the
+standard waveform view into a comprehensive acoustic analysis tool.</p>
+<h3 id="what-the-spectrogram-displays">What the Spectrogram
+Displays</h3>
+<p>While the default Wavesurfer.js interface displays an amplitude
+waveform—showing loudness variations over time—the spectrogram plugin
+visualizes the frequency spectrum of an audio signal. It translates
+three primary dimensions of sound data into a two-dimensional color
+map:</p>
+<ul>
+<li><strong>Time (Horizontal Axis):</strong> The x-axis represents the
+progression of time, synchronized directly with the primary audio
+waveform and playback cursor.</li>
+<li><strong>Frequency (Vertical Axis):</strong> The y-axis represents
+the frequency range of the sound, measured in Hertz (Hz). Lower
+frequencies (such as bass tones) appear near the bottom of the display,
+while higher frequencies (treble or high-pitched harmonics) are
+positioned toward the top.</li>
+<li><strong>Amplitude and Intensity (Color Scale):</strong> Instead of
+using physical height to indicate volume, the spectrogram uses color
+gradients. Bright or high-contrast colors indicate high energy and
+louder frequency bands, while darker or cooler colors represent low
+energy or silence.</li>
+</ul>
+<h3 id="how-it-works">How It Works</h3>
+<p>The plugin relies on the Fast Fourier Transform (FFT) algorithm
+provided by the Web Audio API. It continuously samples discrete slices
+of the audio signal, converting time-domain data into frequency-domain
+data. The developer can configure settings such as FFT size (which
+balances time resolution versus frequency resolution), frequency
+cutoffs, and custom color maps to tailor the visualization to specific
+sound profiles.</p>
+<h3 id="primary-use-cases">Primary Use Cases</h3>
+<p>Displaying a spectrogram is essential in applications where
+understanding the internal texture and frequency makeup of an audio file
+is necessary. Common implementations include:</p>
+<ul>
+<li><strong>Speech and Phonetics Analysis:</strong> Visualizing
+formants, vocal pitch, and consonant friction in linguistics or
+language-learning applications.</li>
+<li><strong>Audio Mastering and Restoration:</strong> Identifying
+unwanted low-frequency rumbles, electrical hums, sibilance, or
+high-frequency background noise that are invisible on a standard
+waveform.</li>
+<li><strong>Bioacoustics:</strong> Analyzing animal vocalizations, such
+as bird songs or marine mammal calls, which have distinct frequency
+signatures.</li>
+<li><strong>Music Production:</strong> Inspecting note pitches, harmonic
+overtones, and instrument frequency separation across a track.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-spectrogram-plugin-explained';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isolated Wavesurfer.js Iframe Embed Patterns - wavesurfer.js</title>
+    <meta name="description" content="This article provides a technical overview of architectural patterns for embedding Wavesurfer.js audio widgets into third-party publisher sites via iframes. It details how to achieve complete CSS and JavaScript isolation, manage cross-origin audio renderi">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/isolated-wavesurfer-js-iframe-embed-patterns">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Isolated Wavesurfer.js Iframe Embed Patterns - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/isolated-wavesurfer-js-iframe-embed-patterns" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article provides a technical overview of architectural patterns for embedding Wavesurfer.js audio widgets into third-party publisher sites via iframes. It details how to achieve complete CSS and JavaScript isolation, manage cross-origin audio renderi" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="isolated-wavesurferjs-iframe-embed-patterns">Isolated
+Wavesurfer.js Iframe Embed Patterns</h1>
+<p>This article provides a technical overview of architectural patterns
+for embedding Wavesurfer.js audio widgets into third-party publisher
+sites via iframes. It details how to achieve complete CSS and JavaScript
+isolation, manage cross-origin audio rendering, synchronize dynamic
+sizing, handle browser autoplay constraints, and exchange real-time
+control events securely between the host page and the audio player.</p>
+<h3 id="1-the-hosted-micro-app-embed-pattern">1. The Hosted Micro-App
+Embed Pattern</h3>
+<p>The most robust method for isolating Wavesurfer.js is to deploy the
+player as a standalone, lightweight micro-frontend on a dedicated embed
+domain (e.g.,
+<code>https://embed.yourservice.com/player?trackId=123</code>). The
+publisher then renders the player using a standard
+<code>&lt;iframe&gt;</code> tag.</p>
+<p>This model creates a clean process boundary. Global CSS styles from
+the publisher cannot disrupt the waveform canvas, and the
+resource-intensive Web Audio API processes remain compartmentalized
+within their own execution context.</p>
+<p>To maximize security and isolate the player's runtime environment,
+configure the iframe with a strict <code>sandbox</code> attribute:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">iframe</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ot">  src</span><span class="op">=</span><span class="st">&quot;https://embed.yourservice.com/player?trackId=123&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ot">  width</span><span class="op">=</span><span class="st">&quot;100%&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ot">  height</span><span class="op">=</span><span class="st">&quot;128&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ot">  frameborder</span><span class="op">=</span><span class="st">&quot;0&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ot">  loading</span><span class="op">=</span><span class="st">&quot;lazy&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ot">  sandbox</span><span class="op">=</span><span class="st">&quot;allow-scripts allow-same-origin allow-presentation&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ot">  allow</span><span class="op">=</span><span class="st">&quot;autoplay&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&gt;&lt;/</span><span class="kw">iframe</span><span class="dt">&gt;</span></span></code></pre></div>
+<p><em>Note: <code>allow-same-origin</code> is required if your widget
+needs to read storage tokens or cache waveform peaks in IndexedDB on the
+embed host domain.</em></p>
+<h3 id="2-bidirectional-postmessage-communication">2. Bidirectional
+PostMessage Communication</h3>
+<p>A fully isolated iframe cannot directly access the host's DOM or
+variables. Implementing a <code>postMessage</code> protocol allows
+publishers to control playback and listen to audio events
+programmatically.</p>
+<h4 id="host-to-widget-commands">Host-to-Widget (Commands)</h4>
+<p>Publishers can send structured commands to pause, play, seek, or
+change visual themes:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Publisher site</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> iframe <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&#39;wavesurfer-frame&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>iframe<span class="op">.</span><span class="at">contentWindow</span><span class="op">.</span><span class="fu">postMessage</span>({</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;WAVESURFER_CMD&#39;</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">action</span><span class="op">:</span> <span class="st">&#39;SEEK_TO&#39;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">payload</span><span class="op">:</span> { <span class="dt">progress</span><span class="op">:</span> <span class="fl">0.5</span> }</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}<span class="op">,</span> <span class="st">&#39;https://embed.yourservice.com&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<p>Inside the iframe micro-app:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Embed widget</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">window</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;message&#39;</span><span class="op">,</span> (<span class="bu">event</span>) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="at">origin</span> <span class="op">!==</span> <span class="st">&#39;https://publisher.com&#39;</span>) <span class="cf">return</span><span class="op">;</span> <span class="co">// Validate origin</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="bu">event</span><span class="op">.</span><span class="at">data</span><span class="op">?.</span><span class="at">type</span> <span class="op">===</span> <span class="st">&#39;WAVESURFER_CMD&#39;</span>) {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> (<span class="bu">event</span><span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">action</span>) {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> <span class="st">&#39;PLAY&#39;</span><span class="op">:</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        wavesurfer<span class="op">.</span><span class="fu">play</span>()<span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      <span class="cf">case</span> <span class="st">&#39;SEEK_TO&#39;</span><span class="op">:</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        wavesurfer<span class="op">.</span><span class="fu">seekTo</span>(<span class="bu">event</span><span class="op">.</span><span class="at">data</span><span class="op">.</span><span class="at">payload</span><span class="op">.</span><span class="at">progress</span>)<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<h4 id="widget-to-host-events--dynamic-resizing">Widget-to-Host (Events
+&amp; Dynamic Resizing)</h4>
+<p>Wavesurfer.js widgets often change height when toggling features like
+timelines, minimaps, or playlists. The widget should observe its own DOM
+changes and report them upward so the host can resize the iframe
+container without causing layout clipping or scrollbars:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Embed widget</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> resizeObserver <span class="op">=</span> <span class="kw">new</span> <span class="fu">ResizeObserver</span>((entries) <span class="kw">=&gt;</span> {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (<span class="kw">let</span> entry <span class="kw">of</span> entries) {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">window</span><span class="op">.</span><span class="at">parent</span><span class="op">.</span><span class="fu">postMessage</span>({</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">type</span><span class="op">:</span> <span class="st">&#39;WAVESURFER_EVENT&#39;</span><span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">event</span><span class="op">:</span> <span class="st">&#39;RESIZE&#39;</span><span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">payload</span><span class="op">:</span> { <span class="dt">height</span><span class="op">:</span> entry<span class="op">.</span><span class="at">contentRect</span><span class="op">.</span><span class="at">height</span> }</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    }<span class="op">,</span> <span class="st">&#39;*&#39;</span>)<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>resizeObserver<span class="op">.</span><span class="fu">observe</span>(<span class="bu">document</span><span class="op">.</span><span class="at">body</span>)<span class="op">;</span></span></code></pre></div>
+<h3 id="3-script-generated-iframe-injection-sdk-pattern">3.
+Script-Generated Iframe Injection (SDK Pattern)</h3>
+<p>To reduce publisher friction, provide a single JavaScript snippet
+that dynamically provisions the iframe and handles messaging under the
+hood. This abstracts the complexity of responsive scaling and
+postMessage handling.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Publisher implementation</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;</span>div data<span class="op">-</span>wavesurfer<span class="op">-</span>widget<span class="op">=</span><span class="st">&quot;track_abc123&quot;</span> data<span class="op">-</span>theme<span class="op">=</span><span class="st">&quot;dark&quot;</span><span class="op">&gt;&lt;/</span>div<span class="op">&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;</span>script src<span class="op">=</span><span class="st">&quot;https://embed.yourservice.com/widget.js&quot;</span> <span class="kw">async</span><span class="op">&gt;&lt;/</span>script<span class="op">&gt;</span></span></code></pre></div>
+<p>The script replaces target <code>&lt;div&gt;</code> elements with
+fully configured iframes and wires up a global SDK API:</p>
+<ol type="1">
+<li>The script identifies all <code>[data-wavesurfer-widget]</code>
+nodes.</li>
+<li>It generates an <code>&lt;iframe&gt;</code> configured with
+responsive styling
+(<code>width: 100%; border: none; overflow: hidden;</code>).</li>
+<li>It sets up an internal listener to process <code>RESIZE</code> and
+playback events from the child document.</li>
+<li>It exposes methods such as
+<code>window.WavesurferSDK.play(instanceId)</code> directly on the host
+window.</li>
+</ol>
+<h3 id="4-cors-and-pre-computed-peaks-for-performance">4. CORS and
+Pre-Computed Peaks for Performance</h3>
+<p>Initializing Wavesurfer.js inside an iframe requires specific data
+handling to avoid audio playback latency and cross-origin security
+restrictions:</p>
+<ul>
+<li><strong>Cross-Origin Media Loading:</strong> If the audio file is
+stored on an external CDN, ensure the CDN sends the
+<code>Access-Control-Allow-Origin: *</code> or explicit embed domain
+header. In the Wavesurfer initialization, Web Audio decoding requires
+fetching the file as an <code>ArrayBuffer</code>.</li>
+<li><strong>Pre-Rendered Waveform Peaks:</strong> Decoding whole MP3/WAV
+files inside an iframe can cause UI jank and memory spikes on lower-end
+devices. Pass pre-computed peaks via the query string or initial API
+response:</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">url</span><span class="op">:</span> <span class="st">&#39;https://cdn.example.com/audio.mp3&#39;</span><span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">peaks</span><span class="op">:</span> [[<span class="fl">0.02</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.01</span><span class="op">,</span> <span class="fl">0.45</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.32</span><span class="op">,</span> <span class="op">...</span>]]<span class="op">,</span> <span class="co">// Bypasses client-side decodeAudioData</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Using pre-computed peaks allows the iframe to render the visual
+waveform instantly without waiting for the full audio binary to download
+and decode.</p>
+<h3 id="5-managing-browser-autoplay-restrictions">5. Managing Browser
+Autoplay Restrictions</h3>
+<p>Modern browsers block audio contexts within iframes unless triggered
+by user activation or explicitly permitted by the host page.</p>
+<ol type="1">
+<li><strong>Feature Policy:</strong> Ensure publishers declare
+<code>allow="autoplay"</code> on the iframe element. Without this
+permission, any call to <code>wavesurfer.play()</code> initiated outside
+an interactive click event within the iframe document will throw an
+<code>Allowed to play only after a user gesture</code> error.</li>
+<li><strong>AudioContext Resuming:</strong> Instantiate or resume the
+Wavesurfer <code>AudioContext</code> directly within a UI event handler
+inside the iframe (such as the play button click) to guarantee
+compliance with browser autoplay security policies.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/isolated-wavesurfer-js-iframe-embed-patterns';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Wavesurfer.js Colors Without Re-Decoding - wavesurfer.js</title>
+    <meta name="description" content="Updating waveform colors in Wavesurfer.js does not require reloading the media file or re-running the computationally expensive audio decoding process. By leveraging built-in configuration methods that separate audio decoding from canvas rendering, develo">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/change-wavesurfer-js-colors-without-re-decoding">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Change Wavesurfer.js Colors Without Re-Decoding - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/change-wavesurfer-js-colors-without-re-decoding" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Updating waveform colors in Wavesurfer.js does not require reloading the media file or re-running the computationally expensive audio decoding process. By leveraging built-in configuration methods that separate audio decoding from canvas rendering, develo" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="change-wavesurferjs-colors-without-re-decoding">Change
+Wavesurfer.js Colors Without Re-Decoding</h1>
+<p>Updating waveform colors in Wavesurfer.js does not require reloading
+the media file or re-running the computationally expensive audio
+decoding process. By leveraging built-in configuration methods that
+separate audio decoding from canvas rendering, developers can seamlessly
+repaint the waveform's visual state instantly without interrupting
+playback or degrading performance.</p>
+<h3 id="the-underlying-rendering-mechanism">The Underlying Rendering
+Mechanism</h3>
+<p>Wavesurfer.js processes an audio track in two distinct phases:
+decoding the audio data into raw numerical peaks via the Web Audio API,
+and drawing those peaks onto an HTML5 <code>&lt;canvas&gt;</code>
+element.</p>
+<p>Calling methods like <code>load()</code> or recreating the instance
+forces the browser to fetch and re-decode the entire audio buffer from
+scratch. To change colors seamlessly, you only need to trigger a redraw
+of the canvas layer using the pre-calculated peak data already stored in
+memory.</p>
+<h3 id="the-modern-approach-setoptions-v7">The Modern Approach:
+<code>setOptions()</code> (v7+)</h3>
+<p>In Wavesurfer.js version 7 and later, the primary technique to update
+wave colors without re-decoding is the <code>setOptions()</code>
+method.</p>
+<p>When you pass updated color parameters into
+<code>setOptions()</code>, Wavesurfer updates its internal configuration
+and immediately invokes the renderer's redraw routine. Because the audio
+buffer remains untouched, the color swap happens instantaneously:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Dynamically update colors on an active instance</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">setOptions</span>({</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4a90e2&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#d0021b&#39;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>This updates both the unplayed waveform (<code>waveColor</code>) and
+the played waveform (<code>progressColor</code>) without causing audio
+glitches, dropped frames, or progress resets.</p>
+<h3 id="the-legacy-approach-dedicated-color-methods-v6-and-below">The
+Legacy Approach: Dedicated Color Methods (v6 and below)</h3>
+<p>In older versions of Wavesurfer.js (v4 to v6), specific setter
+functions directly targeted the canvas drawer:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Legacy color updates</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">setWaveColor</span>(<span class="st">&#39;#4a90e2&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">setProgressColor</span>(<span class="st">&#39;#d0021b&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<p>Under the hood, these functions assign a new <code>fillStyle</code>
+to the 2D canvas rendering context and call
+<code>wavesurfer.drawer.drawPeaks()</code>. The existing peak cache is
+reused, completely bypassing the Web Audio API decoding pipeline.</p>
+<h3 id="why-this-technique-works">Why This Technique Works</h3>
+<ol type="1">
+<li><strong>Peak Preservation</strong>: The array of minimum and maximum
+sample points generated during the initial decode remains in
+memory.</li>
+<li><strong>Context Repainting</strong>: Canvas operations are purely
+visual. Changing color properties only requires a simple clear-and-fill
+operation over the existing coordinate paths.</li>
+<li><strong>Continuous Audio Stream</strong>: The Web Audio
+<code>AudioBufferSourceNode</code> or HTMLMediaElement playback
+continues independently of any DOM or canvas repainting operations.</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/change-wavesurfer-js-colors-without-re-decoding';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

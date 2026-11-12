@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resetting Web Audio Nodes in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Managing custom audio effects in Wavesurfer.js requires interacting directly with the Web Audio API processing chain. When developers apply equalizers, dynamic compressors, or spatial effects, they alter the graph connecting the audio source to the destin">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/resetting-web-audio-nodes-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Resetting Web Audio Nodes in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/resetting-web-audio-nodes-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Managing custom audio effects in Wavesurfer.js requires interacting directly with the Web Audio API processing chain. When developers apply equalizers, dynamic compressors, or spatial effects, they alter the graph connecting the audio source to the destin" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="resetting-web-audio-nodes-in-wavesurferjs">Resetting Web Audio
+Nodes in Wavesurfer.js</h1>
+<p>Managing custom audio effects in Wavesurfer.js requires interacting
+directly with the Web Audio API processing chain. When developers apply
+equalizers, dynamic compressors, or spatial effects, they alter the
+graph connecting the audio source to the destination. To reset all
+attached Web Audio nodes back to the default pass-through state without
+re-initializing the entire waveform player, Wavesurfer.js provides the
+<code>setFilters()</code> method.</p>
+<h3 id="the-reset-method-setfilters">The Reset Method:
+<code>setFilters([])</code></h3>
+<p>The method used to reset attached Web Audio nodes back to a clean
+pass-through state is <code>wavesurfer.setFilters([])</code> (or
+<code>wavesurfer.backend.setFilters([])</code> depending on the version
+and configuration). Passing an empty array (<code>[]</code>) as the
+argument instructs the audio backend to disconnect all intermediary
+nodes and rewire the audio source directly to the destination.</p>
+<h3 id="how-it-works">How It Works</h3>
+<p>Under the hood, Wavesurfer.js manages an internal array of filter and
+effect nodes:</p>
+<ol type="1">
+<li><strong>Applying Effects:</strong> When an array of nodes (such as
+<code>BiquadFilterNode</code> instances) is passed to
+<code>setFilters([node1, node2])</code>, Wavesurfer disconnects the
+direct path from the source node and chains the nodes in sequence:
+<code>Source -&gt; node1 -&gt; node2 -&gt; Destination</code>.</li>
+<li><strong>Resetting to Pass-Through:</strong> Calling
+<code>setFilters([])</code> triggers the backend to loop through the
+existing chain, call <code>.disconnect()</code> on each custom node, and
+reconnect the source node directly to the main output gain node.</li>
+</ol>
+<h3 id="implementation-example">Implementation Example</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize Wavesurfer with the WebAudio backend</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;violet&#39;</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;purple&#39;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">backend</span><span class="op">:</span> <span class="st">&#39;WebAudio&#39;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Setup audio nodes (e.g., an equalizer)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> lowpass <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="at">ac</span><span class="op">.</span><span class="fu">createBiquadFilter</span>()<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>lowpass<span class="op">.</span><span class="at">type</span> <span class="op">=</span> <span class="st">&#39;lowpass&#39;</span><span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>lowpass<span class="op">.</span><span class="at">frequency</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> <span class="dv">1000</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply the filter node</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">setFilters</span>([lowpass])<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Reset all nodes back to default pass-through</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">setFilters</span>([])<span class="op">;</span></span></code></pre></div>
+<h3 id="key-considerations">Key Considerations</h3>
+<ul>
+<li><strong>WebAudio Backend Requirement:</strong> The
+<code>setFilters()</code> method relies on the Web Audio API. Ensure
+that the Wavesurfer instance is configured to use the
+<code>WebAudio</code> backend, as media element backends bypass the Web
+Audio graph by default unless routed through a
+<code>MediaElementAudioSourceNode</code>.</li>
+<li><strong>Garbage Collection:</strong> Disconnecting nodes using
+<code>setFilters([])</code> unlinks them from the active audio context.
+To prevent memory leaks, ensure that any external JavaScript references
+to the removed nodes are also cleared if they are no longer needed.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/resetting-web-audio-nodes-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

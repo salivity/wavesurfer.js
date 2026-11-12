@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Wavesurfer.js Audio Clicks with Gain Fade-Out - wavesurfer.js</title>
+    <meta name="description" content="Abrupt playback interruptions, jumps, and custom seeking operations in Wavesurfer.js frequently produce audible clicks or pops due to instantaneous amplitude drops. This article outlines the root cause of these waveform discontinuities and demonstrates ho">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/fix-wavesurfer-js-audio-clicks-with-gain-fade-out">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fix Wavesurfer.js Audio Clicks with Gain Fade-Out - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/fix-wavesurfer-js-audio-clicks-with-gain-fade-out" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Abrupt playback interruptions, jumps, and custom seeking operations in Wavesurfer.js frequently produce audible clicks or pops due to instantaneous amplitude drops. This article outlines the root cause of these waveform discontinuities and demonstrates ho" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="fix-wavesurferjs-audio-clicks-with-gain-fade-out">Fix
+Wavesurfer.js Audio Clicks with Gain Fade-Out</h1>
+<p>Abrupt playback interruptions, jumps, and custom seeking operations
+in Wavesurfer.js frequently produce audible clicks or pops due to
+instantaneous amplitude drops. This article outlines the root cause of
+these waveform discontinuities and demonstrates how to implement Web
+Audio API gain fade-out techniques—such as linear ramps and exponential
+target curves—within custom Wavesurfer.js playhead logic to ensure
+smooth, artifact-free audio playback.</p>
+<h3 id="the-cause-of-playhead-clicks">The Cause of Playhead Clicks</h3>
+<p>Audible clicks occur when an audio waveform is instantly cut off at a
+non-zero amplitude point. When a user seeks, pauses, or dynamically
+repositions a custom playhead, terminating or repositioning the playback
+instantly forces the signal to jump from its current value directly to
+zero (or to a different phase value). The digital-to-analog converter
+interprets this vertical edge as a wideband impulse, resulting in a
+distinct pop. To eliminate this artifact, the amplitude must be
+transitioned smoothly to zero before the playhead position changes.</p>
+<h3 id="intercepting-the-wavesurferjs-gain-graph">Intercepting the
+Wavesurfer.js Gain Graph</h3>
+<p>Wavesurfer.js relies on the Web Audio API backend by default. To
+apply custom fade-out logic, access the underlying
+<code>AudioContext</code> and insert or control a <code>GainNode</code>
+before executing seek or reposition commands:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> audioContext <span class="op">=</span> wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="fu">getAudioContext</span>()<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Alternatively, connect a custom GainNode via wavesurfer.backend.setFilter()</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> gainNode <span class="op">=</span> audioContext<span class="op">.</span><span class="fu">createGain</span>()<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="at">backend</span><span class="op">.</span><span class="fu">setFilter</span>(gainNode)<span class="op">;</span></span></code></pre></div>
+<h3 id="technique-1-linear-ramp-down-linearramptovalueattime">Technique
+1: Linear Ramp Down (<code>linearRampToValueAtTime</code>)</h3>
+<p>A fast linear ramp is one of the most reliable methods for silencing
+audio right before a playhead jump. A fade-out duration between 3 to 15
+milliseconds is ideal; it is brief enough to feel instantaneous to the
+user, yet sufficiently gradual to prevent high-frequency transients.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">smoothSeek</span>(targetProgress) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> now <span class="op">=</span> audioContext<span class="op">.</span><span class="at">currentTime</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> fadeDuration <span class="op">=</span> <span class="fl">0.005</span><span class="op">;</span> <span class="co">// 5 milliseconds</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Cancel any previously scheduled changes to prevent race conditions</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">cancelScheduledValues</span>(now)<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Anchor the current gain value</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">setValueAtTime</span>(gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="at">value</span><span class="op">,</span> now)<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Ramp down to zero</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">linearRampToValueAtTime</span>(<span class="dv">0</span><span class="op">,</span> now <span class="op">+</span> fadeDuration)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Perform the seek once the ramp completes</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="pp">setTimeout</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">seekTo</span>(targetProgress)<span class="op">;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ramp back up to full volume</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> resumeTime <span class="op">=</span> audioContext<span class="op">.</span><span class="at">currentTime</span><span class="op">;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="dv">0</span><span class="op">,</span> resumeTime)<span class="op">;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">linearRampToValueAtTime</span>(<span class="dv">1</span><span class="op">,</span> resumeTime <span class="op">+</span> fadeDuration)<span class="op">;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span> fadeDuration <span class="op">*</span> <span class="dv">1000</span>)<span class="op">;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="technique-2-exponential-smoothing-settargetattime">Technique 2:
+Exponential Smoothing (<code>setTargetAtTime</code>)</h3>
+<p>While linear ramps are predictable, exponential curves model natural
+acoustic decay more closely and avoid mathematical discontinuities at
+the start of the fade. The <code>setTargetAtTime</code> method provides
+smooth exponential decay toward zero without requiring manual
+recalculation of current gain levels.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">fadeAndPause</span>() {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> now <span class="op">=</span> audioContext<span class="op">.</span><span class="at">currentTime</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> timeConstant <span class="op">=</span> <span class="fl">0.003</span><span class="op">;</span> <span class="co">// Time constant determines steepness</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">cancelScheduledValues</span>(now)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">setTargetAtTime</span>(<span class="dv">0</span><span class="op">,</span> now<span class="op">,</span> timeConstant)<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Wait for the decay to drop below audible thresholds (~3 to 4 time constants)</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="pp">setTimeout</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">pause</span>()<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    gainNode<span class="op">.</span><span class="at">gain</span><span class="op">.</span><span class="fu">setValueAtTime</span>(<span class="dv">1</span><span class="op">,</span> audioContext<span class="op">.</span><span class="at">currentTime</span>)<span class="op">;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span> timeConstant <span class="op">*</span> <span class="dv">4</span> <span class="op">*</span> <span class="dv">1000</span>)<span class="op">;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="handling-rapid-scrubbing-and-edge-cases">Handling Rapid
+Scrubbing and Edge Cases</h3>
+<p>When users drag a custom playhead rapidly, multiple seek commands
+fire in quick succession. To avoid overlapping and corrupted audio
+ramps:</p>
+<ul>
+<li><strong>Always call <code>cancelScheduledValues</code>:</strong>
+Clearing the queue ensures that incoming fade commands immediately take
+over from the instantaneous gain level rather than conflicting with
+previous ramps.</li>
+<li><strong>Debounce high-frequency playhead updates:</strong> When
+implementing continuous dragging, throttle or debounce the
+<code>seekTo</code> triggers while maintaining an active fade-out until
+dragging ceases.</li>
+<li><strong>Anchor the gain value:</strong> Always declare
+<code>setValueAtTime(gainNode.gain.value, audioContext.currentTime)</code>
+before scheduling any ramp, which sets an explicit starting point and
+prevents browsers from defaulting to the last scheduled point in the
+past.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/fix-wavesurfer-js-audio-clicks-with-gain-fade-out';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

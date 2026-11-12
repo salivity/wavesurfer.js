@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generating Wavesurfer.js JSON with AWS Lambda - wavesurfer.js</title>
+    <meta name="description" content="This article outlines how to build automated, serverless workflows using AWS Lambda or Google Cloud Functions to process audio files into pre-computed JSON peak data for Wavesurfer.js. Rendering waveforms directly in the browser requires downloading and d">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/generating-wavesurfer-js-json-with-aws-lambda">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Generating Wavesurfer.js JSON with AWS Lambda - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/generating-wavesurfer-js-json-with-aws-lambda" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article outlines how to build automated, serverless workflows using AWS Lambda or Google Cloud Functions to process audio files into pre-computed JSON peak data for Wavesurfer.js. Rendering waveforms directly in the browser requires downloading and d" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="generating-wavesurferjs-json-with-aws-lambda">Generating
+Wavesurfer.js JSON with AWS Lambda</h1>
+<p>This article outlines how to build automated, serverless workflows
+using AWS Lambda or Google Cloud Functions to process audio files into
+pre-computed JSON peak data for Wavesurfer.js. Rendering waveforms
+directly in the browser requires downloading and decoding entire audio
+files via the Web Audio API, which degrades frontend performance for
+long tracks. By moving this computation to serverless cloud triggers
+using utilities like <code>audiowaveform</code>, you can generate
+lightweight JSON peak data that loads instantly on the client side.</p>
+<h3 id="the-serverless-waveform-processing-concept">The Serverless
+Waveform Processing Concept</h3>
+<p>Wavesurfer.js accepts pre-rendered peak arrays through its
+<code>peaks</code> option, bypassing the browser's need to decode the
+underlying audio file. To generate this data automatically in the cloud,
+serverless architectures rely on an event-driven storage trigger, a
+containerized audio analysis tool (most commonly BBC’s open-source
+<code>audiowaveform</code> binary), and an output target for the
+resulting JSON.</p>
+<h3 id="aws-lambda-workflow">AWS Lambda Workflow</h3>
+<p>The standard AWS workflow uses Amazon S3, AWS Lambda, and an S3
+output bucket or CloudFront distribution.</p>
+<ol type="1">
+<li><strong>Storage Trigger</strong>: A user or backend uploads an audio
+file (MP3, WAV, FLAC, AAC) to an Amazon S3 input bucket. This triggers
+an <code>s3:ObjectCreated:*</code> event notification.</li>
+<li><strong>Lambda Execution Environment</strong>: Because standard
+Lambda runtimes lack audio processing utilities, the Lambda function
+must either include a custom Lambda Layer containing the statically
+compiled <code>audiowaveform</code> binary or run as a container image
+defined via Dockerfile based on
+<code>public.ecr.aws/lambda/nodejs</code> or
+<code>public.ecr.aws/lambda/python</code>.</li>
+<li><strong>Execution Steps</strong>:
+<ul>
+<li><p>The Lambda function downloads the audio file from S3 into the
+<code>/tmp</code> ephemeral storage directory.</p></li>
+<li><p>A child process executes <code>audiowaveform</code>:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">audiowaveform</span> <span class="at">-i</span> /tmp/audio.mp3 <span class="at">-o</span> /tmp/peaks.json <span class="at">--pixels-per-second</span> 20 <span class="at">--bits</span> 8</span></code></pre></div></li>
+<li><p>The binary extracts peak amplitude data and formats it directly
+into JSON containing an array of integers representing min/max
+values.</p></li>
+<li><p>The Lambda script uploads <code>peaks.json</code> to a designated
+S3 output bucket with appropriate caching headers
+(<code>Cache-Control</code>) and CORS settings.</p></li>
+</ul></li>
+<li><strong>Cleanup</strong>: Temporary files in <code>/tmp</code> are
+removed to prevent storage exhaustion on warm Lambda container
+re-use.</li>
+</ol>
+<h3 id="google-cloud-functions-workflow">Google Cloud Functions
+Workflow</h3>
+<p>The workflow on Google Cloud Platform functions similarly using Cloud
+Storage and Cloud Functions (2nd Gen).</p>
+<ol type="1">
+<li><strong>Cloud Storage Trigger</strong>: An audio file lands in a
+Google Cloud Storage (GCS) bucket, triggering an Eventarc event or Cloud
+Storage <code>google.cloud.storage.object.v1.finalized</code>
+trigger.</li>
+<li><strong>Function Environment</strong>: Cloud Functions (2nd Gen) run
+on Cloud Run instances. This allows developers to use Dockerfiles or
+buildpacks that install <code>audiowaveform</code> and
+<code>ffmpeg</code> via package managers like <code>apt-get</code>
+directly into the runtime environment.</li>
+<li><strong>Processing and Storage</strong>: The function streams or
+downloads the file to memory or the <code>/tmp</code> directory, runs
+<code>audiowaveform</code> to export the JSON, and writes the JSON file
+back to GCS adjacent to the source audio or in a dedicated metadata
+bucket.</li>
+</ol>
+<h3 id="consuming-the-output-in-wavesurferjs">Consuming the Output in
+Wavesurfer.js</h3>
+<p>Once the JSON file is generated and stored, the frontend client
+requests both the audio file and its corresponding JSON representation.
+The Wavesurfer.js instance is initialized by supplying the pre-computed
+peak data directly:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fetch</span>(<span class="st">&#39;https://cdn.example.com/audio/track-123.json&#39;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">then</span>(response <span class="kw">=&gt;</span> response<span class="op">.</span><span class="fu">json</span>())</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">.</span><span class="fu">then</span>(data <span class="kw">=&gt;</span> {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">peaks</span><span class="op">:</span> data<span class="op">.</span><span class="at">data</span><span class="op">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">duration</span><span class="op">:</span> data<span class="op">.</span><span class="at">length</span> <span class="op">/</span> data<span class="op">.</span><span class="at">sample_rate</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;https://cdn.example.com/audio/track-123.mp3&#39;</span>)<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span></code></pre></div>
+<p>Using this architecture, waveform visualization appears instantly
+without blocking the browser thread, while compute costs remain strictly
+pay-per-use based on the duration of the serverless function
+execution.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/generating-wavesurfer-js-json-with-aws-lambda';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

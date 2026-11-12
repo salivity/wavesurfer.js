@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seamless Crossfade Transitions for Dual Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Dual Wavesurfer.js implementations allow developers to build DJ-style decks and continuous audio players, but abrupt waveform changes can break visual continuity during transitions. Implementing visual crossfade techniques conceals the switch between two">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/seamless-crossfade-transitions-for-dual-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Seamless Crossfade Transitions for Dual Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/seamless-crossfade-transitions-for-dual-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Dual Wavesurfer.js implementations allow developers to build DJ-style decks and continuous audio players, but abrupt waveform changes can break visual continuity during transitions. Implementing visual crossfade techniques conceals the switch between two" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="seamless-crossfade-transitions-for-dual-wavesurferjs">Seamless
+Crossfade Transitions for Dual Wavesurfer.js</h1>
+<p>Dual Wavesurfer.js implementations allow developers to build DJ-style
+decks and continuous audio players, but abrupt waveform changes can
+break visual continuity during transitions. Implementing visual
+crossfade techniques conceals the switch between two independent canvas
+instances, synchronizing visual cues with audio volume automation. By
+utilizing CSS blending, dynamic canvas masks, coordinate warping, and
+luminosity shifts, developers can completely obscure track changes and
+deliver a continuous, high-fidelity audio-visual experience.</p>
+<h3 id="layered-opacity-crossfades">Layered Opacity Crossfades</h3>
+<p>The most direct method to obscure a deck switch is stacking the two
+Wavesurfer container <code>&lt;div&gt;</code> elements absolutely within
+a parent container. During playback:</p>
+<ul>
+<li>The active deck sits at an <code>opacity</code> of
+<code>1</code>.</li>
+<li>As the audio crossfader moves, the incoming deck’s opacity scales
+from <code>0</code> to <code>1</code> while the outgoing deck scales
+down to <code>0</code>.</li>
+<li>By applying <code>pointer-events: none</code> to the inactive or
+fading track, interaction glitches are avoided.</li>
+</ul>
+<p>When paired with equal-power audio fading, this linear or logarithmic
+alpha transition softens the sudden appearance of new waveform peaks,
+making the waveforms bleed into one another smoothly.</p>
+<h3 id="directional-css-mask-wipes">Directional CSS Mask Wipes</h3>
+<p>To hide the stark difference between track profiles without muddying
+their shapes with transparency, directional masks can be applied using
+CSS <code>mask-image</code> or <code>-webkit-mask-image</code>:</p>
+<ul>
+<li><strong>Linear Gradient Wipe:</strong> A moving linear gradient
+transition shifts across the horizontal axis from left to right,
+matching the playhead direction. The outgoing waveform is clipped away
+as the incoming waveform is revealed.</li>
+<li><strong>Radial Reveal:</strong> Centered on the playhead cursor, an
+expanding circular mask reveals the incoming track’s waveform outwards,
+drawing the eye toward the current playback position rather than the
+entire canvas swap.</li>
+</ul>
+<h3 id="canvas-composite-blending-modes">Canvas Composite Blending
+Modes</h3>
+<p>Wavesurfer renders audio data directly to HTML5
+<code>&lt;canvas&gt;</code> elements. By positioning both canvases
+directly over each other and manipulating CSS
+<code>mix-blend-mode</code> (or rendering both audio buffers onto a
+single canvas using
+<code>CanvasRenderingContext2D.globalCompositeOperation</code>), track
+changes appear as intentional graphic morphs.</p>
+<ul>
+<li><strong><code>screen</code> or <code>lighten</code>:</strong> Blends
+the peaks of both tracks into a brighter composite waveform during the
+mix point, masking the structural shifts of individual audio
+buffers.</li>
+<li><strong><code>difference</code>:</strong> Inverts overlapping areas,
+creating a high-contrast transition effect that disguises structural
+cuts as dynamic visualizations.</li>
+</ul>
+<h3 id="zoom-and-amplitude-warp-transitions">Zoom and Amplitude Warp
+Transitions</h3>
+<p>Sudden shifts in waveform density (such as transitioning from a dense
+rock track to a sparse ambient track) reveal deck switches instantly.
+Visual scaling counters this:</p>
+<ol type="1">
+<li><strong>Horizontal Zoom Morphing:</strong> As Deck A approaches its
+mix-out point, programmatically decrease its <code>minPxPerSec</code>
+parameter to compress the waveform horizontally. Simultaneously,
+initialize Deck B at the same compressed scale and expand it to normal
+width once it becomes the primary track.</li>
+<li><strong>Vertical Amplitude Attenuation:</strong> Reduce the outgoing
+deck's <code>barHeight</code> parameter toward zero while raising the
+incoming deck’s height. This mimics a volume fader directly on the
+waveform geometry itself.</li>
+</ol>
+<h3 id="color-flash-and-luminescence-blinding">Color Flash and
+Luminescence Blinding</h3>
+<p>Visual track cuts can be masked using momentary luminescence
+changes:</p>
+<ul>
+<li>Shift both waveform colors (<code>waveColor</code> and
+<code>progressColor</code>) toward a common bright neutral shade (such
+as pure white or high-saturation primary colors) at the exact midpoint
+of the crossfade.</li>
+<li>Apply a brief CSS <code>filter: brightness()</code> or
+<code>filter: blur()</code> sweep over the waveform container during the
+transition peak. This creates an intentional transition flash that
+momentarily blinds the viewer to the exact moment Deck A unmounts and
+Deck B takes over the interface focus.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/seamless-crossfade-transitions-for-dual-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

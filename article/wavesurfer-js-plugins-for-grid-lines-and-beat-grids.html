@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Plugins for Grid Lines and Beat Grids - wavesurfer.js</title>
+    <meta name="description" content="Displaying visual grid lines or musical beat grids on a Wavesurfer.js waveform enhances audio analysis, editing, and DJ-style playback. While Wavesurfer.js does not feature an out-of-the-box plugin named explicitly &quot;BeatGrid,&quot; developers achieve grid line">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-plugins-for-grid-lines-and-beat-grids">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Plugins for Grid Lines and Beat Grids - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-plugins-for-grid-lines-and-beat-grids" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Displaying visual grid lines or musical beat grids on a Wavesurfer.js waveform enhances audio analysis, editing, and DJ-style playback. While Wavesurfer.js does not feature an out-of-the-box plugin named explicitly &quot;BeatGrid,&quot; developers achieve grid line" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1
+id="wavesurferjs-plugins-for-grid-lines-and-beat-grids">Wavesurfer.js
+Plugins for Grid Lines and Beat Grids</h1>
+<p>Displaying visual grid lines or musical beat grids on a Wavesurfer.js
+waveform enhances audio analysis, editing, and DJ-style playback. While
+Wavesurfer.js does not feature an out-of-the-box plugin named explicitly
+"BeatGrid," developers achieve grid lines and beat-aligned grids using
+the official <strong>Timeline plugin</strong>, the <strong>Regions
+plugin</strong>, or by creating a lightweight custom canvas overlay
+plugin tailored to BPM calculations.</p>
+<h3 id="1-the-official-timeline-plugin">1. The Official Timeline
+Plugin</h3>
+<p>The primary tool for rendering standard grid lines across a waveform
+is the official <strong>Timeline plugin</strong>
+(<code>wavesurfer.js/dist/plugins/timeline.esm.js</code>).</p>
+<p>Although typically positioned above or below the waveform to show
+seconds and minutes, the Timeline plugin can be styled and configured to
+project grid lines across the entire waveform container:</p>
+<ul>
+<li><strong>Time Notches and Secondary Lines:</strong> You can configure
+the <code>timeInterval</code>, <code>primaryLabelInterval</code>, and
+<code>secondaryLabelInterval</code> parameters to determine how
+frequently vertical markers appear.</li>
+<li><strong>Full-Height Grid Overlay:</strong> By adjusting CSS (such as
+setting the timeline's position to <code>absolute</code>, stretching its
+height to <code>100%</code>, and styling notch elements with low-opacity
+borders), the timeline notches act as full-height vertical grid lines
+across the audio peaks.</li>
+</ul>
+<p>While effective for fixed time intervals (e.g., every 1 second, 500
+milliseconds), the standard Timeline plugin tracks absolute time rather
+than dynamic musical beats or tempo changes.</p>
+<h3 id="2-the-regions-plugin-for-measure-and-beat-markers">2. The
+Regions Plugin for Measure and Beat Markers</h3>
+<p>The official <strong>Regions plugin</strong>
+(<code>wavesurfer.js/dist/plugins/regions.esm.js</code>) allows you to
+programmatically draw non-interactive vertical markers or shaded zones
+across the waveform:</p>
+<ul>
+<li><strong>Beat and Bar Markers:</strong> By knowing an audio track's
+BPM (beats per minute) and start offset, you can loop through the
+duration and add thin, vertical regions (<code>start</code> equals
+<code>end</code>) at every beat or bar interval.</li>
+<li><strong>Custom Styling:</strong> Each line can be assigned custom
+CSS classes, allowing you to visually distinguish downbeats (the start
+of a measure) from regular beats using different colors or line
+thicknesses.</li>
+<li><strong>Interactivity:</strong> Unlike static canvas grids, markers
+created via the Regions plugin can be clicked, dragged, or updated
+dynamically if you need an editable beat grid.</li>
+</ul>
+<h3 id="3-custom-canvas-overlays-for-true-beat-grids">3. Custom Canvas
+Overlays for True Beat Grids</h3>
+<p>For music applications, digital audio workstations (DAWs), or DJ
+software requiring true BPM-synchronized beat grids, developers
+typically write a custom plugin or use a secondary HTML5
+<code>&lt;canvas&gt;</code> element.</p>
+<p>Because musical intervals depend on tempo rather than round seconds,
+a BPM-based beat grid requires calculating beat intervals:</p>
+<ol type="1">
+<li><strong>Calculate Interval:</strong> Divide 60 by the track's BPM to
+determine the interval between beats in seconds (e.g., 120 BPM = 0.5
+seconds per beat).</li>
+<li><strong>Handle the Offset:</strong> Account for the first downbeat
+offset (transient detection or manual alignment).</li>
+<li><strong>Render to Canvas:</strong> Listen to Wavesurfer's
+<code>redraw</code> and <code>timeupdate</code> events to project
+vertical lines onto a transparent canvas directly over the
+waveform.</li>
+<li><strong>Zoom Support:</strong> A custom render loop ensures grid
+lines scale correctly when the user changes the waveform's zoom level
+(<code>wavesurfer.zoom(pxPerSec)</code>).</li>
+</ol></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-plugins-for-grid-lines-and-beat-grids';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

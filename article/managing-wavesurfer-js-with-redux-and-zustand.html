@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Managing Wavesurfer.js with Redux and Zustand - wavesurfer.js</title>
+    <meta name="description" content="Managing active Wavesurfer.js audio player instances across modern web applications requires coordinating complex, imperative audio objects with reactive user interfaces. This article examines how state management tools—specifically Zustand, Redux Toolkit">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/managing-wavesurfer-js-with-redux-and-zustand">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Managing Wavesurfer.js with Redux and Zustand - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/managing-wavesurfer-js-with-redux-and-zustand" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Managing active Wavesurfer.js audio player instances across modern web applications requires coordinating complex, imperative audio objects with reactive user interfaces. This article examines how state management tools—specifically Zustand, Redux Toolkit" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="managing-wavesurferjs-with-redux-and-zustand">Managing
+Wavesurfer.js with Redux and Zustand</h1>
+<p>Managing active Wavesurfer.js audio player instances across modern
+web applications requires coordinating complex, imperative audio objects
+with reactive user interfaces. This article examines how state
+management tools—specifically Zustand, Redux Toolkit, and React
+Context—can effectively register, synchronize, and clean up active
+Wavesurfer.js instances without degrading performance or violating
+architectural best practices.</p>
+<h3 id="the-challenge-of-wavesurferjs-instances-in-state-stores">The
+Challenge of Wavesurfer.js Instances in State Stores</h3>
+<p>Wavesurfer.js relies on an imperative lifecycle: it binds directly to
+a DOM node, manages Web Audio API contexts, and exposes methods like
+<code>play()</code>, <code>pause()</code>, and
+<code>destroy()</code>.</p>
+<p>Because a Wavesurfer instance is a complex, stateful, and
+non-serializable JavaScript object, placing it directly into a standard
+state store often introduces architectural challenges:</p>
+<ul>
+<li><strong>Serialization Issues:</strong> Stores designed around
+immutability and serializability (such as Redux) throw warnings or fail
+devtools time-travel features when holding raw DOM or audio
+instances.</li>
+<li><strong>Garbage Collection and Memory Leaks:</strong> If an instance
+is stored globally without an explicit call to <code>.destroy()</code>
+upon component unmounting, dangling audio nodes and event listeners
+persist in memory.</li>
+<li><strong>Rerender Cascades:</strong> Triggering global state updates
+on high-frequency events (like <code>audioprocess</code> or
+<code>timeupdate</code>) causes unnecessary UI re-renders if not
+decoupled from the main reactive tree.</li>
+</ul>
+<hr />
+<h3 id="managing-instances-with-zustand">Managing Instances with
+Zustand</h3>
+<p>Zustand is widely regarded as the most ergonomic solution for
+managing Wavesurfer.js instances. Because Zustand does not require
+stored data to be serializable, it can hold active class instances and
+DOM-related objects directly.</p>
+<h4 id="implementation-pattern">Implementation Pattern</h4>
+<p>In Zustand, you can store either a single active instance or a map of
+multiple instances keyed by track or player ID.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { create } <span class="im">from</span> <span class="st">&#39;zustand&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> useAudioStore <span class="op">=</span> <span class="fu">create</span>((<span class="kw">set</span><span class="op">,</span> <span class="kw">get</span>) <span class="kw">=&gt;</span> ({</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">activePlayer</span><span class="op">:</span> <span class="kw">null</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">isPlaying</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">currentTime</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">setActivePlayer</span><span class="op">:</span> (instance) <span class="kw">=&gt;</span> {</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> current <span class="op">=</span> <span class="kw">get</span>()<span class="op">.</span><span class="at">activePlayer</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (current <span class="op">&amp;&amp;</span> current <span class="op">!==</span> instance) {</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>      current<span class="op">.</span><span class="fu">destroy</span>()<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">set</span>({ <span class="dt">activePlayer</span><span class="op">:</span> instance })<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  <span class="dt">play</span><span class="op">:</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> { activePlayer } <span class="op">=</span> <span class="kw">get</span>()<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (activePlayer) {</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>      activePlayer<span class="op">.</span><span class="fu">play</span>()<span class="op">;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>      <span class="kw">set</span>({ <span class="dt">isPlaying</span><span class="op">:</span> <span class="kw">true</span> })<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  <span class="dt">pause</span><span class="op">:</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> { activePlayer } <span class="op">=</span> <span class="kw">get</span>()<span class="op">;</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (activePlayer) {</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>      activePlayer<span class="op">.</span><span class="fu">pause</span>()<span class="op">;</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>      <span class="kw">set</span>({ <span class="dt">isPlaying</span><span class="op">:</span> <span class="kw">false</span> })<span class="op">;</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  <span class="dt">destroyPlayer</span><span class="op">:</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> { activePlayer } <span class="op">=</span> <span class="kw">get</span>()<span class="op">;</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (activePlayer) {</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>      activePlayer<span class="op">.</span><span class="fu">destroy</span>()<span class="op">;</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>      <span class="kw">set</span>({ <span class="dt">activePlayer</span><span class="op">:</span> <span class="kw">null</span><span class="op">,</span> <span class="dt">isPlaying</span><span class="op">:</span> <span class="kw">false</span><span class="op">,</span> <span class="dt">currentTime</span><span class="op">:</span> <span class="dv">0</span> })<span class="op">;</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>}))<span class="op">;</span></span></code></pre></div>
+<h4 id="why-zustand-works-well">Why Zustand Works Well</h4>
+<ul>
+<li><strong>Direct Object Handling:</strong> No middleware configuration
+is required to bypass non-serializable checks.</li>
+<li><strong>Transient Updates:</strong> Subscribers can listen to
+micro-state updates without forcing complete component tree
+updates.</li>
+<li><strong>Outside-React Access:</strong> Wavesurfer event listeners
+(e.g., <code>wavesurfer.on('ready', ...)</code>) can call store actions
+directly outside the React render cycle.</li>
+</ul>
+<hr />
+<h3 id="managing-instances-with-redux-toolkit-rtk">Managing Instances
+with Redux Toolkit (RTK)</h3>
+<p>Redux strictly discourages storing non-serializable values like
+Wavesurfer instances in the store state. When integrating Wavesurfer.js
+with Redux, you have two primary architectural approaches.</p>
+<h4 id="approach-a-the-external-instance-registry-recommended">Approach
+A: The External Instance Registry (Recommended)</h4>
+<p>The cleanest Redux pattern stores only serializable metadata (such as
+<code>activeTrackId</code>, <code>playbackStatus</code>,
+<code>duration</code>, and <code>currentTime</code>) in the Redux slice.
+The actual <code>WaveSurfer</code> objects are maintained in an
+external, module-scoped <code>Map</code> or singleton registry.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// playerRegistry.js - Non-reactive, non-serializable store</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> playerRegistry <span class="op">=</span> <span class="kw">new</span> <span class="bu">Map</span>()<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> registerPlayer <span class="op">=</span> (id<span class="op">,</span> instance) <span class="kw">=&gt;</span> playerRegistry<span class="op">.</span><span class="fu">set</span>(id<span class="op">,</span> instance)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> getPlayer <span class="op">=</span> (id) <span class="kw">=&gt;</span> playerRegistry<span class="op">.</span><span class="fu">get</span>(id)<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> unregisterPlayer <span class="op">=</span> (id) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> player <span class="op">=</span> playerRegistry<span class="op">.</span><span class="fu">get</span>(id)<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (player) {</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    player<span class="op">.</span><span class="fu">destroy</span>()<span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    playerRegistry<span class="op">.</span><span class="fu">delete</span>(id)<span class="op">;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>Redux actions then dispatch playback intentions (e.g.,
+<code>playTrack(id)</code>), and Redux middleware or custom hooks
+synchronize those intentions with the registry:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Component or custom hook</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> handlePlay <span class="op">=</span> (trackId) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dispatch</span>(<span class="fu">setActiveTrack</span>(trackId))<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> player <span class="op">=</span> <span class="fu">getPlayer</span>(trackId)<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (player) {</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    player<span class="op">.</span><span class="fu">play</span>()<span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<h4 id="approach-b-ignoring-the-serializability-check">Approach B:
+Ignoring the Serializability Check</h4>
+<p>If you must store the instance directly in Redux, you must configure
+Redux Toolkit's middleware to ignore the state path containing the
+Wavesurfer instance:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { configureStore } <span class="im">from</span> <span class="st">&#39;@reduxjs/toolkit&#39;</span><span class="op">;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> playerReducer <span class="im">from</span> <span class="st">&#39;./playerSlice&#39;</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="im">export</span> <span class="kw">const</span> store <span class="op">=</span> <span class="fu">configureStore</span>({</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">reducer</span><span class="op">:</span> {</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">player</span><span class="op">:</span> playerReducer<span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  }<span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">middleware</span><span class="op">:</span> (getDefaultMiddleware) <span class="kw">=&gt;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">getDefaultMiddleware</span>({</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">serializableCheck</span><span class="op">:</span> {</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">ignoredActions</span><span class="op">:</span> [<span class="st">&#39;player/setPlayerInstance&#39;</span>]<span class="op">,</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">ignoredPaths</span><span class="op">:</span> [<span class="st">&#39;player.activeInstance&#39;</span>]<span class="op">,</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>      }<span class="op">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    })<span class="op">,</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>While functional, this approach circumvents Redux’s core guarantees
+and is generally less maintainable than decoupling via an instance
+registry.</p>
+<hr />
+<h3 id="alternative-solutions">Alternative Solutions</h3>
+<h4 id="react-context-with-useref">React Context with
+<code>useRef</code></h4>
+<p>For applications where the audio player scope is localized to a
+specific route or feature, React Context combined with a
+<code>useRef</code> holding a registry map is a lightweight alternative.
+The Context provides reactive state (such as
+<code>currentTrackId</code>), while the ref holds the mutable Wavesurfer
+instances without inducing re-renders when internal player pointers
+change.</p>
+<h4 id="mobx">MobX</h4>
+<p>MobX is well-suited for Wavesurfer.js because it embraces mutable
+object references and fine-grained reactivity. A MobX store can declare
+a Wavesurfer instance as an observable property (or mark it with
+<code>makeObservable</code> and <code>observable.ref</code>), allowing
+components to react directly to player state changes without
+serialization overhead.</p>
+<hr />
+<h3 id="choosing-the-right-tool">Choosing the Right Tool</h3>
+<ul>
+<li><strong>Choose Zustand</strong> if you need a lightweight, global
+store that natively accommodates imperative JavaScript instances
+alongside reactive UI state with minimal setup.</li>
+<li><strong>Choose Redux Toolkit</strong> if your application is already
+heavily invested in the Redux ecosystem, utilizing an external registry
+module to separate audio instances from serializable store data.</li>
+<li><strong>Choose React Context + Refs</strong> if audio playback is
+isolated to specific component trees and does not need to persist across
+unmounts or page-wide navigation.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/managing-wavesurfer-js-with-redux-and-zustand';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

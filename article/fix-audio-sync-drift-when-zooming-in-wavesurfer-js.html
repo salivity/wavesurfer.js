@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Audio Sync Drift When Zooming in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Audio sync drift during zoom operations in Wavesurfer.js occurs when the visual playhead or waveform rendering misaligns with the actual playback position of the audio element. This article covers why this drift happens—primarily due to canvas pixel round">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/fix-audio-sync-drift-when-zooming-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fix Audio Sync Drift When Zooming in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/fix-audio-sync-drift-when-zooming-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Audio sync drift during zoom operations in Wavesurfer.js occurs when the visual playhead or waveform rendering misaligns with the actual playback position of the audio element. This article covers why this drift happens—primarily due to canvas pixel round" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="fix-audio-sync-drift-when-zooming-in-wavesurferjs">Fix Audio
+Sync Drift When Zooming in Wavesurfer.js</h1>
+<p>Audio sync drift during zoom operations in Wavesurfer.js occurs when
+the visual playhead or waveform rendering misaligns with the actual
+playback position of the audio element. This article covers why this
+drift happens—primarily due to canvas pixel rounding errors,
+uncontrolled redraw rates, and asynchronous scroll events—and provides
+actionable technical solutions to maintain frame-accurate
+synchronization between the audio timeline and the visual waveform
+during dynamic zoom events.</p>
+<hr />
+<h3 id="understand-the-cause-of-zoom-drift">Understand the Cause of Zoom
+Drift</h3>
+<p>Wavesurfer.js converts audio buffer time into horizontal pixels using
+the <code>minPxPerSec</code> parameter. When zooming dynamically, three
+common issues introduce desynchronization:</p>
+<ol type="1">
+<li><strong>Floating-Point Rounding Errors:</strong> Successive redraws
+recalculate pixel positions from timestamps. In large files,
+floating-point inaccuracies cause cumulative visual offset.</li>
+<li><strong>Event Flooding:</strong> Triggering
+<code>wavesurfer.zoom()</code> repeatedly on continuous events (such as
+mouse wheel or slider inputs) forces the renderer to process multiple
+redraw cycles before previous renders finish, lagging behind the native
+HTML5 audio <code>currentTime</code>.</li>
+<li><strong>Scroll Viewport Mismatch:</strong> Zooming alters the total
+scroll width of the waveform wrapper without immediately locking the
+scroll position to the current playback head.</li>
+</ol>
+<hr />
+<h3 id="solution-1-debounce-or-throttle-the-zoom-function">Solution 1:
+Debounce or Throttle the Zoom Function</h3>
+<p>Calling <code>zoom()</code> on every raw input event causes race
+conditions between the canvas re-rendering process and the internal
+audio clock. Throttle or debounce your zoom controls using
+<code>requestAnimationFrame</code>.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> isZooming <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">smoothZoom</span>(wavesurfer<span class="op">,</span> targetPxPerSec) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (isZooming) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  isZooming <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">requestAnimationFrame</span>(() <span class="kw">=&gt;</span> {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">zoom</span>(targetPxPerSec)<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    isZooming <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This prevents the browser from queuing conflicting render calls,
+ensuring the internal time-to-pixel calculations remain stable.</p>
+<hr />
+<h3 id="solution-2-anchor-the-viewport-to-current-audio-time">Solution
+2: Anchor the Viewport to Current Audio Time</h3>
+<p>When changing the zoom level, actively reposition the scroll
+container so that the current playback time remains the fixed reference
+point:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">zoomAndCenter</span>(wavesurfer<span class="op">,</span> pxPerSec) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> currentTime <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getCurrentTime</span>()<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> duration <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getDuration</span>()<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>duration) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Apply the new zoom level</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  wavesurfer<span class="op">.</span><span class="fu">zoom</span>(pxPerSec)<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Recalculate relative position and center the scroll view</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> progress <span class="op">=</span> currentTime <span class="op">/</span> duration<span class="op">;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> container <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getWrapper</span>()<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> scrollWidth <span class="op">=</span> container<span class="op">.</span><span class="at">scrollWidth</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> clientWidth <span class="op">=</span> container<span class="op">.</span><span class="at">clientWidth</span><span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Set the scroll position so current playhead stays centered</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> targetScrollLeft <span class="op">=</span> (scrollWidth <span class="op">*</span> progress) <span class="op">-</span> (clientWidth <span class="op">/</span> <span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  container<span class="op">.</span><span class="at">scrollLeft</span> <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="dv">0</span><span class="op">,</span> targetScrollLeft)<span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<hr />
+<h3 id="solution-3-re-sync-playhead-immediately-after-zoom">Solution 3:
+Re-sync Playhead Immediately After Zoom</h3>
+<p>Wavesurfer emits a <code>zoom</code> event when the canvas redraw
+finishes. Hook into this event to explicitly realign the playhead and
+container state with the underlying <code>HTMLMediaElement</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">on</span>(<span class="st">&#39;zoom&#39;</span><span class="op">,</span> (minPxPerSec) <span class="kw">=&gt;</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> mediaElement <span class="op">=</span> wavesurfer<span class="op">.</span><span class="fu">getMediaElement</span>()<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="op">!</span>mediaElement) <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Force the waveform visual state to strictly match actual media time</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> currentTime <span class="op">=</span> mediaElement<span class="op">.</span><span class="at">currentTime</span><span class="op">;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> duration <span class="op">=</span> mediaElement<span class="op">.</span><span class="at">duration</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (duration <span class="op">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    wavesurfer<span class="op">.</span><span class="fu">setTime</span>(currentTime)<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Using <code>wavesurfer.setTime()</code> immediately after rendering
+prevents the visual cursor from trailing behind playing audio.</p>
+<hr />
+<h3 id="solution-4-configure-autocenter-and-autoscroll">Solution 4:
+Configure <code>autoCenter</code> and <code>autoScroll</code></h3>
+<p>Wavesurfer includes built-in scrolling parameters that handle
+alignment natively. When initializing Wavesurfer, explicitly define
+tracking behavior to prevent manual scroll calculations from conflicting
+with internal positioning:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wavesurfer <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#4F46E5&#39;</span><span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#818CF8&#39;</span><span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">minPxPerSec</span><span class="op">:</span> <span class="dv">50</span><span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">autoCenter</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">autoScroll</span><span class="op">:</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<ul>
+<li><strong><code>autoCenter: true</code></strong>: Keeps the cursor
+centered in the viewport during playback and zoom recalculations.</li>
+<li><strong><code>autoScroll: true</code></strong>: Ensures the wrapper
+follows playback seamlessly across zooming states.</li>
+</ul>
+<hr />
+<h3 id="solution-5-compensate-for-device-pixel-ratio">Solution 5:
+Compensate for Device Pixel Ratio</h3>
+<p>High-DPI (Retina) displays can introduce fractional canvas
+boundaries. If custom wrappers or CSS transforms are applied to the
+waveform, ensure dimensions are scaled using integer pixel values:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wrapper <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;#waveform&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> computedWidth <span class="op">=</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">floor</span>(wrapper<span class="op">.</span><span class="fu">getBoundingClientRect</span>()<span class="op">.</span><span class="at">width</span>)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Ensure the container width is always an integer before triggering zoom</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>wrapper<span class="op">.</span><span class="at">style</span><span class="op">.</span><span class="at">width</span> <span class="op">=</span> <span class="vs">`</span><span class="sc">${</span>computedWidth<span class="sc">}</span><span class="vs">px`</span><span class="op">;</span></span></code></pre></div>
+<p>Applying whole-number pixel values stops the browser's subpixel
+rendering engine from drifting the canvas relative to standard DOM
+overlay cursors.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/fix-audio-sync-drift-when-zooming-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Annotation Editing in Wavesurfer.js - wavesurfer.js</title>
+    <meta name="description" content="Building an audio annotation editor on top of Wavesurfer.js requires leveraging its modular plugin architecture—specifically the Regions Plugin—combined with an external state management layer and bidirectional event listeners. This architecture decouples">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/audio-annotation-editing-in-wavesurfer-js">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Audio Annotation Editing in Wavesurfer.js - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/audio-annotation-editing-in-wavesurfer-js" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="Building an audio annotation editor on top of Wavesurfer.js requires leveraging its modular plugin architecture—specifically the Regions Plugin—combined with an external state management layer and bidirectional event listeners. This architecture decouples" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="audio-annotation-editing-in-wavesurferjs">Audio Annotation
+Editing in Wavesurfer.js</h1>
+<p>Building an audio annotation editor on top of Wavesurfer.js requires
+leveraging its modular plugin architecture—specifically the Regions
+Plugin—combined with an external state management layer and
+bidirectional event listeners. This architecture decouples the visual
+waveform rendering from the annotation metadata, enabling precise
+timeline selection, label assignment, real-time segment manipulation,
+and seamless data serialization.</p>
+<h3 id="the-regions-plugin-architecture">The Regions Plugin
+Architecture</h3>
+<p>The core foundation for audio annotation in Wavesurfer.js is the
+Regions Plugin. This extension allows developers to overlay visual,
+interactive bounding boxes directly over the audio canvas. Each region
+represents an discrete segment defined by properties such as
+<code>start</code>, <code>end</code>, <code>color</code>, and
+interactive permissions like <code>drag</code> and
+<code>resize</code>.</p>
+<p>To establish an annotation workflow, initialize Wavesurfer alongside
+the Regions Plugin:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> WaveSurfer <span class="im">from</span> <span class="st">&#39;wavesurfer.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> RegionsPlugin <span class="im">from</span> <span class="st">&#39;wavesurfer.js/dist/plugins/regions.esm.js&#39;</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> ws <span class="op">=</span> WaveSurfer<span class="op">.</span><span class="fu">create</span>({</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">container</span><span class="op">:</span> <span class="st">&#39;#waveform&#39;</span><span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">waveColor</span><span class="op">:</span> <span class="st">&#39;#A8DBA8&#39;</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">progressColor</span><span class="op">:</span> <span class="st">&#39;#3B8686&#39;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> wsRegions <span class="op">=</span> ws<span class="op">.</span><span class="fu">registerPlugin</span>(RegionsPlugin<span class="op">.</span><span class="fu">create</span>())<span class="op">;</span></span></code></pre></div>
+<h3 id="event-driven-state-synchronization">Event-Driven State
+Synchronization</h3>
+<p>To make annotations editable and reliable, you must decouple the
+visual markers from your application state. Treat Wavesurfer as the
+interactive rendering engine while maintaining an external state (such
+as a modern frontend framework store or state array) as the single
+source of truth.</p>
+<p>The Regions Plugin exposes key lifecycle events necessary for
+synchronizing edits:</p>
+<ul>
+<li><strong><code>region-created</code></strong>: Emitted when a user
+drags to generate a new segment. This event initializes a new annotation
+record in your state with unique IDs, fallback labels, and
+timestamps.</li>
+<li><strong><code>region-updated</code></strong>: Emitted continuously
+while a user drags or resizes a segment. Debouncing this event ensures
+high-performance updates to timestamp data.</li>
+<li><strong><code>region-clicked</code></strong>: Directs the interface
+to select the active annotation, focus input fields, or open context
+menus for updating text transcripts and tags.</li>
+<li><strong><code>region-double-clicked</code></strong>: Typically
+mapped to looping the segment playback to verify annotation
+accuracy.</li>
+</ul>
+<h3 id="enforcing-annotation-constraints">Enforcing Annotation
+Constraints</h3>
+<p>Precise annotation workflows often require strict behavioral rules.
+You can enforce these programmatically through event handlers:</p>
+<ol type="1">
+<li><strong>Overlap Prevention</strong>: In scenarios like speaker
+diarization or transcription, segments must not overlap. Intercept
+<code>region-updated</code> to clamp the <code>start</code> and
+<code>end</code> times against adjacent regions.</li>
+<li><strong>Minimum/Maximum Duration</strong>: Restrict region resizing
+to prevent sub-millisecond fragments or excessively long segments by
+programmatically resetting boundaries during the <code>update-end</code>
+event.</li>
+<li><strong>Keyboard-Driven Splitting</strong>: Bind keystrokes to the
+current playback position (<code>ws.getCurrentTime()</code>). When
+triggered, split the active region into two by adjusting the existing
+region's <code>end</code> point and generating a new region starting at
+that exact timestamp.</li>
+</ol>
+<h3 id="metadata-association-and-serialization">Metadata Association and
+Serialization</h3>
+<p>Regions natively support a <code>content</code> property for basic
+DOM rendering (such as simple text labels), but complex annotations
+require structured data. Store identifiers, transcription text, speaker
+IDs, and confidence scores inside the region's custom data parameter or
+an external hash table keyed by the region's generated
+<code>id</code>.</p>
+<p>When exporting annotations, map the plugin's regions back into
+structured payloads such as JSON, WebVTT, or SRT:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> exportAnnotations <span class="op">=</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> wsRegions<span class="op">.</span><span class="fu">getRegions</span>()<span class="op">.</span><span class="fu">map</span>(region <span class="kw">=&gt;</span> ({</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">id</span><span class="op">:</span> region<span class="op">.</span><span class="at">id</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">start</span><span class="op">:</span> region<span class="op">.</span><span class="at">start</span><span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">end</span><span class="op">:</span> region<span class="op">.</span><span class="at">end</span><span class="op">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">text</span><span class="op">:</span> region<span class="op">.</span><span class="at">data</span><span class="op">?.</span><span class="at">text</span> <span class="op">||</span> <span class="st">&#39;&#39;</span><span class="op">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">speaker</span><span class="op">:</span> region<span class="op">.</span><span class="at">data</span><span class="op">?.</span><span class="at">speaker</span> <span class="op">||</span> <span class="st">&#39;Speaker 1&#39;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  }))<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p>Conversely, loading existing annotations into Wavesurfer requires
+iterating through your stored records and invoking
+<code>wsRegions.addRegion()</code> for each entry. This bidirectional
+data pipeline delivers a robust, scalable audio annotation platform.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/audio-annotation-editing-in-wavesurfer-js';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

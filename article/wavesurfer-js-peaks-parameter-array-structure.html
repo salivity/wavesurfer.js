@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavesurfer.js Peaks Parameter Array Structure - wavesurfer.js</title>
+    <meta name="description" content="This guide outlines the expected array structure for the peaks parameter in Wavesurfer.js, detailing the exact data formats, channel representations, and value normalization required to render pre-computed waveforms efficiently. The standard format expect">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-peaks-parameter-array-structure">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Wavesurfer.js Peaks Parameter Array Structure - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-peaks-parameter-array-structure" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This guide outlines the expected array structure for the peaks parameter in Wavesurfer.js, detailing the exact data formats, channel representations, and value normalization required to render pre-computed waveforms efficiently. The standard format expect" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="wavesurferjs-peaks-parameter-array-structure">Wavesurfer.js
+Peaks Parameter Array Structure</h1>
+<p>This guide outlines the expected array structure for the
+<code>peaks</code> parameter in Wavesurfer.js, detailing the exact data
+formats, channel representations, and value normalization required to
+render pre-computed waveforms efficiently.</p>
+<h3 id="primary-array-format-multi-channel-2d-array">Primary Array
+Format: Multi-Channel 2D Array</h3>
+<p>The standard format expected by Wavesurfer.js for the
+<code>peaks</code> parameter is a two-dimensional array (or an array of
+<code>Float32Array</code> objects). Each top-level element corresponds
+to an audio channel:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>[</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  [channel_0_peaks]<span class="op">,</span> <span class="co">// Left or Mono channel</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  [channel_1_peaks]  <span class="co">// Right channel (optional)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div>
+<h3 id="mono-and-single-channel-audio">Mono and Single-Channel
+Audio</h3>
+<p>For mono audio, you should wrap the peak data in an outer array
+representing a single channel:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> peaks <span class="op">=</span> [</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  [<span class="op">-</span><span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.5</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.8</span><span class="op">,</span> <span class="fl">0.8</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.2</span><span class="op">,</span> <span class="fl">0.3</span>]</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>]<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;audio.mp3&#39;</span><span class="op">,</span> peaks)<span class="op">;</span></span></code></pre></div>
+<p>While some versions of Wavesurfer.js accept a flat 1D array
+(<code>[peak1, peak2, ...]</code>) for mono tracks, providing a 2D array
+(<code>[ [peak1, peak2, ...] ]</code>) guarantees compatibility across
+versions.</p>
+<h3 id="stereo-and-multi-channel-audio">Stereo and Multi-Channel
+Audio</h3>
+<p>For multi-channel or stereo tracks, pass separate arrays for each
+channel inside the parent array:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> stereoPeaks <span class="op">=</span> [</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  [<span class="op">-</span><span class="fl">0.6</span><span class="op">,</span> <span class="fl">0.7</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.4</span><span class="op">,</span> <span class="fl">0.5</span>]<span class="op">,</span> <span class="co">// Channel 0 (Left)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  [<span class="op">-</span><span class="fl">0.5</span><span class="op">,</span> <span class="fl">0.6</span><span class="op">,</span> <span class="op">-</span><span class="fl">0.3</span><span class="op">,</span> <span class="fl">0.4</span>]  <span class="co">// Channel 1 (Right)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>]<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>wavesurfer<span class="op">.</span><span class="fu">load</span>(<span class="st">&#39;audio.mp3&#39;</span><span class="op">,</span> stereoPeaks)<span class="op">;</span></span></code></pre></div>
+<h3 id="value-normalization-and-ranges">Value Normalization and
+Ranges</h3>
+<p>The numbers inside each channel array must be normalized
+floating-point numbers:</p>
+<ul>
+<li><strong>Range:</strong> Values must fall strictly between
+<code>-1.0</code> and <code>1.0</code>.</li>
+<li><strong>Min/Max Pairs:</strong> If generating peaks from tools like
+<code>audiowaveform</code> or FFmpeg, peak sequences typically alternate
+between minimum and maximum amplitudes (e.g.,
+<code>[-0.45, 0.52, -0.30, 0.35]</code>). Wavesurfer uses these pairs to
+draw the top and bottom bounds of the waveform.</li>
+<li><strong>Positive-Only (Absolute) Peaks:</strong> You may also
+provide non-negative floats (between <code>0.0</code> and
+<code>1.0</code>). Wavesurfer will mirror these values across the center
+line to create a symmetrical waveform.</li>
+</ul></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/wavesurfer-js-peaks-parameter-array-structure';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>

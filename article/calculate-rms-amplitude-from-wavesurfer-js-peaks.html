@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculate RMS Amplitude from Wavesurfer.js Peaks - wavesurfer.js</title>
+    <meta name="description" content="This article explains the mathematical formula and computational process required to derive Root Mean Square (RMS) amplitude visualization from Wavesurfer.js peak arrays. While Wavesurfer.js by default renders waveforms using linear peak values (minima an">
+    <link rel="canonical" href="https://salivity.github.io/wavesurfer.js/article/calculate-rms-amplitude-from-wavesurfer-js-peaks">
+    <link rel="search" type="application/opensearchdescription+xml" title="wavesurfer.js" href="/wavesurfer.js/opensearch.xml">
+    <link rel="icon" href="/wavesurfer.js/favicon.ico">
+    <link rel="stylesheet" href="/wavesurfer.js/css/style.css">
+    <link media="print" rel="stylesheet" href="/wavesurfer.js/css/print.css">
+    <script src="/wavesurfer.js/js/fuse.min.js"></script>
+    <script src="/wavesurfer.js/js/script.js"></script>
+    <script id="MathJax-script" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/4.1.3/tex-chtml.min.js" defer></script>
+    <script src="/monetize/monetize.js"></script>
+    <script src="/social/social.js"></script>
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Calculate RMS Amplitude from Wavesurfer.js Peaks - wavesurfer.js" />
+    <meta property="og:url" content="https://salivity.github.io/wavesurfer.js/article/calculate-rms-amplitude-from-wavesurfer-js-peaks" />
+    <meta property="og:image" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:secure_url" content="https://salivity.github.io/wavesurfer.js/images/open-graph/default.webp" />
+    <meta property="og:image:width" content="1120" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:description" content="This article explains the mathematical formula and computational process required to derive Root Mean Square (RMS) amplitude visualization from Wavesurfer.js peak arrays. While Wavesurfer.js by default renders waveforms using linear peak values (minima an" />
+    <link rel="manifest" href="/wavesurfer.js/pwa/manifest.json" />
+</head>
+<body>
+    <header>
+        <a href="/wavesurfer.js/" aria-label="Go To Home Page" title="Go To Home Page" id="logo">
+            <span>salivity.github.io/</span><span>wavesurfer.js</span>
+        </a>
+        <nav>
+            <ul class="header-links">
+                <li><a href="/wavesurfer.js/search" title="Search" aria-label="Go To Search Page"><svg class="svg-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"></path></svg></a></li>
+                <li><a id="theme-toggle" title="Theme" href="javascript:void(0);" aria-label="Toggle Website Theme"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        
+    <div class="article-layout">
+        <aside id="profile-sidebar" class="profile-column" aria-label="Author Profile"></aside>
+        <div class="article-main-column">
+            <article><h1 id="calculate-rms-amplitude-from-wavesurferjs-peaks">Calculate RMS
+Amplitude from Wavesurfer.js Peaks</h1>
+<p>This article explains the mathematical formula and computational
+process required to derive Root Mean Square (RMS) amplitude
+visualization from Wavesurfer.js peak arrays. While Wavesurfer.js by
+default renders waveforms using linear peak values (minima and maxima),
+transforming these peaks into RMS values provides an accurate
+representation of perceived loudness and energy. Below, you will find
+the exact formula, how to adapt it to peak arrays, and how to compute it
+for custom waveform visualization.</p>
+<h2 id="the-standard-rms-formula">The Standard RMS Formula</h2>
+<p>The Root Mean Square (<span
+class="math inline">\(X_{\text{RMS}}\)</span>) of a discrete set of
+<span class="math inline">\(N\)</span> values is defined mathematically
+as:</p>
+<p><span class="math display">\[X_{\text{RMS}} = \sqrt{\frac{1}{N}
+\sum_{i=1}^{N} x_i^2}\]</span></p>
+<p>Where:</p>
+<ul>
+<li><span class="math inline">\(N\)</span> is the total number of audio
+samples or peak data points in a given window.</li>
+<li><span class="math inline">\(x_i\)</span> represents the amplitude of
+an individual sample at index <span
+class="math inline">\(i\)</span>.</li>
+<li><span class="math inline">\(\sum_{i=1}^{N} x_i^2\)</span> is the sum
+of the squared values across the window.</li>
+</ul>
+<h2 id="adapting-the-formula-for-wavesurferjs-peak-arrays">Adapting the
+Formula for Wavesurfer.js Peak Arrays</h2>
+<p>Wavesurfer.js generates peak arrays in two primary formats depending
+on configuration:</p>
+<ol type="1">
+<li>A single interleaved array:
+<code>[min_0, max_0, min_1, max_1, ..., min_k, max_k]</code></li>
+<li>Two separate parallel arrays: one for <code>min</code> values and
+one for <code>max</code> values.</li>
+</ol>
+<p>Because peak arrays already downsample the original PCM buffer into
+pairs representing the negative and positive limits of time slices, the
+formula must treat both bounds as discrete amplitude observations.</p>
+<h3 id="formula-for-interleaved-peak-arrays">Formula for Interleaved
+Peak Arrays</h3>
+<p>For an interleaved slice containing <span
+class="math inline">\(M\)</span> peak pairs (total <span
+class="math inline">\(N = 2M\)</span> points):</p>
+<p><span class="math display">\[\text{RMS}_{\text{window}} =
+\sqrt{\frac{1}{2M} \sum_{j=1}^{M} \left( (\text{min}_j)^2 +
+(\text{max}_j)^2 \right)}\]</span></p>
+<p>If you are calculating RMS across the entire peak array to normalize
+rendering:</p>
+<p><span class="math display">\[\text{RMS}_{\text{total}} =
+\sqrt{\frac{1}{L} \sum_{k=0}^{L-1} p_k^2}\]</span></p>
+<p>Where <span class="math inline">\(L\)</span> is the total length of
+the <code>peaks</code> array and <span
+class="math inline">\(p_k\)</span> is the peak value at index <span
+class="math inline">\(k\)</span>.</p>
+<h2 id="step-by-step-implementation">Step-by-Step Implementation</h2>
+<ol type="1">
+<li><strong>Normalize Peak Values:</strong> Ensure values fall within a
+normalized range of <span class="math inline">\([-1.0, 1.0]\)</span>. If
+Wavesurfer.js outputs 8-bit integers (<code>[-128, 127]</code>), divide
+each value by 128 before calculation.</li>
+<li><strong>Define Window Size:</strong> Group the peaks into discrete
+windows (e.g., chunks of 10 to 50 values) depending on the desired
+visual smoothing.</li>
+<li><strong>Square and Accumulate:</strong> Square every peak value in
+the target window and add them together.</li>
+<li><strong>Divide by Sample Count:</strong> Divide the accumulated sum
+by the number of peak values evaluated in that window.</li>
+<li><strong>Square Root:</strong> Take the square root of the quotient
+to yield the window's RMS value.</li>
+</ol>
+<h2 id="decibel-conversion-for-dynamic-range-display">Decibel Conversion
+for Dynamic Range Display</h2>
+<p>Linear RMS values can be converted to decibels full scale (dBFS) to
+map visual height to human auditory perception:</p>
+<p><span class="math display">\[\text{dBFS} = 20
+\log_{10}(\text{RMS})\]</span></p>
+<p>Values can then be clamped between a defined floor (such as <span
+class="math inline">\(-60\text{ dB}\)</span>) and <span
+class="math inline">\(0\text{ dB}\)</span> to render a smoothed,
+perceptually balanced energy envelope in your Wavesurfer.js canvas or
+custom visualizer.</p></article>
+        <div id='disqus_thread'></div>
+        <script>
+
+            var disqus_config = function () {
+                this.page.url =         'https://salivity.github.io/wavesurfer.js/article/calculate-rms-amplitude-from-wavesurfer-js-peaks';  
+                //this.page.identifier =  PAGE_IDENTIFIER; 
+            };
+            
+            (function() {
+                var d = document, s = d.createElement('script');
+                s.src = 'https://salivity-github-io.disqus.com/embed.js';
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+        </div>
+    </div>
+    
+    </main>
+    <footer>
+        <nav>
+            <ul class="social-links">
+            </ul>
+        </nav>
+        <nav>
+            <ul class="footer-links">
+                <li><a href="https://smvc.dev/contact">Contact</a></li>
+                <li><a href="/wavesurfer.js/privacy-policy">Privacy Policy</a></li>
+                <li><a href="/wavesurfer.js/terms-and-conditions">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+        <div class="copyright">
+            Copyright &copy; <span id="current-year"></span>
+        </div>
+    </footer>
+</body>
+</html>
